@@ -1,0 +1,11 @@
+replicaCount: 2
+image:
+  repository: archie789docker/hireme
+  tag: api-latest-3
+  pullPolicy: IfNotPresent
+
+service:
+  type: LoadBalancer
+  port: 8080
+
+resources: {}
