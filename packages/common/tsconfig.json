@@ -1,0 +1,18 @@
+{
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": ["node_modules"],
+  "compilerOptions": {
+    "outDir": "lib",
+    "rootDir": "src",
+    "baseUrl": ".",
+    "strict": true,
+    "strictNullChecks": true,
+    "declaration": true,
+    "declarationDir": "lib/types",
+    "target": "ESNext",
+    "module": "CommonJS",
+    "moduleResolution": "node"
+  }
+}

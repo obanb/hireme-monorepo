@@ -1,0 +1,215 @@
+{
+  "version": "6.0",
+  "nxVersion": "20.3.3",
+  "pathMappings": {},
+  "nxJsonPlugins": [],
+  "fileMap": {
+    "nonProjectFiles": [
+      {
+        "file": "lerna.json",
+        "hash": "9665198490292609539"
+      },
+      {
+        "file": ".gitignore",
+        "hash": "17998652997554323467"
+      },
+      {
+        "file": "yarn.lock",
+        "hash": "10945864330021056895"
+      },
+      {
+        "file": "package.json",
+        "hash": "13538092262847923842"
+      },
+      {
+        "file": "nx.json",
+        "hash": "13096541334647236566"
+      }
+    ],
+    "projectFileMap": {
+      "api": [
+        {
+          "file": "packages/api/.gitignore",
+          "hash": "11053275306421914406"
+        },
+        {
+          "file": "packages/api/Dockerfile",
+          "hash": "3395248445429768509"
+        },
+        {
+          "file": "packages/api/README.md",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/api/k8s/deployment.yaml",
+          "hash": "17813136159058991235"
+        },
+        {
+          "file": "packages/api/k8s/service.yaml",
+          "hash": "10429761346300120194"
+        },
+        {
+          "file": "packages/api/package.json",
+          "hash": "9962428563783643608",
+          "deps": [
+            "npm:@types/node",
+            "npm:ts-node",
+            "npm:typescript",
+            "npm:@types/express",
+            "npm:dotenv@16.0.3",
+            "npm:express",
+            "common"
+          ]
+        },
+        {
+          "file": "packages/api/src/index.ts",
+          "hash": "6071229032447700388"
+        },
+        {
+          "file": "packages/api/tsconfig.json",
+          "hash": "16715011573561789016"
+        }
+      ],
+      "common": [
+        {
+          "file": "packages/common/README.md",
+          "hash": "3629793782327139708"
+        },
+        {
+          "file": "packages/common/package.json",
+          "hash": "14835215009720542934",
+          "deps": [
+            "npm:express",
+            "npm:winston",
+            "npm:zod"
+          ]
+        },
+        {
+          "file": "packages/common/src/asyncLocalStorage/asyncLocalStorage.ts",
+          "hash": "12592321028940228332"
+        },
+        {
+          "file": "packages/common/src/asyncLocalStorage/index.ts",
+          "hash": "17862752530853463146"
+        },
+        {
+          "file": "packages/common/src/common.ts",
+          "hash": "7196071153314525702"
+        },
+        {
+          "file": "packages/common/src/logging/index.ts",
+          "hash": "5887290674789689246"
+        },
+        {
+          "file": "packages/common/src/logging/logger.ts",
+          "hash": "12333072345097728333"
+        },
+        {
+          "file": "packages/common/src/utils/export-test.ts",
+          "hash": "4438609823104731435"
+        },
+        {
+          "file": "packages/common/src/utils/index.ts",
+          "hash": "12579977546160050648"
+        },
+        {
+          "file": "packages/common/src/utils/uuid.ts",
+          "hash": "5894271224882090181"
+        },
+        {
+          "file": "packages/common/tsconfig.json",
+          "hash": "3174921603891561405"
+        },
+        {
+          "file": "packages/common/yarn.lock",
+          "hash": "14953481567476914638"
+        }
+      ],
+      "frontend": [
+        {
+          "file": "packages/frontend/.gitignore",
+          "hash": "1867017717006394117"
+        },
+        {
+          "file": "packages/frontend/README.md",
+          "hash": "10766794746169900117"
+        },
+        {
+          "file": "packages/frontend/eslint.config.mjs",
+          "hash": "11349616980964601162"
+        },
+        {
+          "file": "packages/frontend/next.config.ts",
+          "hash": "17157214668998829023"
+        },
+        {
+          "file": "packages/frontend/package.json",
+          "hash": "14941058237848116980",
+          "deps": [
+            "npm:typescript",
+            "npm:@types/node",
+            "npm:@types/react",
+            "npm:@types/react-dom",
+            "npm:postcss",
+            "npm:tailwindcss",
+            "npm:eslint",
+            "npm:eslint-config-next",
+            "npm:@eslint/eslintrc",
+            "npm:react",
+            "npm:react-dom",
+            "npm:next",
+            "common"
+          ]
+        },
+        {
+          "file": "packages/frontend/postcss.config.mjs",
+          "hash": "2557392112968376575"
+        },
+        {
+          "file": "packages/frontend/public/file.svg",
+          "hash": "15617830351863523835"
+        },
+        {
+          "file": "packages/frontend/public/globe.svg",
+          "hash": "9134466864871335697"
+        },
+        {
+          "file": "packages/frontend/public/next.svg",
+          "hash": "8300767200008744458"
+        },
+        {
+          "file": "packages/frontend/public/vercel.svg",
+          "hash": "3007623926711696394"
+        },
+        {
+          "file": "packages/frontend/public/window.svg",
+          "hash": "16677869292061012332"
+        },
+        {
+          "file": "packages/frontend/src/app/favicon.ico",
+          "hash": "9157999678830540297"
+        },
+        {
+          "file": "packages/frontend/src/app/globals.css",
+          "hash": "15891550427149691066"
+        },
+        {
+          "file": "packages/frontend/src/app/layout.tsx",
+          "hash": "3768300601413009371"
+        },
+        {
+          "file": "packages/frontend/src/app/page.tsx",
+          "hash": "9336170553813227619"
+        },
+        {
+          "file": "packages/frontend/tailwind.config.ts",
+          "hash": "3655220359568002042"
+        },
+        {
+          "file": "packages/frontend/tsconfig.json",
+          "hash": "10198612799611492853"
+        }
+      ]
+    }
+  }
+}

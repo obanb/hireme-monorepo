@@ -1,0 +1,16 @@
+.idea
+.vscode
+coverage
+dist
+lib
+build
+node_modules
+
+.env
+.npmrc
+.yarnrc
+
+yarn-error.log
+package-lock.json
+lerna-debug.log
+*.tgz

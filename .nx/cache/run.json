@@ -1,0 +1,43 @@
+{
+  "run": {
+    "command": "cli run build",
+    "startTime": "2025-01-26T16:20:31.348Z",
+    "endTime": "2025-01-26T16:20:53.855Z",
+    "inner": false
+  },
+  "tasks": [
+    {
+      "taskId": "common:build",
+      "target": "build",
+      "projectName": "common",
+      "hash": "402248101152361910",
+      "startTime": "2025-01-26T16:20:31.366Z",
+      "endTime": "2025-01-26T16:20:35.184Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 0
+    },
+    {
+      "taskId": "api:build",
+      "target": "build",
+      "projectName": "api",
+      "hash": "9385973212740666604",
+      "startTime": "2025-01-26T16:20:35.192Z",
+      "endTime": "2025-01-26T16:20:37.223Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 0
+    },
+    {
+      "taskId": "frontend:build",
+      "target": "build",
+      "projectName": "frontend",
+      "hash": "9355289341267942457",
+      "startTime": "2025-01-26T16:20:35.192Z",
+      "endTime": "2025-01-26T16:20:53.852Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 0
+    }
+  ]
+}
