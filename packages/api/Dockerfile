@@ -22,7 +22,7 @@ COPY --from=build /usr/src/app/node_modules ./node_modules
 
 WORKDIR api
 
-RUN yarn run build
+RUN yarn build
 
 EXPOSE 8080
 
