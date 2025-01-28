@@ -1,29 +1,29 @@
 {
   "run": {
-    "command": "cli run build",
-    "startTime": "2025-01-28T16:06:11.008Z",
-    "endTime": "2025-01-28T16:06:36.131Z",
+    "command": "nx run-many --target=build --all",
+    "startTime": "2025-01-28T16:10:59.325Z",
+    "endTime": "2025-01-28T16:11:18.795Z",
     "inner": false
   },
   "tasks": [
     {
-      "taskId": "common:build",
+      "taskId": "api:build",
       "target": "build",
-      "projectName": "common",
-      "hash": "402248101152361910",
-      "startTime": "2025-01-28T16:06:11.028Z",
-      "endTime": "2025-01-28T16:06:14.723Z",
+      "projectName": "api",
+      "hash": "14099827874084450626",
+      "startTime": "2025-01-28T16:10:59.347Z",
+      "endTime": "2025-01-28T16:11:01.673Z",
       "params": "",
       "cacheStatus": "cache-miss",
       "status": 0
     },
     {
-      "taskId": "api:build",
+      "taskId": "common:build",
       "target": "build",
-      "projectName": "api",
-      "hash": "10483367272878411360",
-      "startTime": "2025-01-28T16:06:14.731Z",
-      "endTime": "2025-01-28T16:06:16.679Z",
+      "projectName": "common",
+      "hash": "402248101152361910",
+      "startTime": "2025-01-28T16:10:59.347Z",
+      "endTime": "2025-01-28T16:11:03.840Z",
       "params": "",
       "cacheStatus": "cache-miss",
       "status": 0
@@ -33,8 +33,8 @@
       "target": "build",
       "projectName": "frontend",
       "hash": "9355289341267942457",
-      "startTime": "2025-01-28T16:06:14.731Z",
-      "endTime": "2025-01-28T16:06:36.128Z",
+      "startTime": "2025-01-28T16:10:59.347Z",
+      "endTime": "2025-01-28T16:11:18.792Z",
       "params": "",
       "cacheStatus": "cache-miss",
       "status": 0
