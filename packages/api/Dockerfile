@@ -8,7 +8,7 @@ COPY . /usr/src/app
 
 RUN yarn install
 
-RUN yarn nx run-many --target=build --all
+RUN npx lerna run build --stream
 
 FROM node:20.18-alpine3.20 AS production
 
