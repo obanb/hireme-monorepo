@@ -8,6 +8,9 @@ COPY . /usr/src/app
 
 RUN yarn install
 
+WORKDIR /usr/src/app/packages/api
+
+RUN yarn build
 FROM node:20.18-alpine3.20 AS production
 
 ARG NODE_ENV=production
