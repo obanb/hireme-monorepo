@@ -22,6 +22,8 @@ COPY --from=build /usr/src/app/node_modules ./node_modules
 
 WORKDIR api
 
+RUN yarn run build
+
 EXPOSE 8080
 
 CMD ["node", "dist/index.js"]

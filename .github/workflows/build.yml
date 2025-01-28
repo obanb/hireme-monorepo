@@ -27,8 +27,8 @@ jobs:
           TAG=main-${{ github.sha }}
           docker build -t archie789docker/api:$TAG -f packages/api/Dockerfile .
           docker push archie789docker/api:$TAG
-          docker build -t archie789docker/frontend:$TAG -f packages/frontend/Dockerfile .
-          docker push archie789docker/frontend:$TAG
+#          docker build -t archie789docker/frontend:$TAG -f packages/frontend/Dockerfile .
+#          docker push archie789docker/frontend:$TAG
 
       - name: Install Helm
         run: |
@@ -50,8 +50,8 @@ jobs:
             --set image.repository=archie789docker/api \
             --set image.tag=main-${{ github.sha }}
 
-      - name: Deploy Frontend with Helm
-        run: |
-          helm upgrade --install frontend ./charts/frontend \
-            --set image.repository=archie789docker/frontend \
-            --set image.tag=main-${{ github.sha }}
+#      - name: Deploy Frontend with Helm
+#       run: |
+#          helm upgrade --install frontend ./charts/frontend \
+#            --set image.repository=archie789docker/frontend \
+#            --set image.tag=main-${{ github.sha }}
