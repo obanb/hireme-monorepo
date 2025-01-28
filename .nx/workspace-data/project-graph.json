@@ -8560,6 +8560,11 @@
     "api": [
       {
         "source": "api",
+        "target": "npm:@types/express",
+        "type": "static"
+      },
+      {
+        "source": "api",
         "target": "npm:@types/node",
         "type": "static"
       },
@@ -8571,11 +8576,6 @@
       {
         "source": "api",
         "target": "npm:typescript",
-        "type": "static"
-      },
-      {
-        "source": "api",
-        "target": "npm:@types/express",
         "type": "static"
       },
       {

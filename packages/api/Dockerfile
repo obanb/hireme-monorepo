@@ -8,9 +8,8 @@ COPY . /usr/src/app
 
 RUN yarn install
 
-WORKDIR /usr/src/app/packages/api
+RUN yarn nx run-many --target=build --all
 
-RUN yarn build
 FROM node:20.18-alpine3.20 AS production
 
 ARG NODE_ENV=production
@@ -24,8 +23,6 @@ COPY --from=build /usr/src/app/node_modules ./node_modules
 # COPY --from=build /usr/src/app/yarn.lock ./
 
 WORKDIR api
-
-RUN yarn build
 
 EXPOSE 8080
 
