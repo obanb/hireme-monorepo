@@ -1,7 +1,7 @@
 replicaCount: 2
 image:
   repository: archie789docker/hireme
-  tag: api-latest-3
+  tag: api-latest
   pullPolicy: IfNotPresent
 
 service:
