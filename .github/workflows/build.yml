@@ -34,16 +34,14 @@ jobs:
         run: |
           curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
-      - name: Set up GCloud
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          credentials_json: ${{ secrets.GCLOUD_AUTH }}
-
       -   name: Login
-          uses: google-github-actions/setup-gcloud@v2
+          uses: google-github-actions/setup-gcloud@v0
           with:
             project_id: ${{ secrets.GCLOUD_PROJECT_ID }}
             service_account_key: ${{ secrets.GCLOUD_AUTH }}
+
+      -   name: Configure Docker
+          run: gcloud auth configure-docker --quiet
 
 #      - name: Configure GKE Cluster
 #        run: gcloud container clusters get-credentials gke_black-skyline-448810-r4_europe-west1_autopilot-cluster-1 --zone europe-west1
