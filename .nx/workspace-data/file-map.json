@@ -6,48 +6,48 @@
   "fileMap": {
     "nonProjectFiles": [
       {
-        "file": ".helm/hireme/charts/api/values.yaml",
-        "hash": "8058094042502705954"
-      },
-      {
-        "file": "yarn.lock",
-        "hash": "10945864330021056895"
-      },
-      {
-        "file": ".helm/hireme/charts/api/templates/deployment.yaml",
-        "hash": "6339115225031968573"
-      },
-      {
-        "file": "nx.json",
-        "hash": "13096541334647236566"
-      },
-      {
         "file": "lerna.json",
         "hash": "9665198490292609539"
+      },
+      {
+        "file": ".github/workflows/build.yml",
+        "hash": "9616736126688593826"
+      },
+      {
+        "file": ".helm/hireme/charts/api/templates/service.yaml",
+        "hash": "9163540145955059801"
+      },
+      {
+        "file": ".helm/hireme/charts/api/values.yaml",
+        "hash": "8058094042502705954"
       },
       {
         "file": ".helm/hireme/charts/frontend/values.yaml",
         "hash": "9586097652911932551"
       },
       {
-        "file": ".helm/hireme/charts/frontend/templates/service.yaml",
-        "hash": "2924549744881311385"
+        "file": ".helm/hireme/charts/frontend/Chart.yaml",
+        "hash": "1343225409887802358"
+      },
+      {
+        "file": ".helm/hireme/charts/api/Chart.yaml",
+        "hash": "10664066977391376717"
+      },
+      {
+        "file": ".helm/hireme/charts/api/templates/deployment.yaml",
+        "hash": "6339115225031968573"
       },
       {
         "file": ".helm/hireme/Chart.yaml",
         "hash": "16097259628781862923"
       },
       {
-        "file": ".helm/hireme/charts/frontend/Chart.yaml",
-        "hash": "1343225409887802358"
-      },
-      {
         "file": ".gitignore",
         "hash": "17998652997554323467"
       },
       {
-        "file": ".github/workflows/build.yml",
-        "hash": "14172718806288392600"
+        "file": "yarn.lock",
+        "hash": "10945864330021056895"
       },
       {
         "file": ".helm/hireme/charts/frontend/templates/deployment.yaml",
@@ -58,12 +58,12 @@
         "hash": "13538092262847923842"
       },
       {
-        "file": ".helm/hireme/charts/api/Chart.yaml",
-        "hash": "10664066977391376717"
+        "file": "nx.json",
+        "hash": "13096541334647236566"
       },
       {
-        "file": ".helm/hireme/charts/api/templates/service.yaml",
-        "hash": "9163540145955059801"
+        "file": ".helm/hireme/charts/frontend/templates/service.yaml",
+        "hash": "2924549744881311385"
       }
     ],
     "projectFileMap": {
