@@ -43,6 +43,7 @@ jobs:
         with:
           project_id: 'black-skyline-448810-r4'
           workload_identity_provider: 'projects/983170717422/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
+          service_account: 'github-action@black-skyline-448810-r4.iam.gserviceaccount.com'
 
 
       -   name: Configure Docker
