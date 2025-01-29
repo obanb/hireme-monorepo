@@ -44,6 +44,7 @@ jobs:
           project_id: 'black-skyline-448810-r4'
           workload_identity_provider: 'projects/983170717422/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
 
+
       -   name: Configure Docker
           run: gcloud auth configure-docker --quiet
 
