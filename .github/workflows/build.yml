@@ -50,7 +50,6 @@ jobs:
 #      - name: Configure GKE Cluster
 #        run: gcloud container clusters get-credentials gke_black-skyline-448810-r4_europe-west1_autopilot-cluster-1 --zone europe-west1
 
-
       - name: Deploy API with Helm
         run: |
           helm upgrade --install api ./charts/api \
