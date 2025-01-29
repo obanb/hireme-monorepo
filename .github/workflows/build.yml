@@ -46,9 +46,6 @@ jobs:
           service_account: 'github-action@black-skyline-448810-r4.iam.gserviceaccount.com'
 
 
-      -   name: Configure Docker
-          run: gcloud auth configure-docker --quiet
-
       - name: Configure GKE Cluster
         run: gcloud container clusters get-credentials autopilot-cluster-1 --zone europe-west1
 
@@ -58,6 +55,9 @@ jobs:
           with:
             project_id: 'black-skyline-448810-r4'
             install_components: 'gke-gcloud-auth-plugin'
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker --quiet
 
       - name: Deploy API with Helm
         run: |
