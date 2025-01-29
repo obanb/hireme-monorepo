@@ -51,7 +51,7 @@ jobs:
 
       - name: Install gke-gcloud-auth-plugin
         run: |
-          gcloud components install gke-gcloud-auth-plugin --quietn
+          gcloud components install gke-gcloud-auth-plugin --quiet
 
       - name: Configure GKE Cluster
         run: gcloud container clusters get-credentials autopilot-cluster-1 --zone europe-west1
