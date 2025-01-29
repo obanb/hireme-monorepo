@@ -51,10 +51,10 @@ jobs:
 
 
       - name: Install the gcloud CLI
-          uses: google-github-actions/setup-gcloud@v2
-          with:
-            project_id: 'black-skyline-448810-r4'
-            install_components: 'gke-gcloud-auth-plugin'
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: 'black-skyline-448810-r4'
+          install_components: 'gke-gcloud-auth-plugin'
 
       - name: Configure Docker
         run: gcloud auth configure-docker --quiet
