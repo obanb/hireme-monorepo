@@ -10,9 +10,13 @@ jobs:
     if: "contains(github.event.head_commit.message, 'CI push')"
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -34,11 +38,12 @@ jobs:
         run: |
           curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
-      -   name: Login
-          uses: google-github-actions/setup-gcloud@v2
-          with:
-            project_id: ${{ secrets.GCLOUD_PROJECT_ID }}
-            service_account_key: ${{ secrets.GCLOUD_AUTH }}
+      - name: Authenticate with GCP
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: 'black-skyline-448810-r4'
+          workload_identity_provider: 'projects/983170717422/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
+
 
       -   name: Configure Docker
           run: gcloud auth configure-docker --quiet
