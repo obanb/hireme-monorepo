@@ -26,11 +26,11 @@ jobs:
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-#      - name: Build and Push Docker Images
-#        run: |
-#          TAG=main-${{ github.sha }}
-#          docker build -t archie789docker/api:$TAG -f packages/api/Dockerfile .
-#          docker push archie789docker/api:$TAG
+      - name: Build and Push Docker Images
+        run: |
+          TAG=main-${{ github.sha }}
+          docker build -t archie789docker/api:$TAG -f packages/api/Dockerfile .
+          docker push archie789docker/api:$TAG
 #          docker build -t archie789docker/frontend:$TAG -f packages/frontend/Dockerfile .
 #          docker push archie789docker/frontend:$TAG
 
@@ -46,22 +46,23 @@ jobs:
           service_account: 'github-action@black-skyline-448810-r4.iam.gserviceaccount.com'
 
 
-      - name: Configure GKE Cluster
-        run: gcloud container clusters get-credentials autopilot-cluster-1 --zone europe-west1
-
-
       - name: Install the gcloud CLI
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: 'black-skyline-448810-r4'
           install_components: 'gke-gcloud-auth-plugin'
 
+
+      - name: Configure GKE Cluster
+        run: gcloud container clusters get-credentials autopilot-cluster-1 --zone europe-west1
+
       - name: Configure Docker
         run: gcloud auth configure-docker --quiet
 
       - name: Deploy API with Helm
         run: |
-          helm upgrade --install api ./charts/api \
+          cd .helm/hireme
+          helm upgrade --install api charts/api \
             --set image.repository=archie789docker/api \
             --set image.tag=main-${{ github.sha }}
 
