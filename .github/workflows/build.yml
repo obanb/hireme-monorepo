@@ -29,12 +29,10 @@ jobs:
       - name: Build and Push Docker Images
         run: |
           TAG=main-${{ github.sha }}
-
           docker build -t ${{ secrets.DOCKER_REPO }}/api:$TAG -f packages/api/Dockerfile .
           docker push ${{ secrets.DOCKER_REPO }}/api:$TAG
-
-          docker build -t archie789docker/frontend:$TAG -f packages/frontend/Dockerfile .
-          docker push archie789docker/frontend:$TAG
+          docker build -t ${{ secrets.DOCKER_REPO }}/frontend:$TAG -f packages/frontend/Dockerfile .
+          docker push ${{ secrets.DOCKER_REPO }}/frontend:$TAG
 
       - name: Install Helm
         run: |
