@@ -29,10 +29,12 @@ jobs:
       - name: Build and Push Docker Images
         run: |
           TAG=main-${{ github.sha }}
-          docker build -t archie789docker/api:$TAG -f packages/api/Dockerfile .
-          docker push archie789docker/api:$TAG
-#          docker build -t archie789docker/frontend:$TAG -f packages/frontend/Dockerfile .
-#          docker push archie789docker/frontend:$TAG
+
+          docker build -t ${{ secrets.DOCKER_REPO }}/api:$TAG -f packages/api/Dockerfile .
+          docker push ${{ secrets.DOCKER_REPO }}/api:$TAG
+
+          docker build -t archie789docker/frontend:$TAG -f packages/frontend/Dockerfile .
+          docker push archie789docker/frontend:$TAG
 
       - name: Install Helm
         run: |
@@ -41,20 +43,20 @@ jobs:
       - name: Authenticate with GCP
         uses: google-github-actions/auth@v2
         with:
-          project_id: 'black-skyline-448810-r4'
-          workload_identity_provider: 'projects/983170717422/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
-          service_account: 'github-action@black-skyline-448810-r4.iam.gserviceaccount.com'
+          project_id: ${{ secrets.GCLOUD_PROJECT_ID }}
+          workload_identity_provider: ${{ secrets.GCLOUD_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCLOUD_SERVICE_ACCOUNT }}
 
 
       - name: Install the gcloud CLI
         uses: google-github-actions/setup-gcloud@v2
         with:
-          project_id: 'black-skyline-448810-r4'
+          project_id: ${{ secrets.GCLOUD_PROJECT_ID }}
           install_components: 'gke-gcloud-auth-plugin'
 
 
       - name: Configure GKE Cluster
-        run: gcloud container clusters get-credentials autopilot-cluster-1 --zone europe-west1
+        run: gcloud container clusters get-credentials ${{ secrets.GCLOUD_CLUSTER }} --zone europe-west1
 
       - name: Configure Docker
         run: gcloud auth configure-docker --quiet
@@ -63,11 +65,11 @@ jobs:
         run: |
           cd .helm/hireme
           helm upgrade --install api charts/api \
-            --set image.repository=archie789docker/api \
+            --set image.repository=${{ secrets.DOCKER_REPO }}/api \
             --set image.tag=main-${{ github.sha }}
 
-#      - name: Deploy Frontend with Helm
-#       run: |
-#          helm upgrade --install frontend ./charts/frontend \
-#            --set image.repository=archie789docker/frontend \
-#            --set image.tag=main-${{ github.sha }}
+      - name: Deploy Frontend with Helm
+       run: |
+          helm upgrade --install frontend ./charts/frontend \
+            --set image.repository=${{ secrets.DOCKER_REPO }}/frontend \
+            --set image.tag=main-${{ github.sha }}

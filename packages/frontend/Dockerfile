@@ -14,14 +14,14 @@ FROM node:20.18-alpine3.20 AS production
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
-ENV PORT=8080
+ENV PORT=3000
 
 WORKDIR /usr/src/app
 
 COPY --from=build /usr/src/app .
 
-WORKDIR packages/api
+WORKDIR packages/frontend
 
-EXPOSE 8080
+EXPOSE 3000
 
-CMD ["node", "dist/index.js"]
+CMD yarn run start
