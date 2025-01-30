@@ -70,6 +70,7 @@ jobs:
 
       - name: Deploy Frontend with Helm
         run: |
-          helm upgrade --install frontend ./charts/frontend \
+          cd .helm/hireme
+          helm upgrade --install frontend charts/frontend \
             --set image.repository=${{ secrets.DOCKER_REPO }}/frontend \
             --set image.tag=main-${{ github.sha }}
