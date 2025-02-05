@@ -31,6 +31,8 @@ jobs:
           TAG=main-${{ github.sha }}
           docker build -t ${{ secrets.DOCKER_REPO }}/api:$TAG -f packages/api/Dockerfile .
           docker push ${{ secrets.DOCKER_REPO }}/api:$TAG
+          docker build -t ${{ secrets.DOCKER_REPO }}/llm:$TAG -f packages/llm/Dockerfile .
+          docker push ${{ secrets.DOCKER_REPO }}/llm:$TAG
           docker build -t ${{ secrets.DOCKER_REPO }}/frontend:$TAG -f packages/frontend/Dockerfile .
           docker push ${{ secrets.DOCKER_REPO }}/frontend:$TAG
 
@@ -64,6 +66,13 @@ jobs:
           cd .helm/hireme
           helm upgrade --install api charts/api \
             --set image.repository=${{ secrets.DOCKER_REPO }}/api \
+            --set image.tag=main-${{ github.sha }}
+
+      - name: Deploy LLM API with Helm
+        run: |
+          cd .helm/hireme
+          helm upgrade --install llm charts/llm \
+            --set image.repository=${{ secrets.DOCKER_REPO }}/llm \
             --set image.tag=main-${{ github.sha }}
 
       - name: Deploy Frontend with Helm

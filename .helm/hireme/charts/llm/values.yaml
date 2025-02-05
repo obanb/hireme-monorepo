@@ -1,0 +1,11 @@
+replicaCount: 1
+image:
+  repository: archie789docker/hireme
+  tag: llm-latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: LoadBalancer
+  port: 8080
+
+resources: {}
