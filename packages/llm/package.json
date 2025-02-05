@@ -1,0 +1,25 @@
+{
+  "name": "llm",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "tsc && node --trace-warnings --enable-source-maps -r dotenv/config dist/index.js"
+  },
+  "keywords": [],
+  "author": "obanb",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "16.0.3",
+    "express": "^4.19.2",
+    "common": "*"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20",
+    "ts-node": "^10.9.2",
+    "typescript": "^5"
+  }
+}
