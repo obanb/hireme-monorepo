@@ -14,6 +14,9 @@
   "dependencies": {
     "dotenv": "16.0.3",
     "express": "^4.19.2",
+    "mongodb": "^6.9.0",
+    "socket.io": "^4.7.5",
+    "openai": "^4.8.0",
     "common": "*"
   },
   "devDependencies": {
