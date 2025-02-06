@@ -20,7 +20,7 @@ export const startServer = async () => {
     app.use(express.json({ limit: '1mb' }));
 
     app.get('/hello', (req, res) => {
-        res.json({"hello":"from helm deploy"});
+        res.json({"hello":"from llm"});
     })
 };
 
