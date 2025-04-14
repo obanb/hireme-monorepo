@@ -6,7 +6,9 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "tsc && node --trace-warnings --enable-source-maps -r dotenv/config dist/index.js"
+    "start": "tsc && node --trace-warnings --enable-source-maps -r dotenv/config dist/index.js",
+    "mcp": "node --trace-warnings --enable-source-maps -r dotenv/config dist/mcp/server.js",
+    "ollama-help": "ollama help"
   },
   "keywords": [],
   "author": "obanb",
@@ -17,6 +19,8 @@
     "mongodb": "^6.9.0",
     "socket.io": "^4.7.5",
     "openai": "^4.8.0",
+    "ollama": "^0.5.14",
+    "@modelcontextprotocol/sdk" : "1.9.0",
     "common": "*"
   },
   "devDependencies": {
