@@ -4,68 +4,6 @@
   "pathMappings": {},
   "nxJsonPlugins": [],
   "fileMap": {
-    "nonProjectFiles": [
-      {
-        "file": "nx.json",
-        "hash": "13096541334647236566"
-      },
-      {
-        "file": "package.json",
-        "hash": "13538092262847923842"
-      },
-      {
-        "file": ".helm/hireme/charts/frontend/templates/service.yaml",
-        "hash": "2924549744881311385"
-      },
-      {
-        "file": ".helm/hireme/charts/api/values.yaml",
-        "hash": "8058094042502705954"
-      },
-      {
-        "file": ".helm/hireme/charts/api/templates/deployment.yaml",
-        "hash": "6339115225031968573"
-      },
-      {
-        "file": ".helm/hireme/charts/api/Chart.yaml",
-        "hash": "10664066977391376717"
-      },
-      {
-        "file": ".helm/hireme/charts/frontend/Chart.yaml",
-        "hash": "1343225409887802358"
-      },
-      {
-        "file": ".gitignore",
-        "hash": "17998652997554323467"
-      },
-      {
-        "file": ".helm/hireme/charts/api/templates/service.yaml",
-        "hash": "9163540145955059801"
-      },
-      {
-        "file": ".helm/hireme/Chart.yaml",
-        "hash": "16097259628781862923"
-      },
-      {
-        "file": "yarn.lock",
-        "hash": "10945864330021056895"
-      },
-      {
-        "file": ".helm/hireme/charts/frontend/values.yaml",
-        "hash": "9586097652911932551"
-      },
-      {
-        "file": ".helm/hireme/charts/frontend/templates/deployment.yaml",
-        "hash": "16459225983190401445"
-      },
-      {
-        "file": "lerna.json",
-        "hash": "9665198490292609539"
-      },
-      {
-        "file": ".github/workflows/build.yml",
-        "hash": "3132971495219301200"
-      }
-    ],
     "projectFileMap": {
       "common": [
         {
@@ -129,19 +67,11 @@
         },
         {
           "file": "packages/api/Dockerfile",
-          "hash": "12545587212743345609"
+          "hash": "581610828898500851"
         },
         {
           "file": "packages/api/README.md",
           "hash": "3244421341483603138"
-        },
-        {
-          "file": "packages/api/k8s/deployment.yaml",
-          "hash": "17813136159058991235"
-        },
-        {
-          "file": "packages/api/k8s/service.yaml",
-          "hash": "10429761346300120194"
         },
         {
           "file": "packages/api/package.json",
@@ -158,17 +88,81 @@
         },
         {
           "file": "packages/api/src/index.ts",
-          "hash": "1173094494754648532"
+          "hash": "3984135048136571298"
         },
         {
           "file": "packages/api/tsconfig.json",
           "hash": "16715011573561789016"
         }
       ],
+      "llm": [
+        {
+          "file": "packages/llm/Dockerfile",
+          "hash": "13431577809865089968"
+        },
+        {
+          "file": "packages/llm/README.md",
+          "hash": "12793896410993987779"
+        },
+        {
+          "file": "packages/llm/__tests__/llm.test.js",
+          "hash": "15237116888317581482"
+        },
+        {
+          "file": "packages/llm/package.json",
+          "hash": "85374748665764924",
+          "deps": [
+            "npm:@types/express",
+            "npm:@types/node",
+            "npm:ts-node",
+            "npm:typescript",
+            "npm:dotenv",
+            "npm:express",
+            "npm:mongodb",
+            "npm:socket.io",
+            "npm:openai",
+            "npm:ollama",
+            "npm:@modelcontextprotocol/sdk",
+            "common"
+          ]
+        },
+        {
+          "file": "packages/llm/src/index.ts",
+          "hash": "17499593591960198606"
+        },
+        {
+          "file": "packages/llm/src/mcp/server.ts",
+          "hash": "13759653124547558592"
+        },
+        {
+          "file": "packages/llm/src/ollama/gemma.ts",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/llm/src/openai/index.ts",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/llm/src/openai/openaiClient.ts",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/llm/src/rag/atlas-vector-search.ts",
+          "hash": "1377494346201557352"
+        },
+        {
+          "file": "packages/llm/tsconfig.json",
+          "hash": "16715011573561789016"
+        }
+      ],
       "frontend": [
         {
           "file": "packages/frontend/.gitignore",
-          "hash": "1867017717006394117"
+          "hash": "6194208029448391336"
+        },
+        {
+          "file": "packages/frontend/Dockerfile",
+          "hash": "12496371316234150782"
         },
         {
           "file": "packages/frontend/README.md",
@@ -239,7 +233,7 @@
         },
         {
           "file": "packages/frontend/src/app/page.tsx",
-          "hash": "9336170553813227619"
+          "hash": "16071577927263012808"
         },
         {
           "file": "packages/frontend/tailwind.config.ts",
@@ -250,6 +244,84 @@
           "hash": "10198612799611492853"
         }
       ]
-    }
+    },
+    "nonProjectFiles": [
+      {
+        "file": ".github/workflows/build.yml",
+        "hash": "5274105492588655244"
+      },
+      {
+        "file": ".gitignore",
+        "hash": "17998652997554323467"
+      },
+      {
+        "file": ".helm/hireme/Chart.yaml",
+        "hash": "16097259628781862923"
+      },
+      {
+        "file": ".helm/hireme/charts/api/Chart.yaml",
+        "hash": "10664066977391376717"
+      },
+      {
+        "file": ".helm/hireme/charts/api/templates/deployment.yaml",
+        "hash": "6339115225031968573"
+      },
+      {
+        "file": ".helm/hireme/charts/api/templates/service.yaml",
+        "hash": "9163540145955059801"
+      },
+      {
+        "file": ".helm/hireme/charts/api/values.yaml",
+        "hash": "8058094042502705954"
+      },
+      {
+        "file": ".helm/hireme/charts/frontend/Chart.yaml",
+        "hash": "1343225409887802358"
+      },
+      {
+        "file": ".helm/hireme/charts/frontend/templates/deployment.yaml",
+        "hash": "9497792898241117715"
+      },
+      {
+        "file": ".helm/hireme/charts/frontend/templates/service.yaml",
+        "hash": "2924549744881311385"
+      },
+      {
+        "file": ".helm/hireme/charts/frontend/values.yaml",
+        "hash": "8511772502979899956"
+      },
+      {
+        "file": ".helm/hireme/charts/llm/Chart.yaml",
+        "hash": "6840170690200994781"
+      },
+      {
+        "file": ".helm/hireme/charts/llm/templates/deployment.yaml",
+        "hash": "6339115225031968573"
+      },
+      {
+        "file": ".helm/hireme/charts/llm/templates/service.yaml",
+        "hash": "3985730742563740231"
+      },
+      {
+        "file": ".helm/hireme/charts/llm/values.yaml",
+        "hash": "12907457759661692071"
+      },
+      {
+        "file": "lerna.json",
+        "hash": "9665198490292609539"
+      },
+      {
+        "file": "nx.json",
+        "hash": "13096541334647236566"
+      },
+      {
+        "file": "package.json",
+        "hash": "13538092262847923842"
+      },
+      {
+        "file": "yarn.lock",
+        "hash": "16929678522132029447"
+      }
+    ]
   }
 }
