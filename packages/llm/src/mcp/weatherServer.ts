@@ -19,8 +19,6 @@ export class WeatherMcpServer extends MCPServer {
     }
 
     protected async handleRequest(request: JSONRPCRequest): Promise<void> {
-        console.log('rerrrrr')
-
         this.validateRequest(request);
 
         switch (request.method) {
