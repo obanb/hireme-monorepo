@@ -9,7 +9,7 @@
     "tools": "tsc && node --trace-warnings --enable-source-maps -r dotenv/config dist/index.js",
     "example": "node --trace-warnings --enable-source-maps -r dotenv/config dist/mcp/example.js",
     "mcp": "node --trace-warnings --enable-source-maps -r dotenv/config dist/mcp/startMcp.js",
-
+    "start": "rimraf lib && tsc && node --trace-warnings --enable-source-maps dist/index.js",
     "ollama-help": "ollama help"
   },
   "keywords": [],
@@ -17,7 +17,7 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "16.0.3",
-    "express": "^4.19.2",
+    "express": "^5.1.0",
     "mongodb": "^6.9.0",
     "socket.io": "^4.7.5",
     "openai": "^4.8.0",
