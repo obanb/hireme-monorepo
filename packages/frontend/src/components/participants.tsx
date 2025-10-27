@@ -3,7 +3,7 @@ import Image from "next/image";
 interface Participant {
     role: string;
     name: string;
-    avatar: any; // Imported image object (static import)
+    avatar: string; // Imported image object (static import)
     description: string;
     status: string;
 }

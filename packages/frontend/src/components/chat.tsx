@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import Image from "next/image";
 
 const initialMessages = [
     {
