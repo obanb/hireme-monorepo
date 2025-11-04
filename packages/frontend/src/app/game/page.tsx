@@ -1,48 +1,72 @@
 'use client';
 
+// This is a Next.js client component for our pixel art game
 import { useEffect, useRef } from "react";
-import { useControls } from "../../hooks/useControls";
-import { useNPCs } from "../../hooks/useNPCs";
-import { useCharacters } from "../../hooks/useCharacters";
-import { useGameState } from "../../hooks/useGameState";
+import { useControls } from "../../hooks/useControls";  // Hook for keyboard input
+import { useNPCs } from "../../hooks/useNPCs";           // Hook for NPC data
+import { useCharacters } from "../../hooks/useCharacters"; // Hook for drawing character sprites
+import { useGameState } from "../../hooks/useGameState";  // Hook for game state management
 
 export default function NpcCameraGame() {
+    // Reference to the canvas HTML element where we draw the game
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
+    // Get keyboard input state - tracks which keys are currently pressed
     const { keysRef } = useControls();
+    
+    // Player sprite size in pixels (64x64)
     const playerSize = 64;
+    
+    // Get all game state: player position, timing, map dimensions, obstacles, etc.
     const { playerRef, lastTimeRef, walkCycleRef, mapWidth, mapHeight, gridSize, obstacles, willCollide } = useGameState(playerSize);
+    
+    // Get NPCs array (miner and wizard)
     const { npcs } = useNPCs();
+    
+    // Get drawing functions for different characters
     const { drawPlayer, drawMiner, drawWizard, drawSpeechBubble } = useCharacters();
 
+    // useEffect runs when component mounts and sets up the game
     useEffect(() => {
         const canvas = canvasRef.current;
-        const ctx = canvas?.getContext("2d");
+        const ctx = canvas?.getContext("2d");  // Get 2D drawing context
+        
+        // Early exit if canvas not ready
         if (!canvas || !ctx) return;
 
+        // Movement speed multiplier (pixels per millisecond)
         const speed = 0.2;
 
+        // Main game loop - runs every frame (~60fps)
         function gameLoop(time: number) {
+            // Initialize lastTime on first frame to calculate delta
             if (lastTimeRef.current === 0) lastTimeRef.current = time;
+            
+            // Calculate time difference since last frame (for smooth movement regardless of framerate)
             const delta = time - lastTimeRef.current;
             lastTimeRef.current = time;
             
             if (!ctx) return;
 
+            // Movement direction variables (dx = delta x, dy = delta y)
             let dx = 0;
             let dy = 0;
             let isMoving = false;
+            
+            // Check which keys are currently pressed and calculate movement
             const keysPressed = keysRef.current;
             if (keysPressed.has("arrowright") || keysPressed.has("d")) { dx += speed * delta; isMoving = true; }
             if (keysPressed.has("arrowleft") || keysPressed.has("a")) { dx -= speed * delta; isMoving = true; }
             if (keysPressed.has("arrowdown") || keysPressed.has("s")) { dy += speed * delta; isMoving = true; }
             if (keysPressed.has("arrowup") || keysPressed.has("w")) { dy -= speed * delta; isMoving = true; }
             
+            // Update walking animation cycle if moving (increments slowly for smooth animation)
             if (isMoving) {
                 walkCycleRef.current += 0.15;
-                if (walkCycleRef.current >= 100) walkCycleRef.current = 0;
+                if (walkCycleRef.current >= 100) walkCycleRef.current  = 0; // Reset to prevent overflow
             }
 
+            // Calculate where player wants to move next
             const nextX = playerRef.current.x + dx;
             const nextY = playerRef.current.y + dy;
 
