@@ -12,9 +12,15 @@
   "author": "obanb",
   "license": "ISC",
   "dependencies": {
+    "@apollo/gateway": "^2.8.0",
+    "@apollo/server": "^4.11.0",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
     "dotenv": "16.0.3",
     "express": "^4.19.2",
-    "common": "*"
+    "graphql": "^16.9.0",
+    "common": "*",
+    "telemetry": "*"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",

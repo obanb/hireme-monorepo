@@ -1,8 +1,8 @@
-'use client';
-
+import { Suspense } from 'react';
 import HotelSidebar from '@/components/HotelSidebar';
 import DashboardStats from '@/components/DashboardStats';
 import RoomCalendar from '@/components/RoomCalendar';
+import LiveRates from './LiveRates';
 
 export default function HotelCMSDashboard() {
   return (
@@ -36,6 +36,27 @@ export default function HotelCMSDashboard() {
               </p>
             </div>
             <RoomCalendar />
+          </div>
+
+          {/* Federated Live Data */}
+          <div className="mb-8">
+            <div className="mb-4">
+              <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                Federated Live Data
+              </h2>
+              <p className="text-slate-600">
+                Server component fetching from the new GraphQL subgraph
+              </p>
+            </div>
+            <Suspense
+              fallback={
+                <div className="rounded-xl border border-slate-200 bg-white p-6 text-slate-500">
+                  Loading live hotel rates...
+                </div>
+              }
+            >
+              <LiveRates />
+            </Suspense>
           </div>
 
           {/* Recent Activity Section */}
