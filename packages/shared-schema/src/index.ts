@@ -20,3 +20,7 @@ export type {
 // Export manual types
 export * from "./types";
 
+// Export domain schemas
+export * from "./domain/base";
+export * from "./domain/reservation/reservation"; // Existing reservation schemas
+export * from "./domain/reservation/events";
