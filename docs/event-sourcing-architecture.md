@@ -17,11 +17,17 @@ graph TD
     TX -->|Insert| ES
     TX -->|Update| PROJ[Projections]
     PROJ -->|Insert/Update| RM[(Read Models \n PostgreSQL)]
+    
+    %% Async Integration
+    REL["Event Relayer \n (Polling Publisher)"] -->|Poll New Events| ES
+    REL -->|Publish| MQ["Message Broker \n (RabbitMQ)"]
+    MQ -->|Consume| EXT[External Services]
 ```
 
 ## 2. Database Schema
 
 ### 2.1 Event Store Table (`events`)
+
 This is the single source of truth.
 
 ```sql
@@ -43,6 +49,7 @@ CREATE INDEX idx_events_stream_id ON events(stream_id);
 ```
 
 ### 2.2 Read Models (Example: `reservations`)
+
 Optimized for querying. Driven by Projections.
 
 ```sql
@@ -55,9 +62,21 @@ CREATE TABLE reservations (
 );
 ```
 
+### 2.3 Event Publisher Checkpoint (`event_checkpoints`)
+
+Tracks which events have been published to the broker.
+
+```sql
+CREATE TABLE event_checkpoints (
+  id VARCHAR(50) PRIMARY KEY,       -- e.g., 'reservation-service-rabbitmq-publisher'
+  last_processed_event_id BIGINT NOT NULL
+);
+```
+
 ## 3. Code Components
 
 ### 3.1 Event Definitions (`shared-schema`)
+
 Define your events using Zod for runtime validation and static typing.
 
 ```typescript
@@ -89,6 +108,7 @@ export type ReservationEvent = z.infer<typeof ReservationEventSchema>;
 ```
 
 ### 3.2 Aggregate
+
 Pure domain logic. Reconstructs state from events.
 
 ```typescript
@@ -134,6 +154,7 @@ export class ReservationAggregate {
 ```
 
 ### 3.3 Repository (Postgres Integration)
+
 Handles loading and saving.
 
 ```typescript
@@ -191,6 +212,7 @@ class ReservationRepository {
 ```
 
 ### 3.4 Projections
+
 Translates events into Read Models.
 
 ```typescript
@@ -210,8 +232,67 @@ async function applyProjection(client: any, aggregateId: string, event: Reservat
 }
 ```
 
+### 3.5 Event Relayer (Polling Publisher)
+
+Polls the `events` table for new entries and publishes them to RabbitMQ. Ensures at-least-once delivery.
+
+```typescript
+import amqp from 'amqplib';
+
+class EventRelayer {
+  constructor(private db: Pool, private amqpUrl: string) {}
+
+  async start() {
+    const connection = await amqp.connect(this.amqpUrl);
+    const channel = await connection.createChannel();
+    await channel.assertExchange('domain_events', 'topic', { durable: true });
+
+    setInterval(() => this.processBatch(channel), 1000); // Simple polling loop
+  }
+
+  async processBatch(channel: amqp.Channel) {
+    // 1. Get Checkpoint
+    const res = await this.db.query(
+      `SELECT last_processed_event_id FROM event_checkpoints WHERE id = 'rabbitmq-publisher'`
+    );
+    const lastId = res.rows[0]?.last_processed_event_id || 0;
+
+    // 2. Fetch Unprocessed Events
+    const events = await this.db.query(
+      `SELECT id, type, data, stream_id FROM events WHERE id > $1 ORDER BY id ASC LIMIT 100`,
+      [lastId]
+    );
+
+    if (events.rows.length === 0) return;
+
+    let maxId = lastId;
+
+    for (const event of events.rows) {
+      // 3. Publish to Broker
+      const routingKey = `event.${event.type}`;
+      channel.publish(
+        'domain_events', 
+        routingKey, 
+        Buffer.from(JSON.stringify(event))
+      );
+      maxId = event.id;
+    }
+
+    // 4. Update Checkpoint
+    await this.db.query(
+      `INSERT INTO event_checkpoints (id, last_processed_event_id) 
+       VALUES ('rabbitmq-publisher', $1)
+       ON CONFLICT (id) DO UPDATE SET last_processed_event_id = $1`,
+      [maxId]
+    );
+  }
+}
+```
+
 ## 4. Best Practices Checklist
+
 - [ ] **Optimistic Concurrency**: Always use the `version` column constraint to prevent race conditions during writes.
 - [ ] **Validation**: Use Zod to ensure events in the DB match your code's expectations.
 - [ ] **Consistency**: Start with synchronous projections (in the same transaction) for simplicity. Move to async (using Postgres LISTEN/NOTIFY or queue) only if performance requires it.
+- [ ] **Idempotency**: External consumers MUST operate idempotently, as the "Polling Publisher" guarantees at-least-once delivery (events might be published twice if the script crashes before checkpointing).
 - [ ] **Immutability**: Never update or delete existing rows in the `events` table (except for rare GDPR purges).
