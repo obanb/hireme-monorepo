@@ -1,8 +1,11 @@
 /**
  * Event Sourcing Integration Tests
  *
+ * These tests run against a SEPARATE test database (postgres_test).
+ * The test database is created automatically by jest.globalSetup.ts.
+ *
  * Prerequisites:
- * - PostgreSQL running on localhost:5432 (or configure via env vars)
+ * - PostgreSQL running on localhost:5432
  * - RabbitMQ running on localhost:5672 (optional, for relayer tests)
  *
  * Run with: npm test
@@ -24,10 +27,21 @@ import {
 } from './index';
 import { config } from './config';
 
+/**
+ * Clean all test data from tables (preserves schema)
+ */
+async function cleanTestData(): Promise<void> {
+  const pool = getPool();
+  await pool.query('TRUNCATE TABLE events RESTART IDENTITY CASCADE');
+  await pool.query('TRUNCATE TABLE reservations RESTART IDENTITY CASCADE');
+  await pool.query('TRUNCATE TABLE event_checkpoints RESTART IDENTITY CASCADE');
+}
+
 describe('Event Sourcing Integration Tests', () => {
-  // Setup: Initialize database before all tests
+  // Setup: Initialize database and clean data before all tests
   beforeAll(async () => {
     await initializeDatabase();
+    await cleanTestData();
   });
 
   // Cleanup: Close connections after all tests
