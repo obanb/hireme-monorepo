@@ -91,6 +91,31 @@ export class ReservationRepository {
   }
 
   /**
+   * Confirm an existing reservation
+   */
+  async confirm(
+    id: string,
+    confirmedBy?: string
+  ): Promise<{ aggregate: ReservationAggregate; events: StoredEvent[] }> {
+    const aggregate = await this.load(id);
+
+    if (!aggregate) {
+      throw new Error(`Reservation with ID ${id} not found`);
+    }
+
+    // Execute the confirm command
+    const event = aggregate.confirm(confirmedBy);
+
+    // Save the event
+    const savedEvents = await this.save(aggregate, [event]);
+
+    // Update aggregate version
+    aggregate.version = savedEvents[savedEvents.length - 1].version;
+
+    return { aggregate, events: savedEvents };
+  }
+
+  /**
    * Cancel an existing reservation
    */
   async cancel(

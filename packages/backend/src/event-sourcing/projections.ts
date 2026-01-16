@@ -20,6 +20,9 @@ export async function applyReservationProjection(
     case 'ReservationCreated':
       await handleReservationCreated(client, streamId, event);
       break;
+    case 'ReservationConfirmed':
+      await handleReservationConfirmed(client, streamId, event);
+      break;
     case 'ReservationCancelled':
       await handleReservationCancelled(client, streamId, event);
       break;
@@ -75,13 +78,29 @@ async function handleReservationCreated(
       streamId,
       booking.originId || null,
       guestName,
-      'CONFIRMED',
+      'PENDING',
       booking.arrivalTime ? new Date(booking.arrivalTime).toISOString().split('T')[0] : null,
       booking.departureTime ? new Date(booking.departureTime).toISOString().split('T')[0] : null,
       booking.totalAmount || null,
       booking.currency || 'USD',
       event.version,
     ]
+  );
+}
+
+/**
+ * Handle ReservationConfirmed event - update the reservation status to confirmed
+ */
+async function handleReservationConfirmed(
+  client: PoolClient,
+  streamId: string,
+  event: StoredEvent
+): Promise<void> {
+  await client.query(
+    `UPDATE reservations
+     SET status = 'CONFIRMED', version = $2, updated_at = NOW()
+     WHERE id = $1`,
+    [streamId, event.version]
   );
 }
 

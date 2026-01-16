@@ -72,6 +72,9 @@ export class ReservationAggregate {
       case 'ReservationCreated':
         this.applyReservationCreated(event.data as unknown as ReservationCreatedData);
         break;
+      case 'ReservationConfirmed':
+        this.applyReservationConfirmed(event.data as unknown as ReservationConfirmedData);
+        break;
       case 'ReservationCancelled':
         this.applyReservationCancelled(event.data as unknown as ReservationCancelledData);
         break;
@@ -81,7 +84,7 @@ export class ReservationAggregate {
   }
 
   private applyReservationCreated(data: ReservationCreatedData): void {
-    this._status = 'CONFIRMED';
+    this._status = 'PENDING';
     const booking = data.bookingDetails;
     if (booking) {
       this._originId = booking.originId || null;
@@ -93,6 +96,10 @@ export class ReservationAggregate {
         this._guestName = `${booking.customer.firstName || ''} ${booking.customer.lastName || ''}`.trim() || null;
       }
     }
+  }
+
+  private applyReservationConfirmed(_data: ReservationConfirmedData): void {
+    this._status = 'CONFIRMED';
   }
 
   private applyReservationCancelled(data: ReservationCancelledData): void {
@@ -130,16 +137,43 @@ export class ReservationAggregate {
   }
 
   /**
+   * Confirm the reservation
+   * @throws Error if reservation is not pending or already confirmed/cancelled
+   */
+  confirm(confirmedBy?: string): DomainEvent {
+    if (this._status === 'CONFIRMED') {
+      throw new Error('Reservation is already confirmed');
+    }
+
+    if (this._status === 'CANCELLED') {
+      throw new Error('Cannot confirm a cancelled reservation');
+    }
+
+    const event: DomainEvent = {
+      type: 'ReservationConfirmed',
+      data: {
+        reservationId: this.id,
+        confirmedAt: new Date().toISOString(),
+        confirmedBy,
+      },
+      metadata: {
+        timestamp: new Date().toISOString(),
+      },
+    };
+
+    // Apply immediately so aggregate reflects new state
+    this.apply(event);
+
+    return event;
+  }
+
+  /**
    * Cancel the reservation
    * @throws Error if reservation is already cancelled
    */
   cancel(reason: string): DomainEvent {
     if (this._status === 'CANCELLED') {
       throw new Error('Reservation is already cancelled');
-    }
-
-    if (this._status === 'PENDING') {
-      throw new Error('Cannot cancel a pending reservation that was never confirmed');
     }
 
     const event: DomainEvent = {
@@ -166,6 +200,12 @@ export class ReservationAggregate {
 interface ReservationCreatedData {
   reservationId: string;
   bookingDetails?: BookingDetails;
+}
+
+interface ReservationConfirmedData {
+  reservationId: string;
+  confirmedAt: string;
+  confirmedBy?: string;
 }
 
 interface ReservationCancelledData {

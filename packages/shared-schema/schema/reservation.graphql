@@ -38,12 +38,22 @@ input CreateReservationInput {
   currency: String
 }
 
+input ConfirmReservationInput {
+  reservationId: ID!
+  confirmedBy: String
+}
+
 input CancelReservationInput {
   reservationId: ID!
   reason: String!
 }
 
 type CreateReservationResult {
+  reservation: Reservation!
+  events: [StoredEvent!]!
+}
+
+type ConfirmReservationResult {
   reservation: Reservation!
   events: [StoredEvent!]!
 }
@@ -61,6 +71,7 @@ extend type Query {
 
 extend type Mutation {
   createReservation(input: CreateReservationInput!): CreateReservationResult!
+  confirmReservation(input: ConfirmReservationInput!): ConfirmReservationResult!
   cancelReservation(input: CancelReservationInput!): CancelReservationResult!
   initializeEventSourcingDatabase: Boolean!
   startEventRelayer: Boolean!

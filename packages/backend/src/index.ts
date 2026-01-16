@@ -141,6 +141,28 @@ const resolvers = {
       };
     },
 
+    // Confirm an existing reservation
+    confirmReservation: async (
+      _: unknown,
+      args: { input: { reservationId: string; confirmedBy?: string } }
+    ) => {
+      const { aggregate, events } = await reservationRepository.confirm(
+        args.input.reservationId,
+        args.input.confirmedBy
+      );
+
+      const reservation = await reservationRepository.getReadModel(args.input.reservationId);
+
+      return {
+        reservation: reservation ? formatReservation(reservation) : {
+          id: args.input.reservationId,
+          status: aggregate.state.status,
+          version: aggregate.version,
+        },
+        events: events.map(formatStoredEvent),
+      };
+    },
+
     // Cancel an existing reservation
     cancelReservation: async (
       _: unknown,
