@@ -1,0 +1,68 @@
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+type Reservation {
+  id: ID!
+  originId: String
+  guestName: String
+  status: ReservationStatus!
+  checkInDate: String
+  checkOutDate: String
+  totalAmount: Float
+  currency: String
+  version: Int!
+  createdAt: String
+  updatedAt: String
+}
+
+type StoredEvent {
+  id: Int!
+  streamId: String!
+  version: Int!
+  type: String!
+  data: String!
+  metadata: String
+  occurredAt: String!
+}
+
+input CreateReservationInput {
+  originId: String
+  guestFirstName: String
+  guestLastName: String
+  checkInDate: String
+  checkOutDate: String
+  totalAmount: Float
+  currency: String
+}
+
+input CancelReservationInput {
+  reservationId: ID!
+  reason: String!
+}
+
+type CreateReservationResult {
+  reservation: Reservation!
+  events: [StoredEvent!]!
+}
+
+type CancelReservationResult {
+  reservation: Reservation!
+  events: [StoredEvent!]!
+}
+
+extend type Query {
+  reservation(id: ID!): Reservation
+  reservations(status: ReservationStatus, limit: Int, offset: Int): [Reservation!]!
+  reservationEventHistory(id: ID!): [StoredEvent!]!
+}
+
+extend type Mutation {
+  createReservation(input: CreateReservationInput!): CreateReservationResult!
+  cancelReservation(input: CancelReservationInput!): CancelReservationResult!
+  initializeEventSourcingDatabase: Boolean!
+  startEventRelayer: Boolean!
+  stopEventRelayer: Boolean!
+}

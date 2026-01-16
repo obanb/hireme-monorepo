@@ -6,6 +6,14 @@ export function getHotelSchema(): string {
   return readFileSync(join(__dirname, "../schema/hotel.graphql"), "utf-8");
 }
 
+export function getReservationSchema(): string {
+  return readFileSync(join(__dirname, "../schema/reservation.graphql"), "utf-8");
+}
+
+export function getCombinedSchema(): string {
+  return getHotelSchema() + "\n" + getReservationSchema();
+}
+
 // Re-export generated types (will be available after codegen runs)
 // Using dynamic import to handle case where generated files don't exist yet
 export type {
