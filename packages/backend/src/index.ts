@@ -10,9 +10,12 @@ import { getCombinedSchema, Hotel, QueryHotelArgs, QueryFeaturedHotelsArgs } fro
 import {
   initializeDatabase,
   reservationRepository,
+  roomRepository,
   eventRelayer,
   closePool,
   StoredEvent,
+  RoomType,
+  RoomStatus,
 } from "./event-sourcing";
 
 // Use types from shared-schema
@@ -48,6 +51,7 @@ function formatReservation(reservation: {
   checkOutDate: Date | null;
   totalAmount: number | null;
   currency: string | null;
+  roomId: string | null;
   version: number;
   createdAt: Date;
   updatedAt: Date;
@@ -61,9 +65,37 @@ function formatReservation(reservation: {
     checkOutDate: reservation.checkOutDate?.toISOString().split('T')[0] || null,
     totalAmount: reservation.totalAmount,
     currency: reservation.currency,
+    roomId: reservation.roomId,
     version: reservation.version,
     createdAt: reservation.createdAt.toISOString(),
     updatedAt: reservation.updatedAt.toISOString(),
+  };
+}
+
+// Helper to format room for GraphQL response
+function formatRoom(room: {
+  id: string;
+  name: string;
+  roomNumber: string;
+  type: RoomType;
+  capacity: number;
+  status: RoomStatus;
+  color: string;
+  version: number;
+  createdAt: Date;
+  updatedAt: Date;
+}) {
+  return {
+    id: room.id,
+    name: room.name,
+    roomNumber: room.roomNumber,
+    type: room.type,
+    capacity: room.capacity,
+    status: room.status,
+    color: room.color,
+    version: room.version,
+    createdAt: room.createdAt.toISOString(),
+    updatedAt: room.updatedAt.toISOString(),
   };
 }
 
@@ -84,10 +116,24 @@ const resolvers = {
 
     reservations: async (
       _: unknown,
-      args: { status?: string; limit?: number; offset?: number }
+      args: {
+        filter?: {
+          status?: string;
+          guestName?: string;
+          checkInFrom?: string;
+          checkInTo?: string;
+          checkOutFrom?: string;
+          checkOutTo?: string;
+          createdFrom?: string;
+          createdTo?: string;
+          currency?: string;
+        };
+        limit?: number;
+        offset?: number;
+      }
     ) => {
       const reservations = await reservationRepository.listReadModels({
-        status: args.status,
+        filter: args.filter,
         limit: args.limit,
         offset: args.offset,
       });
@@ -97,6 +143,29 @@ const resolvers = {
     reservationEventHistory: async (_: unknown, args: { id: string }) => {
       const events = await reservationRepository.getEventHistory(args.id);
       return events.map(formatStoredEvent);
+    },
+
+    // Room queries
+    room: async (_: unknown, args: { id: string }) => {
+      const room = await roomRepository.getReadModel(args.id);
+      if (!room) return null;
+      return formatRoom(room);
+    },
+
+    rooms: async (
+      _: unknown,
+      args: {
+        type?: RoomType;
+        status?: RoomStatus;
+      }
+    ) => {
+      const rooms = await roomRepository.listReadModels({
+        filter: {
+          type: args.type,
+          status: args.status,
+        },
+      });
+      return rooms.map(formatRoom);
     },
   },
 
@@ -113,6 +182,7 @@ const resolvers = {
           checkOutDate?: string;
           totalAmount?: number;
           currency?: string;
+          roomId?: string;
         };
       }
     ) => {
@@ -123,6 +193,7 @@ const resolvers = {
         currency: args.input.currency,
         arrivalTime: args.input.checkInDate,
         departureTime: args.input.checkOutDate,
+        roomId: args.input.roomId,
         customer: {
           firstName: args.input.guestFirstName,
           lastName: args.input.guestLastName,
@@ -217,12 +288,109 @@ const resolvers = {
         return false;
       }
     },
+
+    // Create a new room
+    createRoom: async (
+      _: unknown,
+      args: {
+        input: {
+          name: string;
+          roomNumber: string;
+          type: RoomType;
+          capacity: number;
+          color?: string;
+        };
+      }
+    ) => {
+      const roomId = uuidv4();
+      const { events } = await roomRepository.create(roomId, {
+        name: args.input.name,
+        roomNumber: args.input.roomNumber,
+        type: args.input.type,
+        capacity: args.input.capacity,
+        color: args.input.color,
+      });
+
+      const room = await roomRepository.getReadModel(roomId);
+
+      return {
+        room: room ? formatRoom(room) : {
+          id: roomId,
+          name: args.input.name,
+          roomNumber: args.input.roomNumber,
+          type: args.input.type,
+          capacity: args.input.capacity,
+          status: 'AVAILABLE',
+          color: args.input.color || '#3b82f6',
+          version: 1,
+        },
+        events: events.map(formatStoredEvent),
+      };
+    },
+
+    // Update an existing room
+    updateRoom: async (
+      _: unknown,
+      args: {
+        id: string;
+        input: {
+          name?: string;
+          roomNumber?: string;
+          type?: RoomType;
+          capacity?: number;
+          color?: string;
+        };
+      }
+    ) => {
+      const { events } = await roomRepository.update(args.id, args.input);
+
+      const room = await roomRepository.getReadModel(args.id);
+
+      return {
+        room: room ? formatRoom(room) : null,
+        events: events.map(formatStoredEvent),
+      };
+    },
+
+    // Change room status
+    changeRoomStatus: async (
+      _: unknown,
+      args: {
+        input: {
+          roomId: string;
+          status: RoomStatus;
+          reason?: string;
+        };
+      }
+    ) => {
+      const { events } = await roomRepository.changeStatus(
+        args.input.roomId,
+        args.input.status,
+        args.input.reason
+      );
+
+      const room = await roomRepository.getReadModel(args.input.roomId);
+
+      return {
+        room: room ? formatRoom(room) : null,
+        events: events.map(formatStoredEvent),
+      };
+    },
   },
 
   Hotel: {
     __resolveReference(reference: { id: string }) {
       return hotels.find((hotel) => hotel.id === reference.id) ?? null;
     }
+  },
+
+  Reservation: {
+    room: async (parent: { roomId?: string | null }) => {
+      if (!parent.roomId) return null;
+      const room = await roomRepository.getReadModel(parent.roomId);
+      if (!room) return null;
+      return formatRoom(room);
+    },
   },
 };
 

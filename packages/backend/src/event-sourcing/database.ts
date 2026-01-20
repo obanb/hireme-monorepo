@@ -65,6 +65,22 @@ export async function initializeDatabase(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_events_stream_id ON events(stream_id);
     `);
 
+    // Create rooms read model table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS rooms (
+        id UUID PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        room_number VARCHAR(20) NOT NULL UNIQUE,
+        type VARCHAR(20) NOT NULL,
+        capacity INT NOT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'AVAILABLE',
+        color VARCHAR(7) NOT NULL DEFAULT '#3b82f6',
+        version INT NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
     // Create reservations read model table
     await client.query(`
       CREATE TABLE IF NOT EXISTS reservations (
@@ -76,10 +92,24 @@ export async function initializeDatabase(): Promise<void> {
         check_out_date DATE,
         total_amount DECIMAL(10,2),
         currency VARCHAR(3),
+        room_id UUID REFERENCES rooms(id),
         version INT NOT NULL DEFAULT 0,
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       );
+    `);
+
+    // Add room_id column to reservations if it doesn't exist (for existing installations)
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'reservations' AND column_name = 'room_id'
+        ) THEN
+          ALTER TABLE reservations ADD COLUMN room_id UUID REFERENCES rooms(id);
+        END IF;
+      END $$;
     `);
 
     // Create event checkpoints table for the event relayer

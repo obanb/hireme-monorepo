@@ -1,0 +1,74 @@
+enum RoomType {
+  SINGLE
+  DOUBLE
+  SUITE
+  DELUXE
+  PENTHOUSE
+}
+
+enum RoomStatus {
+  AVAILABLE
+  OCCUPIED
+  MAINTENANCE
+}
+
+type Room {
+  id: ID!
+  name: String!
+  roomNumber: String!
+  type: RoomType!
+  capacity: Int!
+  status: RoomStatus!
+  color: String!
+  version: Int!
+  createdAt: String
+  updatedAt: String
+}
+
+input CreateRoomInput {
+  name: String!
+  roomNumber: String!
+  type: RoomType!
+  capacity: Int!
+  color: String
+}
+
+input UpdateRoomInput {
+  name: String
+  roomNumber: String
+  type: RoomType
+  capacity: Int
+  color: String
+}
+
+input ChangeRoomStatusInput {
+  roomId: ID!
+  status: RoomStatus!
+  reason: String
+}
+
+type CreateRoomResult {
+  room: Room!
+  events: [StoredEvent!]!
+}
+
+type UpdateRoomResult {
+  room: Room!
+  events: [StoredEvent!]!
+}
+
+type ChangeRoomStatusResult {
+  room: Room!
+  events: [StoredEvent!]!
+}
+
+extend type Query {
+  room(id: ID!): Room
+  rooms(type: RoomType, status: RoomStatus): [Room!]!
+}
+
+extend type Mutation {
+  createRoom(input: CreateRoomInput!): CreateRoomResult!
+  updateRoom(id: ID!, input: UpdateRoomInput!): UpdateRoomResult!
+  changeRoomStatus(input: ChangeRoomStatusInput!): ChangeRoomStatusResult!
+}

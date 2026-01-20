@@ -17,6 +17,7 @@ export interface ReservationState {
   checkOutDate: string | null;
   totalAmount: number | null;
   currency: string | null;
+  roomId: string | null;
   cancellationReason: string | null;
 }
 
@@ -31,6 +32,7 @@ export class ReservationAggregate {
   private _checkOutDate: string | null = null;
   private _totalAmount: number | null = null;
   private _currency: string | null = null;
+  private _roomId: string | null = null;
   private _cancellationReason: string | null = null;
 
   constructor(id: string) {
@@ -50,6 +52,7 @@ export class ReservationAggregate {
       checkOutDate: this._checkOutDate,
       totalAmount: this._totalAmount,
       currency: this._currency,
+      roomId: this._roomId,
       cancellationReason: this._cancellationReason,
     };
   }
@@ -92,6 +95,7 @@ export class ReservationAggregate {
       this._currency = booking.currency || null;
       this._checkInDate = booking.arrivalTime || null;
       this._checkOutDate = booking.departureTime || null;
+      this._roomId = booking.roomId || null;
       if (booking.customer) {
         this._guestName = `${booking.customer.firstName || ''} ${booking.customer.lastName || ''}`.trim() || null;
       }
@@ -220,6 +224,7 @@ export interface BookingDetails {
   currency?: string;
   arrivalTime?: string;
   departureTime?: string;
+  roomId?: string;
   customer?: {
     firstName?: string;
     lastName?: string;

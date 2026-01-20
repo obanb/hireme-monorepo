@@ -13,6 +13,8 @@ type Reservation {
   checkOutDate: String
   totalAmount: Float
   currency: String
+  roomId: ID
+  room: Room
   version: Int!
   createdAt: String
   updatedAt: String
@@ -36,6 +38,7 @@ input CreateReservationInput {
   checkOutDate: String
   totalAmount: Float
   currency: String
+  roomId: ID
 }
 
 input ConfirmReservationInput {
@@ -46,6 +49,19 @@ input ConfirmReservationInput {
 input CancelReservationInput {
   reservationId: ID!
   reason: String!
+}
+
+input ReservationFilterInput {
+  status: ReservationStatus
+  guestName: String
+  checkInFrom: String
+  checkInTo: String
+  checkOutFrom: String
+  checkOutTo: String
+  createdFrom: String
+  createdTo: String
+  currency: String
+  roomId: ID
 }
 
 type CreateReservationResult {
@@ -65,7 +81,7 @@ type CancelReservationResult {
 
 extend type Query {
   reservation(id: ID!): Reservation
-  reservations(status: ReservationStatus, limit: Int, offset: Int): [Reservation!]!
+  reservations(filter: ReservationFilterInput, limit: Int, offset: Int): [Reservation!]!
   reservationEventHistory(id: ID!): [StoredEvent!]!
 }
 

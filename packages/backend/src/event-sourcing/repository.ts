@@ -66,6 +66,7 @@ export class ReservationRepository {
       currency?: string;
       arrivalTime?: string;
       departureTime?: string;
+      roomId?: string;
       customer?: {
         firstName?: string;
         lastName?: string;
@@ -156,7 +157,18 @@ export class ReservationRepository {
    * List all reservations from the read model
    */
   async listReadModels(options?: {
-    status?: string;
+    filter?: {
+      status?: string;
+      guestName?: string;
+      checkInFrom?: string;
+      checkInTo?: string;
+      checkOutFrom?: string;
+      checkOutTo?: string;
+      createdFrom?: string;
+      createdTo?: string;
+      currency?: string;
+      roomId?: string;
+    };
     limit?: number;
     offset?: number;
   }) {
@@ -164,10 +176,56 @@ export class ReservationRepository {
     const params: (string | number)[] = [];
     let query = 'SELECT * FROM reservations';
     const conditions: string[] = [];
+    const filter = options?.filter;
 
-    if (options?.status) {
-      params.push(options.status);
+    if (filter?.status) {
+      params.push(filter.status);
       conditions.push(`status = $${params.length}`);
+    }
+
+    if (filter?.guestName) {
+      params.push(`%${filter.guestName}%`);
+      conditions.push(`guest_name ILIKE $${params.length}`);
+    }
+
+    if (filter?.checkInFrom) {
+      params.push(filter.checkInFrom);
+      conditions.push(`check_in_date >= $${params.length}`);
+    }
+
+    if (filter?.checkInTo) {
+      params.push(filter.checkInTo);
+      conditions.push(`check_in_date <= $${params.length}`);
+    }
+
+    if (filter?.checkOutFrom) {
+      params.push(filter.checkOutFrom);
+      conditions.push(`check_out_date >= $${params.length}`);
+    }
+
+    if (filter?.checkOutTo) {
+      params.push(filter.checkOutTo);
+      conditions.push(`check_out_date <= $${params.length}`);
+    }
+
+    if (filter?.createdFrom) {
+      params.push(filter.createdFrom);
+      conditions.push(`created_at >= $${params.length}`);
+    }
+
+    if (filter?.createdTo) {
+      params.push(filter.createdTo);
+      conditions.push(`created_at <= $${params.length}`);
+    }
+
+    if (filter?.currency) {
+      params.push(filter.currency);
+      conditions.push(`currency = $${params.length}`);
+    }
+
+    if (filter?.roomId) {
+      params.push(filter.roomId);
+      conditions.push(`room_id = $${params.length}`);
     }
 
     if (conditions.length > 0) {
@@ -197,6 +255,7 @@ export class ReservationRepository {
       checkOutDate: row.check_out_date,
       totalAmount: row.total_amount,
       currency: row.currency,
+      roomId: row.room_id,
       version: row.version,
       createdAt: row.created_at,
       updatedAt: row.updated_at,

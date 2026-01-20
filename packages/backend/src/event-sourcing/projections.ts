@@ -47,6 +47,7 @@ async function handleReservationCreated(
       currency?: string;
       arrivalTime?: string;
       departureTime?: string;
+      roomId?: string;
       customer?: {
         firstName?: string;
         lastName?: string;
@@ -62,8 +63,8 @@ async function handleReservationCreated(
   await client.query(
     `INSERT INTO reservations (
       id, origin_id, guest_name, status, check_in_date, check_out_date,
-      total_amount, currency, version, created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+      total_amount, currency, room_id, version, created_at, updated_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
     ON CONFLICT (id) DO UPDATE SET
       origin_id = EXCLUDED.origin_id,
       guest_name = EXCLUDED.guest_name,
@@ -72,6 +73,7 @@ async function handleReservationCreated(
       check_out_date = EXCLUDED.check_out_date,
       total_amount = EXCLUDED.total_amount,
       currency = EXCLUDED.currency,
+      room_id = EXCLUDED.room_id,
       version = EXCLUDED.version,
       updated_at = NOW()`,
     [
@@ -83,6 +85,7 @@ async function handleReservationCreated(
       booking.departureTime ? new Date(booking.departureTime).toISOString().split('T')[0] : null,
       booking.totalAmount || null,
       booking.currency || 'USD',
+      booking.roomId || null,
       event.version,
     ]
   );
@@ -135,6 +138,7 @@ export async function getReservation(
   checkOutDate: Date | null;
   totalAmount: number | null;
   currency: string | null;
+  roomId: string | null;
   version: number;
   createdAt: Date;
   updatedAt: Date;
@@ -148,6 +152,7 @@ export async function getReservation(
     check_out_date: Date | null;
     total_amount: number | null;
     currency: string | null;
+    room_id: string | null;
     version: number;
     created_at: Date;
     updated_at: Date;
@@ -170,6 +175,7 @@ export async function getReservation(
     checkOutDate: row.check_out_date,
     totalAmount: row.total_amount,
     currency: row.currency,
+    roomId: row.room_id,
     version: row.version,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

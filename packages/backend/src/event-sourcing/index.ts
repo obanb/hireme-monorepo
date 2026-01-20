@@ -53,6 +53,27 @@ export {
   reservationRepository,
 } from './repository';
 
+// Room Aggregate
+export {
+  RoomAggregate,
+  type RoomState,
+  type RoomType,
+  type RoomStatus,
+  type RoomDetails,
+} from './room-aggregate';
+
+// Room Projections
+export {
+  applyRoomProjection,
+  getRoom,
+} from './room-projections';
+
+// Room Repository
+export {
+  RoomRepository,
+  roomRepository,
+} from './room-repository';
+
 // Event Relayer
 export {
   EventRelayer,
