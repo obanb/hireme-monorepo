@@ -81,6 +81,9 @@ export class ReservationAggregate {
       case 'ReservationCancelled':
         this.applyReservationCancelled(event.data as unknown as ReservationCancelledData);
         break;
+      case 'RoomAssigned':
+        this.applyRoomAssigned(event.data as unknown as RoomAssignedData);
+        break;
       default:
         console.warn(`Unknown event type: ${event.type}`);
     }
@@ -109,6 +112,10 @@ export class ReservationAggregate {
   private applyReservationCancelled(data: ReservationCancelledData): void {
     this._status = 'CANCELLED';
     this._cancellationReason = data.reason;
+  }
+
+  private applyRoomAssigned(data: RoomAssignedData): void {
+    this._roomId = data.roomId;
   }
 
   // ============ COMMANDS ============
@@ -197,6 +204,34 @@ export class ReservationAggregate {
 
     return event;
   }
+
+  /**
+   * Assign a room to the reservation
+   * @throws Error if reservation is cancelled
+   */
+  assignRoom(roomId: string): DomainEvent {
+    if (this._status === 'CANCELLED') {
+      throw new Error('Cannot assign room to a cancelled reservation');
+    }
+
+    const event: DomainEvent = {
+      type: 'RoomAssigned',
+      data: {
+        reservationId: this.id,
+        roomId,
+        previousRoomId: this._roomId,
+        assignedAt: new Date().toISOString(),
+      },
+      metadata: {
+        timestamp: new Date().toISOString(),
+      },
+    };
+
+    // Apply immediately so aggregate reflects new state
+    this.apply(event);
+
+    return event;
+  }
 }
 
 // ============ TYPE DEFINITIONS ============
@@ -216,6 +251,13 @@ interface ReservationCancelledData {
   reservationId: string;
   reason: string;
   cancelledAt: string;
+}
+
+interface RoomAssignedData {
+  reservationId: string;
+  roomId: string;
+  previousRoomId: string | null;
+  assignedAt: string;
 }
 
 export interface BookingDetails {

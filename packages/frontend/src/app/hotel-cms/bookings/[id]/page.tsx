@@ -11,6 +11,7 @@ interface Room {
   roomNumber: string;
   type: string;
   color: string;
+  status: string;
 }
 
 interface Reservation {
@@ -47,11 +48,14 @@ export default function ReservationDetailPage() {
 
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const [events, setEvents] = useState<StoredEvent[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [showRoomDialog, setShowRoomDialog] = useState(false);
+  const [selectedRoomId, setSelectedRoomId] = useState<string>('');
 
   const fetchReservation = useCallback(async () => {
     try {
@@ -135,9 +139,40 @@ export default function ReservationDetailPage() {
     }
   }, [reservationId]);
 
+  const fetchRooms = useCallback(async () => {
+    try {
+      const response = await fetch(GRAPHQL_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: `
+            query ListRooms {
+              rooms {
+                id
+                name
+                roomNumber
+                type
+                color
+                status
+              }
+            }
+          `,
+        }),
+      });
+
+      const result = await response.json();
+      if (!result.errors) {
+        setRooms(result.data?.rooms ?? []);
+      }
+    } catch {
+      // Silently fail rooms fetch
+    }
+  }, []);
+
   useEffect(() => {
     fetchReservation();
-  }, [fetchReservation]);
+    fetchRooms();
+  }, [fetchReservation, fetchRooms]);
 
   const handleConfirm = async () => {
     try {
@@ -219,6 +254,52 @@ export default function ReservationDetailPage() {
       await fetchReservation();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to cancel reservation');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleAssignRoom = async () => {
+    if (!selectedRoomId) {
+      setError('Please select a room');
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+      const response = await fetch(GRAPHQL_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: `
+            mutation AssignRoom($input: AssignRoomInput!) {
+              assignRoom(input: $input) {
+                reservation {
+                  id
+                  roomId
+                }
+              }
+            }
+          `,
+          variables: {
+            input: {
+              reservationId,
+              roomId: selectedRoomId,
+            },
+          },
+        }),
+      });
+
+      const result = await response.json();
+      if (result.errors) {
+        throw new Error(result.errors[0]?.message ?? 'Failed to assign room');
+      }
+
+      setShowRoomDialog(false);
+      setSelectedRoomId('');
+      await fetchReservation();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to assign room');
     } finally {
       setActionLoading(false);
     }
@@ -393,7 +474,20 @@ export default function ReservationDetailPage() {
 
             {/* Room Details */}
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-lg font-semibold text-slate-800 mb-4">Room</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-slate-800">Room</h2>
+                {reservation.status !== 'CANCELLED' && (
+                  <button
+                    onClick={() => {
+                      setSelectedRoomId(reservation.roomId || '');
+                      setShowRoomDialog(true);
+                    }}
+                    className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                  >
+                    {reservation.room ? 'Change' : 'Assign'}
+                  </button>
+                )}
+              </div>
               {reservation.room ? (
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
@@ -412,7 +506,17 @@ export default function ReservationDetailPage() {
                   </div>
                 </div>
               ) : (
-                <p className="text-slate-500">No room assigned</p>
+                <div className="text-center py-4">
+                  <p className="text-slate-500 mb-3">No room assigned</p>
+                  {reservation.status !== 'CANCELLED' && (
+                    <button
+                      onClick={() => setShowRoomDialog(true)}
+                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Assign Room
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -523,6 +627,82 @@ export default function ReservationDetailPage() {
                 className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
               >
                 {actionLoading ? 'Processing...' : 'Cancel Reservation'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Room Assignment Dialog */}
+      {showRoomDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-slate-800 mb-4">
+              {reservation?.room ? 'Change Room' : 'Assign Room'}
+            </h3>
+            <p className="text-slate-600 mb-4">
+              Select a room for this reservation.
+            </p>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {rooms.length === 0 ? (
+                <p className="text-slate-500 text-center py-4">No rooms available</p>
+              ) : (
+                rooms.map((room) => (
+                  <label
+                    key={room.id}
+                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      selectedRoomId === room.id
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="room"
+                      value={room.id}
+                      checked={selectedRoomId === room.id}
+                      onChange={() => setSelectedRoomId(room.id)}
+                      className="text-blue-600"
+                    />
+                    <div
+                      className="w-4 h-4 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: room.color }}
+                    />
+                    <div className="flex-1">
+                      <p className="font-medium text-slate-800">{room.name}</p>
+                      <p className="text-sm text-slate-500">
+                        #{room.roomNumber} - {room.type}
+                      </p>
+                    </div>
+                    {room.status !== 'AVAILABLE' && (
+                      <span className={`px-2 py-0.5 text-xs rounded-full ${
+                        room.status === 'OCCUPIED'
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-orange-100 text-orange-700'
+                      }`}>
+                        {room.status}
+                      </span>
+                    )}
+                  </label>
+                ))
+              )}
+            </div>
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={() => {
+                  setShowRoomDialog(false);
+                  setSelectedRoomId('');
+                }}
+                className="px-4 py-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAssignRoom}
+                disabled={actionLoading || !selectedRoomId}
+                className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {actionLoading ? 'Assigning...' : 'Assign Room'}
               </button>
             </div>
           </div>

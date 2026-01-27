@@ -142,6 +142,31 @@ export class ReservationRepository {
   }
 
   /**
+   * Assign a room to an existing reservation
+   */
+  async assignRoom(
+    id: string,
+    roomId: string
+  ): Promise<{ aggregate: ReservationAggregate; events: StoredEvent[] }> {
+    const aggregate = await this.load(id);
+
+    if (!aggregate) {
+      throw new Error(`Reservation with ID ${id} not found`);
+    }
+
+    // Execute the assign room command
+    const event = aggregate.assignRoom(roomId);
+
+    // Save the event
+    const savedEvents = await this.save(aggregate, [event]);
+
+    // Update aggregate version
+    aggregate.version = savedEvents[savedEvents.length - 1].version;
+
+    return { aggregate, events: savedEvents };
+  }
+
+  /**
    * Get a reservation from the read model (optimized for queries)
    */
   async getReadModel(id: string) {

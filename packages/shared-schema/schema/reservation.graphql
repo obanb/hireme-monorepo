@@ -51,6 +51,11 @@ input CancelReservationInput {
   reason: String!
 }
 
+input AssignRoomInput {
+  reservationId: ID!
+  roomId: ID!
+}
+
 input ReservationFilterInput {
   status: ReservationStatus
   guestName: String
@@ -79,6 +84,11 @@ type CancelReservationResult {
   events: [StoredEvent!]!
 }
 
+type AssignRoomResult {
+  reservation: Reservation!
+  events: [StoredEvent!]!
+}
+
 extend type Query {
   reservation(id: ID!): Reservation
   reservations(filter: ReservationFilterInput, limit: Int, offset: Int): [Reservation!]!
@@ -89,6 +99,7 @@ extend type Mutation {
   createReservation(input: CreateReservationInput!): CreateReservationResult!
   confirmReservation(input: ConfirmReservationInput!): ConfirmReservationResult!
   cancelReservation(input: CancelReservationInput!): CancelReservationResult!
+  assignRoom(input: AssignRoomInput!): AssignRoomResult!
   initializeEventSourcingDatabase: Boolean!
   startEventRelayer: Boolean!
   stopEventRelayer: Boolean!

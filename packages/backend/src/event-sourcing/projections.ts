@@ -26,6 +26,9 @@ export async function applyReservationProjection(
     case 'ReservationCancelled':
       await handleReservationCancelled(client, streamId, event);
       break;
+    case 'RoomAssigned':
+      await handleRoomAssigned(client, streamId, event);
+      break;
     default:
       console.warn(`Unknown event type for projection: ${event.type}`);
   }
@@ -120,6 +123,23 @@ async function handleReservationCancelled(
      SET status = 'CANCELLED', version = $2, updated_at = NOW()
      WHERE id = $1`,
     [streamId, event.version]
+  );
+}
+
+/**
+ * Handle RoomAssigned event - update the room assignment
+ */
+async function handleRoomAssigned(
+  client: PoolClient,
+  streamId: string,
+  event: StoredEvent
+): Promise<void> {
+  const data = event.data as { roomId: string };
+  await client.query(
+    `UPDATE reservations
+     SET room_id = $2, version = $3, updated_at = NOW()
+     WHERE id = $1`,
+    [streamId, data.roomId, event.version]
   );
 }
 

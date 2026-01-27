@@ -256,6 +256,29 @@ const resolvers = {
       };
     },
 
+    // Assign a room to an existing reservation
+    assignRoom: async (
+      _: unknown,
+      args: { input: { reservationId: string; roomId: string } }
+    ) => {
+      const { aggregate, events } = await reservationRepository.assignRoom(
+        args.input.reservationId,
+        args.input.roomId
+      );
+
+      const reservation = await reservationRepository.getReadModel(args.input.reservationId);
+
+      return {
+        reservation: reservation ? formatReservation(reservation) : {
+          id: args.input.reservationId,
+          status: aggregate.state.status,
+          roomId: args.input.roomId,
+          version: aggregate.version,
+        },
+        events: events.map(formatStoredEvent),
+      };
+    },
+
     // Initialize the database schema
     initializeEventSourcingDatabase: async () => {
       try {
@@ -397,6 +420,11 @@ const resolvers = {
 const schema = buildSubgraphSchema({ typeDefs, resolvers });
 
 async function startServer() {
+  // Initialize database schema (creates tables if they don't exist)
+  console.log('Initializing database schema...');
+  await initializeDatabase();
+  console.log('Database schema ready');
+
   const app = express();
   const server = new ApolloServer({ schema });
   await server.start();
