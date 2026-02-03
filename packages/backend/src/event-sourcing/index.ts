@@ -80,3 +80,46 @@ export {
   eventRelayer,
   createExampleConsumer,
 } from './event-relayer';
+
+// RoomType Aggregate
+export {
+  RoomTypeAggregate,
+  type RoomTypeState,
+  type RoomTypeDetails,
+} from './room-type-aggregate';
+
+// RoomType Projections
+export {
+  applyRoomTypeProjection,
+  getRoomType,
+  listRoomTypes,
+} from './room-type-projections';
+
+// RoomType Repository
+export {
+  RoomTypeRepository,
+  roomTypeRepository,
+} from './room-type-repository';
+
+// RateCode Aggregate
+export {
+  RateCodeAggregate,
+  type RateCodeState,
+  type RateCodeDetails,
+} from './rate-code-aggregate';
+
+// RateCode Projections
+export {
+  applyRateCodeProjection,
+  getRateCode,
+  listRateCodes,
+} from './rate-code-projections';
+
+// RateCode Repository
+export {
+  RateCodeRepository,
+  rateCodeRepository,
+} from './rate-code-repository';
+
+// Seed Data
+export { seedDefaultRoomTypes } from './seed-data';

@@ -17,6 +17,8 @@ export interface RoomState {
   capacity: number | null;
   status: RoomStatus;
   color: string;
+  roomTypeId: string | null;
+  rateCodeId: string | null;
 }
 
 export class RoomAggregate {
@@ -29,6 +31,8 @@ export class RoomAggregate {
   private _capacity: number | null = null;
   private _status: RoomStatus = 'AVAILABLE';
   private _color: string = '#3b82f6';
+  private _roomTypeId: string | null = null;
+  private _rateCodeId: string | null = null;
 
   constructor(id: string) {
     this.id = id;
@@ -46,6 +50,8 @@ export class RoomAggregate {
       capacity: this._capacity,
       status: this._status,
       color: this._color,
+      roomTypeId: this._roomTypeId,
+      rateCodeId: this._rateCodeId,
     };
   }
 
@@ -85,6 +91,8 @@ export class RoomAggregate {
     this._capacity = data.capacity;
     this._status = 'AVAILABLE';
     this._color = data.color || '#3b82f6';
+    this._roomTypeId = data.roomTypeId || null;
+    this._rateCodeId = data.rateCodeId || null;
   }
 
   private applyRoomUpdated(data: RoomUpdatedData): void {
@@ -93,6 +101,8 @@ export class RoomAggregate {
     if (data.type !== undefined) this._type = data.type;
     if (data.capacity !== undefined) this._capacity = data.capacity;
     if (data.color !== undefined) this._color = data.color;
+    if (data.roomTypeId !== undefined) this._roomTypeId = data.roomTypeId;
+    if (data.rateCodeId !== undefined) this._rateCodeId = data.rateCodeId;
   }
 
   private applyRoomStatusChanged(data: RoomStatusChangedData): void {
@@ -120,6 +130,8 @@ export class RoomAggregate {
         type: details.type,
         capacity: details.capacity,
         color: details.color || '#3b82f6',
+        roomTypeId: details.roomTypeId,
+        rateCodeId: details.rateCodeId,
       },
       metadata: {
         timestamp: new Date().toISOString(),
@@ -187,6 +199,8 @@ interface RoomCreatedData {
   type: RoomType;
   capacity: number;
   color?: string;
+  roomTypeId?: string;
+  rateCodeId?: string;
 }
 
 interface RoomUpdatedData {
@@ -196,6 +210,8 @@ interface RoomUpdatedData {
   type?: RoomType;
   capacity?: number;
   color?: string;
+  roomTypeId?: string | null;
+  rateCodeId?: string | null;
 }
 
 interface RoomStatusChangedData {
@@ -212,4 +228,6 @@ export interface RoomDetails {
   type: RoomType;
   capacity: number;
   color?: string;
+  roomTypeId?: string;
+  rateCodeId?: string;
 }

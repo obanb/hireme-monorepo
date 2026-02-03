@@ -11,11 +11,14 @@ import {
   initializeDatabase,
   reservationRepository,
   roomRepository,
+  roomTypeRepository,
+  rateCodeRepository,
   eventRelayer,
   closePool,
   StoredEvent,
   RoomType,
   RoomStatus,
+  seedDefaultRoomTypes,
 } from "./event-sourcing";
 
 // Use types from shared-schema
@@ -81,6 +84,8 @@ function formatRoom(room: {
   capacity: number;
   status: RoomStatus;
   color: string;
+  roomTypeId?: string | null;
+  rateCodeId?: string | null;
   version: number;
   createdAt: Date;
   updatedAt: Date;
@@ -93,9 +98,55 @@ function formatRoom(room: {
     capacity: room.capacity,
     status: room.status,
     color: room.color,
+    roomTypeId: room.roomTypeId || null,
+    rateCodeId: room.rateCodeId || null,
     version: room.version,
     createdAt: room.createdAt.toISOString(),
     updatedAt: room.updatedAt.toISOString(),
+  };
+}
+
+// Helper to format room type for GraphQL response
+function formatRoomType(roomType: {
+  id: string;
+  code: string;
+  name: string;
+  isActive: boolean;
+  version: number;
+  createdAt: Date;
+  updatedAt: Date;
+}) {
+  return {
+    id: roomType.id,
+    code: roomType.code,
+    name: roomType.name,
+    isActive: roomType.isActive,
+    version: roomType.version,
+    createdAt: roomType.createdAt.toISOString(),
+    updatedAt: roomType.updatedAt.toISOString(),
+  };
+}
+
+// Helper to format rate code for GraphQL response
+function formatRateCode(rateCode: {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  isActive: boolean;
+  version: number;
+  createdAt: Date;
+  updatedAt: Date;
+}) {
+  return {
+    id: rateCode.id,
+    code: rateCode.code,
+    name: rateCode.name,
+    description: rateCode.description,
+    isActive: rateCode.isActive,
+    version: rateCode.version,
+    createdAt: rateCode.createdAt.toISOString(),
+    updatedAt: rateCode.updatedAt.toISOString(),
   };
 }
 
@@ -166,6 +217,30 @@ const resolvers = {
         },
       });
       return rooms.map(formatRoom);
+    },
+
+    // RoomType queries
+    roomType: async (_: unknown, args: { id: string }) => {
+      const roomType = await roomTypeRepository.getReadModel(args.id);
+      if (!roomType) return null;
+      return formatRoomType(roomType);
+    },
+
+    roomTypes: async (_: unknown, args: { includeInactive?: boolean }) => {
+      const roomTypes = await roomTypeRepository.listReadModels(args.includeInactive ?? false);
+      return roomTypes.map(formatRoomType);
+    },
+
+    // RateCode queries
+    rateCode: async (_: unknown, args: { id: string }) => {
+      const rateCode = await rateCodeRepository.getReadModel(args.id);
+      if (!rateCode) return null;
+      return formatRateCode(rateCode);
+    },
+
+    rateCodes: async (_: unknown, args: { includeInactive?: boolean }) => {
+      const rateCodes = await rateCodeRepository.listReadModels(args.includeInactive ?? false);
+      return rateCodes.map(formatRateCode);
     },
   },
 
@@ -322,6 +397,8 @@ const resolvers = {
           type: RoomType;
           capacity: number;
           color?: string;
+          roomTypeId?: string;
+          rateCodeId?: string;
         };
       }
     ) => {
@@ -332,6 +409,8 @@ const resolvers = {
         type: args.input.type,
         capacity: args.input.capacity,
         color: args.input.color,
+        roomTypeId: args.input.roomTypeId,
+        rateCodeId: args.input.rateCodeId,
       });
 
       const room = await roomRepository.getReadModel(roomId);
@@ -345,6 +424,8 @@ const resolvers = {
           capacity: args.input.capacity,
           status: 'AVAILABLE',
           color: args.input.color || '#3b82f6',
+          roomTypeId: args.input.roomTypeId || null,
+          rateCodeId: args.input.rateCodeId || null,
           version: 1,
         },
         events: events.map(formatStoredEvent),
@@ -362,6 +443,8 @@ const resolvers = {
           type?: RoomType;
           capacity?: number;
           color?: string;
+          roomTypeId?: string;
+          rateCodeId?: string;
         };
       }
     ) => {
@@ -399,6 +482,134 @@ const resolvers = {
         events: events.map(formatStoredEvent),
       };
     },
+
+    // Create a new room type
+    createRoomType: async (
+      _: unknown,
+      args: {
+        input: {
+          code: string;
+          name: string;
+        };
+      }
+    ) => {
+      const roomTypeId = uuidv4();
+      const { events } = await roomTypeRepository.create(roomTypeId, {
+        code: args.input.code,
+        name: args.input.name,
+      });
+
+      const roomType = await roomTypeRepository.getReadModel(roomTypeId);
+
+      return {
+        roomType: roomType ? formatRoomType(roomType) : {
+          id: roomTypeId,
+          code: args.input.code,
+          name: args.input.name,
+          isActive: true,
+          version: 1,
+        },
+        events: events.map(formatStoredEvent),
+      };
+    },
+
+    // Update an existing room type
+    updateRoomType: async (
+      _: unknown,
+      args: {
+        id: string;
+        input: {
+          code?: string;
+          name?: string;
+          isActive?: boolean;
+        };
+      }
+    ) => {
+      const { events } = await roomTypeRepository.update(args.id, args.input);
+
+      const roomType = await roomTypeRepository.getReadModel(args.id);
+
+      return {
+        roomType: roomType ? formatRoomType(roomType) : null,
+        events: events.map(formatStoredEvent),
+      };
+    },
+
+    // Delete a room type (soft delete)
+    deleteRoomType: async (_: unknown, args: { id: string }) => {
+      const { events } = await roomTypeRepository.delete(args.id);
+
+      return {
+        success: true,
+        events: events.map(formatStoredEvent),
+      };
+    },
+
+    // Create a new rate code
+    createRateCode: async (
+      _: unknown,
+      args: {
+        input: {
+          code: string;
+          name: string;
+          description?: string;
+        };
+      }
+    ) => {
+      const rateCodeId = uuidv4();
+      const { events } = await rateCodeRepository.create(rateCodeId, {
+        code: args.input.code,
+        name: args.input.name,
+        description: args.input.description,
+      });
+
+      const rateCode = await rateCodeRepository.getReadModel(rateCodeId);
+
+      return {
+        rateCode: rateCode ? formatRateCode(rateCode) : {
+          id: rateCodeId,
+          code: args.input.code,
+          name: args.input.name,
+          description: args.input.description || null,
+          isActive: true,
+          version: 1,
+        },
+        events: events.map(formatStoredEvent),
+      };
+    },
+
+    // Update an existing rate code
+    updateRateCode: async (
+      _: unknown,
+      args: {
+        id: string;
+        input: {
+          code?: string;
+          name?: string;
+          description?: string;
+          isActive?: boolean;
+        };
+      }
+    ) => {
+      const { events } = await rateCodeRepository.update(args.id, args.input);
+
+      const rateCode = await rateCodeRepository.getReadModel(args.id);
+
+      return {
+        rateCode: rateCode ? formatRateCode(rateCode) : null,
+        events: events.map(formatStoredEvent),
+      };
+    },
+
+    // Delete a rate code (soft delete)
+    deleteRateCode: async (_: unknown, args: { id: string }) => {
+      const { events } = await rateCodeRepository.delete(args.id);
+
+      return {
+        success: true,
+        events: events.map(formatStoredEvent),
+      };
+    },
   },
 
   Hotel: {
@@ -415,6 +626,21 @@ const resolvers = {
       return formatRoom(room);
     },
   },
+
+  Room: {
+    roomTypeEntity: async (parent: { roomTypeId?: string | null }) => {
+      if (!parent.roomTypeId) return null;
+      const roomType = await roomTypeRepository.getReadModel(parent.roomTypeId);
+      if (!roomType) return null;
+      return formatRoomType(roomType);
+    },
+    rateCode: async (parent: { rateCodeId?: string | null }) => {
+      if (!parent.rateCodeId) return null;
+      const rateCode = await rateCodeRepository.getReadModel(parent.rateCodeId);
+      if (!rateCode) return null;
+      return formatRateCode(rateCode);
+    },
+  },
 };
 
 const schema = buildSubgraphSchema({ typeDefs, resolvers });
@@ -424,6 +650,9 @@ async function startServer() {
   console.log('Initializing database schema...');
   await initializeDatabase();
   console.log('Database schema ready');
+
+  // Seed default room types
+  await seedDefaultRoomTypes();
 
   const app = express();
   const server = new ApolloServer({ schema });

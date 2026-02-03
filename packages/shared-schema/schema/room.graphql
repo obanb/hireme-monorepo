@@ -1,3 +1,6 @@
+"""
+@deprecated Use RoomTypeEntity instead. This enum is kept for backward compatibility.
+"""
 enum RoomType {
   SINGLE
   DOUBLE
@@ -16,10 +19,17 @@ type Room {
   id: ID!
   name: String!
   roomNumber: String!
+  """
+  @deprecated Use roomTypeEntity instead
+  """
   type: RoomType!
   capacity: Int!
   status: RoomStatus!
   color: String!
+  roomTypeId: ID
+  roomTypeEntity: RoomTypeEntity
+  rateCodeId: ID
+  rateCode: RateCode
   version: Int!
   createdAt: String
   updatedAt: String
@@ -31,6 +41,8 @@ input CreateRoomInput {
   type: RoomType!
   capacity: Int!
   color: String
+  roomTypeId: ID
+  rateCodeId: ID
 }
 
 input UpdateRoomInput {
@@ -39,6 +51,8 @@ input UpdateRoomInput {
   type: RoomType
   capacity: Int
   color: String
+  roomTypeId: ID
+  rateCodeId: ID
 }
 
 input ChangeRoomStatusInput {

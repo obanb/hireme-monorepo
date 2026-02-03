@@ -48,18 +48,22 @@ async function handleRoomCreated(
     type: RoomType;
     capacity: number;
     color?: string;
+    roomTypeId?: string;
+    rateCodeId?: string;
   };
 
   await client.query(
     `INSERT INTO rooms (
-      id, name, room_number, type, capacity, status, color, version, created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+      id, name, room_number, type, capacity, status, color, room_type_id, rate_code_id, version, created_at, updated_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
     ON CONFLICT (id) DO UPDATE SET
       name = EXCLUDED.name,
       room_number = EXCLUDED.room_number,
       type = EXCLUDED.type,
       capacity = EXCLUDED.capacity,
       color = EXCLUDED.color,
+      room_type_id = EXCLUDED.room_type_id,
+      rate_code_id = EXCLUDED.rate_code_id,
       version = EXCLUDED.version,
       updated_at = NOW()`,
     [
@@ -70,6 +74,8 @@ async function handleRoomCreated(
       data.capacity,
       'AVAILABLE',
       data.color || '#3b82f6',
+      data.roomTypeId || null,
+      data.rateCodeId || null,
       event.version,
     ]
   );
@@ -90,10 +96,12 @@ async function handleRoomUpdated(
     type?: RoomType;
     capacity?: number;
     color?: string;
+    roomTypeId?: string | null;
+    rateCodeId?: string | null;
   };
 
   const updates: string[] = ['version = $2', 'updated_at = NOW()'];
-  const params: (string | number)[] = [streamId, event.version];
+  const params: (string | number | null)[] = [streamId, event.version];
 
   if (data.name !== undefined) {
     params.push(data.name);
@@ -118,6 +126,16 @@ async function handleRoomUpdated(
   if (data.color !== undefined) {
     params.push(data.color);
     updates.push(`color = $${params.length}`);
+  }
+
+  if (data.roomTypeId !== undefined) {
+    params.push(data.roomTypeId);
+    updates.push(`room_type_id = $${params.length}`);
+  }
+
+  if (data.rateCodeId !== undefined) {
+    params.push(data.rateCodeId);
+    updates.push(`rate_code_id = $${params.length}`);
   }
 
   await client.query(
@@ -160,6 +178,8 @@ export async function getRoom(
   capacity: number;
   status: RoomStatus;
   color: string;
+  roomTypeId: string | null;
+  rateCodeId: string | null;
   version: number;
   createdAt: Date;
   updatedAt: Date;
@@ -172,6 +192,8 @@ export async function getRoom(
     capacity: number;
     status: RoomStatus;
     color: string;
+    room_type_id: string | null;
+    rate_code_id: string | null;
     version: number;
     created_at: Date;
     updated_at: Date;
@@ -193,6 +215,8 @@ export async function getRoom(
     capacity: row.capacity,
     status: row.status,
     color: row.color,
+    roomTypeId: row.room_type_id,
+    rateCodeId: row.rate_code_id,
     version: row.version,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

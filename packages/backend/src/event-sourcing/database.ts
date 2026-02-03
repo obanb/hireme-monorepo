@@ -120,6 +120,59 @@ export async function initializeDatabase(): Promise<void> {
       );
     `);
 
+    // Create room_types read model table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS room_types (
+        id UUID PRIMARY KEY,
+        code VARCHAR(20) NOT NULL UNIQUE,
+        name VARCHAR(100) NOT NULL,
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        version INT NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Create rate_codes read model table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS rate_codes (
+        id UUID PRIMARY KEY,
+        code VARCHAR(20) NOT NULL UNIQUE,
+        name VARCHAR(100) NOT NULL,
+        description TEXT,
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        version INT NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Add room_type_id column to rooms if it doesn't exist
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'rooms' AND column_name = 'room_type_id'
+        ) THEN
+          ALTER TABLE rooms ADD COLUMN room_type_id UUID REFERENCES room_types(id);
+        END IF;
+      END $$;
+    `);
+
+    // Add rate_code_id column to rooms if it doesn't exist
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'rooms' AND column_name = 'rate_code_id'
+        ) THEN
+          ALTER TABLE rooms ADD COLUMN rate_code_id UUID REFERENCES rate_codes(id);
+        END IF;
+      END $$;
+    `);
+
     console.log('Database schema initialized successfully');
   } finally {
     client.release();

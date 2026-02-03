@@ -6,6 +6,20 @@ import HotelSidebar from '@/components/HotelSidebar';
 type RoomType = 'SINGLE' | 'DOUBLE' | 'SUITE' | 'DELUXE' | 'PENTHOUSE';
 type RoomStatus = 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE';
 
+interface RoomTypeEntity {
+  id: string;
+  code: string;
+  name: string;
+  isActive: boolean;
+}
+
+interface RateCode {
+  id: string;
+  code: string;
+  name: string;
+  isActive: boolean;
+}
+
 interface Room {
   id: string;
   name: string;
@@ -14,6 +28,10 @@ interface Room {
   capacity: number;
   status: RoomStatus;
   color: string;
+  roomTypeId?: string;
+  rateCodeId?: string;
+  roomTypeEntity?: RoomTypeEntity;
+  rateCode?: RateCode;
   version: number;
   createdAt?: string;
   updatedAt?: string;
@@ -25,6 +43,8 @@ interface RoomFormData {
   type: RoomType;
   capacity: number;
   color: string;
+  roomTypeId: string;
+  rateCodeId: string;
 }
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:4001/graphql';
@@ -54,10 +74,14 @@ const emptyFormData: RoomFormData = {
   type: 'DOUBLE',
   capacity: 2,
   color: DEFAULT_COLORS[0],
+  roomTypeId: '',
+  rateCodeId: '',
 };
 
 export default function RoomsPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [roomTypeEntities, setRoomTypeEntities] = useState<RoomTypeEntity[]>([]);
+  const [rateCodes, setRateCodes] = useState<RateCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -96,9 +120,33 @@ export default function RoomsPage() {
                 capacity
                 status
                 color
+                roomTypeId
+                rateCodeId
+                roomTypeEntity {
+                  id
+                  code
+                  name
+                }
+                rateCode {
+                  id
+                  code
+                  name
+                }
                 version
                 createdAt
                 updatedAt
+              }
+              roomTypes {
+                id
+                code
+                name
+                isActive
+              }
+              rateCodes {
+                id
+                code
+                name
+                isActive
               }
             }
           `,
@@ -116,6 +164,8 @@ export default function RoomsPage() {
       }
 
       setRooms(result.data?.rooms ?? []);
+      setRoomTypeEntities(result.data?.roomTypes ?? []);
+      setRateCodes(result.data?.rateCodes ?? []);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch rooms');
@@ -153,6 +203,8 @@ export default function RoomsPage() {
     setFormData({
       ...emptyFormData,
       color: DEFAULT_COLORS[rooms.length % DEFAULT_COLORS.length],
+      roomTypeId: roomTypeEntities[0]?.id ?? '',
+      rateCodeId: '',
     });
     setFormError(null);
     setIsModalOpen(true);
@@ -166,6 +218,8 @@ export default function RoomsPage() {
       type: room.type,
       capacity: room.capacity,
       color: room.color,
+      roomTypeId: room.roomTypeId ?? '',
+      rateCodeId: room.rateCodeId ?? '',
     });
     setFormError(null);
     setIsModalOpen(true);
@@ -201,6 +255,8 @@ export default function RoomsPage() {
                     capacity
                     status
                     color
+                    roomTypeId
+                    rateCodeId
                     version
                   }
                 }
@@ -214,6 +270,8 @@ export default function RoomsPage() {
                 type: formData.type,
                 capacity: formData.capacity,
                 color: formData.color,
+                roomTypeId: formData.roomTypeId || null,
+                rateCodeId: formData.rateCodeId || null,
               },
             },
           }),
@@ -243,6 +301,8 @@ export default function RoomsPage() {
                     capacity
                     status
                     color
+                    roomTypeId
+                    rateCodeId
                     version
                   }
                 }
@@ -255,6 +315,8 @@ export default function RoomsPage() {
                 type: formData.type,
                 capacity: formData.capacity,
                 color: formData.color,
+                roomTypeId: formData.roomTypeId || null,
+                rateCodeId: formData.rateCodeId || null,
               },
             },
           }),
@@ -475,6 +537,9 @@ export default function RoomsPage() {
                       Type
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Rate Code
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Capacity
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
@@ -501,9 +566,22 @@ export default function RoomsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-slate-700">
-                          {ROOM_TYPES.find((t) => t.value === room.type)?.label ?? room.type}
-                        </span>
+                        <div className="text-slate-700">
+                          {room.roomTypeEntity?.name ?? ROOM_TYPES.find((t) => t.value === room.type)?.label ?? room.type}
+                        </div>
+                        {room.roomTypeEntity && (
+                          <div className="text-xs text-slate-500">{room.roomTypeEntity.code}</div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        {room.rateCode ? (
+                          <div>
+                            <div className="text-slate-700">{room.rateCode.name}</div>
+                            <div className="text-xs text-slate-500">{room.rateCode.code}</div>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 text-sm">-</span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-slate-700">{room.capacity} guests</span>
@@ -586,10 +664,10 @@ export default function RoomsPage() {
                   />
                 </div>
 
-                {/* Room Type */}
+                {/* Room Type (Legacy) */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Room Type
+                    Room Type (Legacy)
                   </label>
                   <select
                     value={formData.type}
@@ -603,6 +681,48 @@ export default function RoomsPage() {
                     ))}
                   </select>
                 </div>
+
+                {/* Room Type Entity */}
+                {roomTypeEntities.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Room Type
+                    </label>
+                    <select
+                      value={formData.roomTypeId}
+                      onChange={(e) => setFormData({ ...formData, roomTypeId: e.target.value })}
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select room type...</option>
+                      {roomTypeEntities.map((rt) => (
+                        <option key={rt.id} value={rt.id}>
+                          {rt.name} ({rt.code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Rate Code */}
+                {rateCodes.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Rate Code
+                    </label>
+                    <select
+                      value={formData.rateCodeId}
+                      onChange={(e) => setFormData({ ...formData, rateCodeId: e.target.value })}
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select rate code (optional)...</option>
+                      {rateCodes.map((rc) => (
+                        <option key={rc.id} value={rc.id}>
+                          {rc.name} ({rc.code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 {/* Capacity */}
                 <div>

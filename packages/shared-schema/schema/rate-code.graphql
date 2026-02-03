@@ -1,0 +1,49 @@
+type RateCode {
+  id: ID!
+  code: String!
+  name: String!
+  description: String
+  isActive: Boolean!
+  version: Int!
+  createdAt: String
+  updatedAt: String
+}
+
+input CreateRateCodeInput {
+  code: String!
+  name: String!
+  description: String
+}
+
+input UpdateRateCodeInput {
+  code: String
+  name: String
+  description: String
+  isActive: Boolean
+}
+
+type CreateRateCodeResult {
+  rateCode: RateCode!
+  events: [StoredEvent!]!
+}
+
+type UpdateRateCodeResult {
+  rateCode: RateCode!
+  events: [StoredEvent!]!
+}
+
+type DeleteRateCodeResult {
+  success: Boolean!
+  events: [StoredEvent!]!
+}
+
+extend type Query {
+  rateCode(id: ID!): RateCode
+  rateCodes(includeInactive: Boolean): [RateCode!]!
+}
+
+extend type Mutation {
+  createRateCode(input: CreateRateCodeInput!): CreateRateCodeResult!
+  updateRateCode(id: ID!, input: UpdateRateCodeInput!): UpdateRateCodeResult!
+  deleteRateCode(id: ID!): DeleteRateCodeResult!
+}

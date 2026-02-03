@@ -208,19 +208,25 @@ export default function AdminDashboard() {
             <h2 className="text-xl font-bold text-slate-900 mb-6">Quick Actions</h2>
             <div className="space-y-3">
               <button className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-left">
-                ➕ Create New Reservation
+                + Create New Reservation
               </button>
               <button className="w-full px-4 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-medium text-left">
-                🏨 Add New Hotel
+                Add New Hotel
               </button>
+              <a
+                href="/room-types"
+                className="w-full px-4 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-medium text-left block"
+              >
+                Manage Room Types
+              </a>
+              <a
+                href="/rate-codes"
+                className="w-full px-4 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-medium text-left block"
+              >
+                Manage Rate Codes
+              </a>
               <button className="w-full px-4 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-medium text-left">
-                👥 Manage Users
-              </button>
-              <button className="w-full px-4 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-medium text-left">
-                📊 View Reports
-              </button>
-              <button className="w-full px-4 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-medium text-left">
-                ⚙️ System Settings
+                View Reports
               </button>
             </div>
           </div>

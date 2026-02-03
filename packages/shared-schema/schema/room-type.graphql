@@ -1,0 +1,46 @@
+type RoomTypeEntity {
+  id: ID!
+  code: String!
+  name: String!
+  isActive: Boolean!
+  version: Int!
+  createdAt: String
+  updatedAt: String
+}
+
+input CreateRoomTypeInput {
+  code: String!
+  name: String!
+}
+
+input UpdateRoomTypeInput {
+  code: String
+  name: String
+  isActive: Boolean
+}
+
+type CreateRoomTypeResult {
+  roomType: RoomTypeEntity!
+  events: [StoredEvent!]!
+}
+
+type UpdateRoomTypeResult {
+  roomType: RoomTypeEntity!
+  events: [StoredEvent!]!
+}
+
+type DeleteRoomTypeResult {
+  success: Boolean!
+  events: [StoredEvent!]!
+}
+
+extend type Query {
+  roomType(id: ID!): RoomTypeEntity
+  roomTypes(includeInactive: Boolean): [RoomTypeEntity!]!
+}
+
+extend type Mutation {
+  createRoomType(input: CreateRoomTypeInput!): CreateRoomTypeResult!
+  updateRoomType(id: ID!, input: UpdateRoomTypeInput!): UpdateRoomTypeResult!
+  deleteRoomType(id: ID!): DeleteRoomTypeResult!
+}

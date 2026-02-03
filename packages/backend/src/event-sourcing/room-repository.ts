@@ -196,6 +196,8 @@ export class RoomRepository {
       capacity: row.capacity,
       status: row.status as RoomStatus,
       color: row.color,
+      roomTypeId: row.room_type_id as string | null,
+      rateCodeId: row.rate_code_id as string | null,
       version: row.version,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
