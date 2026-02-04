@@ -123,3 +123,76 @@ export {
 
 // Seed Data
 export { seedDefaultRoomTypes } from './seed-data';
+
+// Wellness Therapist
+export {
+  WellnessTherapistAggregate,
+  type WellnessTherapistState,
+  type WellnessTherapistDetails,
+} from './wellness-therapist-aggregate';
+
+export {
+  applyWellnessTherapistProjection,
+  getWellnessTherapist,
+  listWellnessTherapists,
+} from './wellness-therapist-projections';
+
+export {
+  WellnessTherapistRepository,
+  wellnessTherapistRepository,
+} from './wellness-therapist-repository';
+
+// Wellness Room Type
+export {
+  WellnessRoomTypeAggregate,
+  type WellnessRoomTypeState,
+  type WellnessRoomTypeDetails,
+} from './wellness-room-type-aggregate';
+
+export {
+  applyWellnessRoomTypeProjection,
+  getWellnessRoomType,
+  listWellnessRoomTypes,
+} from './wellness-room-type-projections';
+
+export {
+  WellnessRoomTypeRepository,
+  wellnessRoomTypeRepository,
+} from './wellness-room-type-repository';
+
+// Wellness Service
+export {
+  WellnessServiceAggregate,
+  type WellnessServiceState,
+  type WellnessServiceDetails,
+} from './wellness-service-aggregate';
+
+export {
+  applyWellnessServiceProjection,
+  getWellnessService,
+  listWellnessServices,
+} from './wellness-service-projections';
+
+export {
+  WellnessServiceRepository,
+  wellnessServiceRepository,
+} from './wellness-service-repository';
+
+// Wellness Booking
+export {
+  WellnessBookingAggregate,
+  type WellnessBookingState,
+  type WellnessBookingDetails,
+  type WellnessBookingStatus,
+} from './wellness-booking-aggregate';
+
+export {
+  applyWellnessBookingProjection,
+  getWellnessBooking,
+  listWellnessBookings,
+} from './wellness-booking-projections';
+
+export {
+  WellnessBookingRepository,
+  wellnessBookingRepository,
+} from './wellness-booking-repository';

@@ -173,6 +173,96 @@ export async function initializeDatabase(): Promise<void> {
       END $$;
     `);
 
+    // Create wellness_therapists read model table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS wellness_therapists (
+        id UUID PRIMARY KEY,
+        code VARCHAR(100) NOT NULL,
+        name VARCHAR(200) NOT NULL,
+        service_types_bit_mask INT NOT NULL DEFAULT 0,
+        is_virtual BOOLEAN NOT NULL DEFAULT false,
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        version INT NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Create wellness_room_types read model table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS wellness_room_types (
+        id UUID PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        bit INT NOT NULL DEFAULT 0,
+        mask_value INT NOT NULL DEFAULT 1,
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        version INT NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Create wellness_services read model table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS wellness_services (
+        id UUID PRIMARY KEY,
+        name VARCHAR(200) NOT NULL,
+        price_normal DECIMAL(10,2) NOT NULL,
+        price_obe DECIMAL(10,2),
+        price_ove DECIMAL(10,2),
+        vat_charge DECIMAL(5,2) NOT NULL DEFAULT 21.0,
+        service_type_bit_mask INT NOT NULL DEFAULT 0,
+        duration INT NOT NULL DEFAULT 60,
+        pause_before INT NOT NULL DEFAULT 0,
+        pause_after INT NOT NULL DEFAULT 0,
+        needs_therapist BOOLEAN NOT NULL DEFAULT true,
+        needs_room BOOLEAN NOT NULL DEFAULT true,
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        version INT NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Fix vat_charge column if it exists with wrong precision
+    await client.query(`
+      DO $$
+      BEGIN
+        ALTER TABLE wellness_services ALTER COLUMN vat_charge TYPE DECIMAL(5,2);
+      EXCEPTION
+        WHEN undefined_table THEN NULL;
+        WHEN undefined_column THEN NULL;
+      END $$;
+    `);
+
+    // Create wellness_bookings read model table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS wellness_bookings (
+        id UUID PRIMARY KEY,
+        reservation_id UUID REFERENCES reservations(id),
+        guest_name VARCHAR(200) NOT NULL,
+        service_id UUID NOT NULL REFERENCES wellness_services(id),
+        therapist_id UUID REFERENCES wellness_therapists(id),
+        room_type_id UUID REFERENCES wellness_room_types(id),
+        scheduled_date DATE NOT NULL,
+        scheduled_time TIME NOT NULL,
+        end_time TIME NOT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'SCHEDULED',
+        notes TEXT,
+        price DECIMAL(10,2) NOT NULL,
+        version INT NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Create indexes for wellness bookings
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_wellness_bookings_date ON wellness_bookings(scheduled_date);
+      CREATE INDEX IF NOT EXISTS idx_wellness_bookings_therapist ON wellness_bookings(therapist_id);
+      CREATE INDEX IF NOT EXISTS idx_wellness_bookings_status ON wellness_bookings(status);
+    `);
+
     console.log('Database schema initialized successfully');
   } finally {
     client.release();

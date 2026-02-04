@@ -12,9 +12,13 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { name: 'Dashboard', href: '/hotel-cms', icon: '📊' },
+  { name: 'Reception', href: '/hotel-cms/reception', icon: '🛎️' },
   { name: 'Calendar', href: '/hotel-cms/calendar', icon: '📅' },
-  { name: 'Rooms', href: '/hotel-cms/rooms', icon: '🛏️' },
   { name: 'Bookings', href: '/hotel-cms/bookings', icon: '📋' },
+  { name: 'Wellness', href: '/hotel-cms/wellness', icon: '💆' },
+  { name: 'Rooms', href: '/hotel-cms/rooms', icon: '🛏️' },
+  { name: 'Room Types', href: '/hotel-cms/room-types', icon: '🏷️' },
+  { name: 'Rate Codes', href: '/hotel-cms/rate-codes', icon: '💰' },
   { name: 'Guests', href: '/hotel-cms/guests', icon: '👥' },
   { name: 'Settings', href: '/hotel-cms/settings', icon: '⚙️' },
 ];

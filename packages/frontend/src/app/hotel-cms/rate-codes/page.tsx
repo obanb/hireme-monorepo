@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
+import HotelSidebar from '@/components/HotelSidebar';
 
 interface RateCode {
   id: string;
@@ -303,23 +303,15 @@ export default function RateCodesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link
-                href="/"
-                className="text-slate-500 hover:text-slate-700 transition-colors"
-              >
-                &larr; Dashboard
-              </Link>
-              <div className="h-6 w-px bg-slate-300" />
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900">Rate Codes</h1>
-                <p className="text-sm text-slate-600 mt-1">Manage pricing rate configurations</p>
-              </div>
+    <div className="flex min-h-screen bg-slate-50">
+      <HotelSidebar />
+      <main className="flex-1 ml-64 p-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Page Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-4xl font-bold text-slate-800 mb-2">Rate Codes</h1>
+              <p className="text-slate-600">Manage pricing rate configurations</p>
             </div>
             <button
               onClick={openCreateModal}
@@ -328,179 +320,176 @@ export default function RateCodesPage() {
               + Add Rate Code
             </button>
           </div>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        {/* Success Message */}
-        {successMessage && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 flex items-center justify-between">
-            <span>{successMessage}</span>
-            <button onClick={() => setSuccessMessage(null)} className="text-green-500 hover:text-green-700">
-              &times;
-            </button>
-          </div>
-        )}
-
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center justify-between">
-            <span>{error}</span>
-            <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">
-              &times;
-            </button>
-          </div>
-        )}
-
-        {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
-          <div className="flex flex-wrap gap-4 items-center">
-            {/* Search */}
-            <div className="flex-1 min-w-[200px]">
-              <input
-                type="text"
-                placeholder="Search by code, name, or description..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+          {/* Success Message */}
+          {successMessage && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 flex items-center justify-between">
+              <span>{successMessage}</span>
+              <button onClick={() => setSuccessMessage(null)} className="text-green-500 hover:text-green-700">
+                &times;
+              </button>
             </div>
+          )}
 
-            {/* Include Inactive Toggle */}
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={includeInactive}
-                onChange={(e) => setIncludeInactive(e.target.checked)}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-              />
-              <span className="text-sm text-slate-700">Show inactive</span>
-            </label>
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center justify-between">
+              <span>{error}</span>
+              <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">
+                &times;
+              </button>
+            </div>
+          )}
 
-            {/* Refresh */}
-            <button
-              onClick={fetchRateCodes}
-              disabled={loading}
-              className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-2"
-            >
-              <span className={loading ? 'animate-spin' : ''}>&#x21bb;</span>
-              Refresh
-            </button>
+          {/* Filters */}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
+            <div className="flex flex-wrap gap-4 items-center">
+              {/* Search */}
+              <div className="flex-1 min-w-[200px]">
+                <input
+                  type="text"
+                  placeholder="Search by code, name, or description..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Include Inactive Toggle */}
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={includeInactive}
+                  onChange={(e) => setIncludeInactive(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm text-slate-700">Show inactive</span>
+              </label>
+
+              {/* Refresh */}
+              <button
+                onClick={fetchRateCodes}
+                disabled={loading}
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-2"
+              >
+                <span className={loading ? 'animate-spin' : ''}>&#x21bb;</span>
+                Refresh
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* Rate Codes Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          {loading ? (
-            <div className="p-12 text-center text-slate-500">
-              <div className="animate-pulse">Loading rate codes...</div>
-            </div>
-          ) : filteredRateCodes.length === 0 ? (
-            <div className="p-12 text-center text-slate-500">
-              <div className="text-4xl mb-4">&#x1F4B0;</div>
-              <p className="text-lg font-medium">No rate codes found</p>
-              <p className="text-sm mt-1">
-                {rateCodes.length === 0
-                  ? 'Create your first rate code to get started'
-                  : 'Try adjusting your search'}
-              </p>
-              {rateCodes.length === 0 && (
-                <button
-                  onClick={openCreateModal}
-                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  Add First Rate Code
-                </button>
-              )}
-            </div>
-          ) : (
-            <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Code
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Description
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {filteredRateCodes.map((rateCode) => (
-                  <tr key={rateCode.id} className={`hover:bg-slate-50 transition-colors ${!rateCode.isActive ? 'opacity-60' : ''}`}>
-                    <td className="px-6 py-4">
-                      <span className="font-mono text-sm bg-slate-100 px-2 py-1 rounded">
-                        {rateCode.code}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="font-medium text-slate-800">{rateCode.name}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-slate-600 text-sm">
-                        {rateCode.description || <span className="text-slate-400 italic">No description</span>}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          rateCode.isActive
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {rateCode.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => openEditModal(rateCode)}
-                          className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                        >
-                          Edit
-                        </button>
-                        {rateCode.isActive ? (
-                          <button
-                            onClick={() => setDeleteConfirm(rateCode)}
-                            className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded transition-colors"
-                          >
-                            Deactivate
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleReactivate(rateCode)}
-                            disabled={saving}
-                            className="px-3 py-1 text-sm text-green-600 hover:bg-green-50 rounded transition-colors disabled:opacity-50"
-                          >
-                            Reactivate
-                          </button>
-                        )}
-                      </div>
-                    </td>
+          {/* Rate Codes Table */}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            {loading ? (
+              <div className="p-12 text-center text-slate-500">
+                <div className="animate-pulse">Loading rate codes...</div>
+              </div>
+            ) : filteredRateCodes.length === 0 ? (
+              <div className="p-12 text-center text-slate-500">
+                <div className="text-4xl mb-4">&#x1F4B0;</div>
+                <p className="text-lg font-medium">No rate codes found</p>
+                <p className="text-sm mt-1">
+                  {rateCodes.length === 0
+                    ? 'Create your first rate code to get started'
+                    : 'Try adjusting your search'}
+                </p>
+                {rateCodes.length === 0 && (
+                  <button
+                    onClick={openCreateModal}
+                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Add First Rate Code
+                  </button>
+                )}
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Code
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Description
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {filteredRateCodes.map((rateCode) => (
+                    <tr key={rateCode.id} className={`hover:bg-slate-50 transition-colors ${!rateCode.isActive ? 'opacity-60' : ''}`}>
+                      <td className="px-6 py-4">
+                        <span className="font-mono text-sm bg-slate-100 px-2 py-1 rounded">
+                          {rateCode.code}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="font-medium text-slate-800">{rateCode.name}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-slate-600 text-sm">
+                          {rateCode.description || <span className="text-slate-400 italic">No description</span>}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            rateCode.isActive
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {rateCode.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => openEditModal(rateCode)}
+                            className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                          >
+                            Edit
+                          </button>
+                          {rateCode.isActive ? (
+                            <button
+                              onClick={() => setDeleteConfirm(rateCode)}
+                              className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded transition-colors"
+                            >
+                              Deactivate
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleReactivate(rateCode)}
+                              disabled={saving}
+                              className="px-3 py-1 text-sm text-green-600 hover:bg-green-50 rounded transition-colors disabled:opacity-50"
+                            >
+                              Reactivate
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          {/* Count */}
+          {!loading && filteredRateCodes.length > 0 && (
+            <div className="mt-4 text-sm text-slate-500 text-center">
+              Showing {filteredRateCodes.length} of {rateCodes.length} rate codes
+            </div>
           )}
         </div>
-
-        {/* Count */}
-        {!loading && filteredRateCodes.length > 0 && (
-          <div className="mt-4 text-sm text-slate-500 text-center">
-            Showing {filteredRateCodes.length} of {rateCodes.length} rate codes
-          </div>
-        )}
       </main>
 
       {/* Create/Edit Modal */}

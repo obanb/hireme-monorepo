@@ -1,0 +1,259 @@
+# Wellness Module Schema
+
+type WellnessTherapist {
+  id: ID!
+  code: String!
+  name: String!
+  serviceTypesBitMask: Int!
+  isVirtual: Boolean!
+  isActive: Boolean!
+  version: Int!
+  createdAt: String
+  updatedAt: String
+}
+
+type WellnessRoomType {
+  id: ID!
+  name: String!
+  bit: Int!
+  maskValue: Int!
+  isActive: Boolean!
+  version: Int!
+  createdAt: String
+  updatedAt: String
+}
+
+type WellnessService {
+  id: ID!
+  name: String!
+  priceNormal: Float!
+  priceOBE: Float
+  priceOVE: Float
+  vatCharge: Float!
+  serviceTypeBitMask: Int!
+  duration: Int!
+  pauseBefore: Int!
+  pauseAfter: Int!
+  needsTherapist: Boolean!
+  needsRoom: Boolean!
+  isActive: Boolean!
+  version: Int!
+  createdAt: String
+  updatedAt: String
+}
+
+enum WellnessBookingStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+type WellnessBooking {
+  id: ID!
+  reservationId: ID
+  reservation: Reservation
+  guestName: String!
+  serviceId: ID!
+  service: WellnessService
+  therapistId: ID
+  therapist: WellnessTherapist
+  roomTypeId: ID
+  roomType: WellnessRoomType
+  scheduledDate: String!
+  scheduledTime: String!
+  endTime: String!
+  status: WellnessBookingStatus!
+  notes: String
+  price: Float!
+  version: Int!
+  createdAt: String
+  updatedAt: String
+}
+
+# Inputs
+
+input CreateWellnessTherapistInput {
+  code: String!
+  name: String!
+  serviceTypesBitMask: Int
+  isVirtual: Boolean
+}
+
+input UpdateWellnessTherapistInput {
+  code: String
+  name: String
+  serviceTypesBitMask: Int
+  isVirtual: Boolean
+  isActive: Boolean
+}
+
+input CreateWellnessRoomTypeInput {
+  name: String!
+  bit: Int!
+  maskValue: Int!
+}
+
+input UpdateWellnessRoomTypeInput {
+  name: String
+  bit: Int
+  maskValue: Int
+  isActive: Boolean
+}
+
+input CreateWellnessServiceInput {
+  name: String!
+  priceNormal: Float!
+  priceOBE: Float
+  priceOVE: Float
+  vatCharge: Float!
+  serviceTypeBitMask: Int
+  duration: Int!
+  pauseBefore: Int
+  pauseAfter: Int
+  needsTherapist: Boolean
+  needsRoom: Boolean
+}
+
+input UpdateWellnessServiceInput {
+  name: String
+  priceNormal: Float
+  priceOBE: Float
+  priceOVE: Float
+  vatCharge: Float
+  serviceTypeBitMask: Int
+  duration: Int
+  pauseBefore: Int
+  pauseAfter: Int
+  needsTherapist: Boolean
+  needsRoom: Boolean
+  isActive: Boolean
+}
+
+input CreateWellnessBookingInput {
+  reservationId: ID
+  guestName: String!
+  serviceId: ID!
+  therapistId: ID
+  roomTypeId: ID
+  scheduledDate: String!
+  scheduledTime: String!
+  notes: String
+  price: Float
+}
+
+input UpdateWellnessBookingInput {
+  therapistId: ID
+  roomTypeId: ID
+  scheduledDate: String
+  scheduledTime: String
+  notes: String
+  status: WellnessBookingStatus
+}
+
+input WellnessBookingFilterInput {
+  scheduledDateFrom: String
+  scheduledDateTo: String
+  therapistId: ID
+  roomTypeId: ID
+  serviceId: ID
+  status: WellnessBookingStatus
+  guestName: String
+}
+
+# Results
+
+type CreateWellnessTherapistResult {
+  therapist: WellnessTherapist!
+  events: [StoredEvent!]!
+}
+
+type UpdateWellnessTherapistResult {
+  therapist: WellnessTherapist!
+  events: [StoredEvent!]!
+}
+
+type DeleteWellnessTherapistResult {
+  success: Boolean!
+  events: [StoredEvent!]!
+}
+
+type CreateWellnessRoomTypeResult {
+  roomType: WellnessRoomType!
+  events: [StoredEvent!]!
+}
+
+type UpdateWellnessRoomTypeResult {
+  roomType: WellnessRoomType!
+  events: [StoredEvent!]!
+}
+
+type DeleteWellnessRoomTypeResult {
+  success: Boolean!
+  events: [StoredEvent!]!
+}
+
+type CreateWellnessServiceResult {
+  service: WellnessService!
+  events: [StoredEvent!]!
+}
+
+type UpdateWellnessServiceResult {
+  service: WellnessService!
+  events: [StoredEvent!]!
+}
+
+type DeleteWellnessServiceResult {
+  success: Boolean!
+  events: [StoredEvent!]!
+}
+
+type CreateWellnessBookingResult {
+  booking: WellnessBooking!
+  events: [StoredEvent!]!
+}
+
+type UpdateWellnessBookingResult {
+  booking: WellnessBooking!
+  events: [StoredEvent!]!
+}
+
+type CancelWellnessBookingResult {
+  booking: WellnessBooking!
+  events: [StoredEvent!]!
+}
+
+# Queries and Mutations
+
+extend type Query {
+  wellnessTherapist(id: ID!): WellnessTherapist
+  wellnessTherapists(includeInactive: Boolean): [WellnessTherapist!]!
+
+  wellnessRoomType(id: ID!): WellnessRoomType
+  wellnessRoomTypes(includeInactive: Boolean): [WellnessRoomType!]!
+
+  wellnessService(id: ID!): WellnessService
+  wellnessServices(includeInactive: Boolean): [WellnessService!]!
+
+  wellnessBooking(id: ID!): WellnessBooking
+  wellnessBookings(filter: WellnessBookingFilterInput): [WellnessBooking!]!
+}
+
+extend type Mutation {
+  createWellnessTherapist(input: CreateWellnessTherapistInput!): CreateWellnessTherapistResult!
+  updateWellnessTherapist(id: ID!, input: UpdateWellnessTherapistInput!): UpdateWellnessTherapistResult!
+  deleteWellnessTherapist(id: ID!): DeleteWellnessTherapistResult!
+
+  createWellnessRoomType(input: CreateWellnessRoomTypeInput!): CreateWellnessRoomTypeResult!
+  updateWellnessRoomType(id: ID!, input: UpdateWellnessRoomTypeInput!): UpdateWellnessRoomTypeResult!
+  deleteWellnessRoomType(id: ID!): DeleteWellnessRoomTypeResult!
+
+  createWellnessService(input: CreateWellnessServiceInput!): CreateWellnessServiceResult!
+  updateWellnessService(id: ID!, input: UpdateWellnessServiceInput!): UpdateWellnessServiceResult!
+  deleteWellnessService(id: ID!): DeleteWellnessServiceResult!
+
+  createWellnessBooking(input: CreateWellnessBookingInput!): CreateWellnessBookingResult!
+  updateWellnessBooking(id: ID!, input: UpdateWellnessBookingInput!): UpdateWellnessBookingResult!
+  cancelWellnessBooking(id: ID!, reason: String): CancelWellnessBookingResult!
+}

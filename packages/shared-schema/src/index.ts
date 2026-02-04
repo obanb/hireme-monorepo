@@ -34,8 +34,20 @@ export function getCommonSchema(): string {
   return readFileSync(join(getSchemaDir(), "common.graphql"), "utf-8");
 }
 
+export function getRoomTypeSchema(): string {
+  return readFileSync(join(getSchemaDir(), "room-type.graphql"), "utf-8");
+}
+
+export function getRateCodeSchema(): string {
+  return readFileSync(join(getSchemaDir(), "rate-code.graphql"), "utf-8");
+}
+
+export function getWellnessSchema(): string {
+  return readFileSync(join(getSchemaDir(), "wellness.graphql"), "utf-8");
+}
+
 export function getCombinedSchema(): string {
-  return getCommonSchema() + "\n" + getHotelSchema() + "\n" + getRoomSchema() + "\n" + getReservationSchema();
+  return getCommonSchema() + "\n" + getHotelSchema() + "\n" + getRoomTypeSchema() + "\n" + getRateCodeSchema() + "\n" + getRoomSchema() + "\n" + getReservationSchema() + "\n" + getWellnessSchema();
 }
 
 // Re-export generated types (will be available after codegen runs)
