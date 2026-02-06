@@ -240,37 +240,37 @@ export default function CalendarPage() {
   const monthYear = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-stone-100">
       <HotelSidebar />
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 ml-72 p-8">
         <div className="max-w-full mx-auto">
           {/* Page Header */}
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-4xl font-bold text-slate-800 mb-2">Calendar</h1>
-              <p className="text-slate-600">
+              <h1 className="text-4xl font-black text-stone-900 mb-2">Calendar</h1>
+              <p className="text-stone-500">
                 Room availability and reservations overview
               </p>
             </div>
             <div className="flex items-center gap-4">
               {/* View Mode Toggle */}
-              <div className="flex bg-white rounded-lg shadow-sm border border-slate-200 p-1">
+              <div className="flex bg-white rounded-2xl border-2 border-stone-200 p-1">
                 <button
                   onClick={() => setViewMode('week')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors ${
                     viewMode === 'week'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-600 hover:bg-slate-100'
+                      ? 'bg-stone-900 text-white'
+                      : 'text-stone-500 hover:bg-stone-100'
                   }`}
                 >
                   Week
                 </button>
                 <button
                   onClick={() => setViewMode('month')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors ${
                     viewMode === 'month'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-600 hover:bg-slate-100'
+                      ? 'bg-stone-900 text-white'
+                      : 'text-stone-500 hover:bg-stone-100'
                   }`}
                 >
                   Month
@@ -281,7 +281,7 @@ export default function CalendarPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-2xl text-red-700">
               {error}
               <button
                 onClick={() => setError(null)}
@@ -293,12 +293,12 @@ export default function CalendarPage() {
           )}
 
           {/* Calendar Controls */}
-          <div className="bg-white rounded-xl shadow-lg mb-6">
-            <div className="p-4 flex items-center justify-between border-b border-slate-200">
+          <div className="bg-white rounded-3xl border-2 border-stone-200 mb-6">
+            <div className="p-4 flex items-center justify-between border-b border-stone-200">
               <div className="flex items-center gap-2">
                 <button
                   onClick={handlePrevious}
-                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-stone-100 rounded-xl transition-colors text-stone-600"
                   aria-label="Previous"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -307,13 +307,13 @@ export default function CalendarPage() {
                 </button>
                 <button
                   onClick={handleToday}
-                  className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm font-bold text-stone-600 hover:bg-stone-100 rounded-xl transition-colors"
                 >
                   Today
                 </button>
                 <button
                   onClick={handleNext}
-                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-stone-100 rounded-xl transition-colors text-stone-600"
                   aria-label="Next"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -321,11 +321,11 @@ export default function CalendarPage() {
                   </svg>
                 </button>
               </div>
-              <h2 className="text-xl font-semibold text-slate-800">{monthYear}</h2>
+              <h2 className="text-xl font-black text-stone-900">{monthYear}</h2>
               <button
                 onClick={fetchData}
                 disabled={loading}
-                className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-2"
+                className="px-4 py-2 text-sm text-stone-600 hover:bg-stone-100 rounded-xl transition-colors flex items-center gap-2 font-medium"
               >
                 <span className={loading ? 'animate-spin' : ''}>&#x21bb;</span>
                 Refresh
@@ -334,13 +334,13 @@ export default function CalendarPage() {
 
             {/* Calendar Grid */}
             {loading ? (
-              <div className="p-12 text-center text-slate-500">
+              <div className="p-12 text-center text-stone-500">
                 <div className="animate-pulse">Loading calendar...</div>
               </div>
             ) : rooms.length === 0 ? (
-              <div className="p-12 text-center text-slate-500">
-                <div className="text-4xl mb-4">&#x1F6CF;</div>
-                <p className="text-lg font-medium">No rooms configured</p>
+              <div className="p-12 text-center text-stone-500">
+                <div className="text-4xl mb-4">◫</div>
+                <p className="text-lg font-bold">No rooms configured</p>
                 <p className="text-sm mt-1">Create rooms first to see them on the calendar</p>
               </div>
             ) : (
@@ -349,7 +349,7 @@ export default function CalendarPage() {
                   {/* Date Headers */}
                   <thead>
                     <tr>
-                      <th className="sticky left-0 z-10 bg-slate-50 border-b border-r border-slate-200 p-3 text-left text-xs font-semibold text-slate-600 uppercase min-w-[180px]">
+                      <th className="sticky left-0 z-10 bg-stone-50 border-b border-r border-stone-200 p-3 text-left text-xs font-bold text-stone-600 uppercase min-w-[180px]">
                         Room
                       </th>
                       {dateRange.map((date) => {
@@ -359,12 +359,12 @@ export default function CalendarPage() {
                         return (
                           <th
                             key={formatDateKey(date)}
-                            className={`border-b border-slate-200 p-2 text-center min-w-[80px] ${
-                              isToday ? 'bg-blue-50' : 'bg-slate-50'
+                            className={`border-b border-stone-200 p-2 text-center min-w-[80px] ${
+                              isToday ? 'bg-lime-50' : 'bg-stone-50'
                             }`}
                           >
-                            <div className="text-xs text-slate-500">{dayName}</div>
-                            <div className={`text-sm font-semibold ${isToday ? 'text-blue-600' : 'text-slate-700'}`}>
+                            <div className="text-xs text-stone-500">{dayName}</div>
+                            <div className={`text-sm font-bold ${isToday ? 'text-lime-600' : 'text-stone-700'}`}>
                               {dayNum}
                             </div>
                           </th>
@@ -378,15 +378,15 @@ export default function CalendarPage() {
                       return (
                         <tr key={room.id} className="group">
                           {/* Room Info */}
-                          <td className="sticky left-0 z-10 bg-white border-b border-r border-slate-200 p-3 group-hover:bg-slate-50">
+                          <td className="sticky left-0 z-10 bg-white border-b border-r border-stone-200 p-3 group-hover:bg-stone-50">
                             <div className="flex items-center gap-3">
                               <div
                                 className="w-3 h-3 rounded-full flex-shrink-0"
                                 style={{ backgroundColor: room.color }}
                               />
                               <div>
-                                <div className="font-medium text-slate-800">{room.name}</div>
-                                <div className="text-xs text-slate-500">
+                                <div className="font-bold text-stone-900">{room.name}</div>
+                                <div className="text-xs text-stone-500">
                                   #{room.roomNumber} - {room.type}
                                 </div>
                               </div>
@@ -398,8 +398,8 @@ export default function CalendarPage() {
                             return (
                               <td
                                 key={formatDateKey(date)}
-                                className={`border-b border-slate-200 p-0 relative h-16 cursor-pointer hover:bg-slate-100 transition-colors ${
-                                  isToday ? 'bg-blue-50/50' : ''
+                                className={`border-b border-stone-200 p-0 relative h-16 cursor-pointer hover:bg-stone-100 transition-colors ${
+                                  isToday ? 'bg-lime-50/50' : ''
                                 }`}
                                 onClick={() => handleCellClick(room.id, date)}
                               >
@@ -446,24 +446,24 @@ export default function CalendarPage() {
           </div>
 
           {/* Legend */}
-          <div className="bg-white rounded-xl shadow-lg p-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-3">Legend</h3>
+          <div className="bg-white rounded-3xl border-2 border-stone-200 p-4">
+            <h3 className="text-sm font-bold text-stone-700 mb-3">Legend</h3>
             <div className="flex flex-wrap gap-4">
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-blue-500" />
-                <span className="text-sm text-slate-600">Confirmed</span>
+                <div className="w-4 h-4 rounded-lg bg-lime-500" />
+                <span className="text-sm text-stone-600">Confirmed</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-blue-500 opacity-70" />
-                <span className="text-sm text-slate-600">Pending</span>
+                <div className="w-4 h-4 rounded-lg bg-lime-500 opacity-70" />
+                <span className="text-sm text-stone-600">Pending</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-blue-500 opacity-40" />
-                <span className="text-sm text-slate-600">Cancelled</span>
+                <div className="w-4 h-4 rounded-lg bg-lime-500 opacity-40" />
+                <span className="text-sm text-stone-600">Cancelled</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded border-2 border-dashed border-slate-300" />
-                <span className="text-sm text-slate-600">Click empty cell to create reservation</span>
+                <div className="w-4 h-4 rounded-lg border-2 border-dashed border-stone-300" />
+                <span className="text-sm text-stone-600">Click empty cell to create reservation</span>
               </div>
             </div>
           </div>

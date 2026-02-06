@@ -282,41 +282,41 @@ function BookingsPageContent() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'CONFIRMED':
-        return 'bg-green-100 text-green-800';
+        return 'bg-lime-100 text-lime-700';
       case 'PENDING':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-amber-100 text-amber-700';
       case 'CANCELLED':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-700';
       default:
-        return 'bg-slate-100 text-slate-800';
+        return 'bg-stone-100 text-stone-700';
     }
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-stone-100">
       <HotelSidebar />
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 ml-72 p-8">
         <div className="max-w-7xl mx-auto">
           {/* Page Header */}
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-4xl font-bold text-slate-800 mb-2">Bookings</h1>
-              <p className="text-slate-600">
+              <h1 className="text-4xl font-black text-stone-900 mb-2">Bookings</h1>
+              <p className="text-stone-500">
                 Manage reservations with event sourcing
               </p>
             </div>
             <button
               onClick={() => setShowForm(!showForm)}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+              className="px-6 py-3 bg-stone-900 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:bg-stone-800 transition-all duration-200 flex items-center gap-2"
             >
-              <span className="text-xl">{showForm ? '✕' : '+'}</span>
+              <span className="text-xl text-lime-400">{showForm ? '✕' : '+'}</span>
               {showForm ? 'Cancel' : 'New Reservation'}
             </button>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-2xl text-red-700">
               {error}
               <button
                 onClick={() => setError(null)}
@@ -329,14 +329,14 @@ function BookingsPageContent() {
 
           {/* Create Reservation Form */}
           {showForm && (
-            <div className="mb-8 bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-slate-800 mb-4">
+            <div className="mb-8 bg-white rounded-3xl border-2 border-stone-200 p-6">
+              <h2 className="text-xl font-black text-stone-900 mb-4">
                 Create New Reservation
               </h2>
               <form onSubmit={handleCreateReservation} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-stone-700 mb-1">
                       First Name *
                     </label>
                     <input
@@ -346,12 +346,12 @@ function BookingsPageContent() {
                       onChange={(e) =>
                         setFormData({ ...formData, guestFirstName: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                      className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none transition-all"
                       placeholder="John"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-stone-700 mb-1">
                       Last Name *
                     </label>
                     <input
@@ -361,12 +361,12 @@ function BookingsPageContent() {
                       onChange={(e) =>
                         setFormData({ ...formData, guestLastName: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                      className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none transition-all"
                       placeholder="Doe"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-stone-700 mb-1">
                       Check-in Date *
                     </label>
                     <input
@@ -376,11 +376,11 @@ function BookingsPageContent() {
                       onChange={(e) =>
                         setFormData({ ...formData, checkInDate: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                      className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-stone-700 mb-1">
                       Check-out Date *
                     </label>
                     <input
@@ -390,11 +390,11 @@ function BookingsPageContent() {
                       onChange={(e) =>
                         setFormData({ ...formData, checkOutDate: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                      className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-stone-700 mb-1">
                       Total Amount *
                     </label>
                     <input
@@ -409,12 +409,12 @@ function BookingsPageContent() {
                           totalAmount: parseFloat(e.target.value) || 0,
                         })
                       }
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                      className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none transition-all"
                       placeholder="299.99"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-stone-700 mb-1">
                       Currency
                     </label>
                     <select
@@ -422,7 +422,7 @@ function BookingsPageContent() {
                       onChange={(e) =>
                         setFormData({ ...formData, currency: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                      className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none transition-all"
                     >
                       <option value="USD">USD</option>
                       <option value="EUR">EUR</option>
@@ -431,7 +431,7 @@ function BookingsPageContent() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-stone-700 mb-1">
                       Room
                     </label>
                     <select
@@ -439,7 +439,7 @@ function BookingsPageContent() {
                       onChange={(e) =>
                         setFormData({ ...formData, roomId: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                      className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none transition-all"
                     >
                       <option value="">No room assigned</option>
                       {rooms.map((room) => (
@@ -450,7 +450,7 @@ function BookingsPageContent() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-stone-700 mb-1">
                       Origin ID (optional)
                     </label>
                     <input
@@ -459,7 +459,7 @@ function BookingsPageContent() {
                       onChange={(e) =>
                         setFormData({ ...formData, originId: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                      className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none transition-all"
                       placeholder="BOOKING-123 (auto-generated if empty)"
                     />
                   </div>
@@ -468,14 +468,14 @@ function BookingsPageContent() {
                   <button
                     type="button"
                     onClick={() => setShowForm(false)}
-                    className="px-6 py-2 border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors"
+                    className="px-6 py-2 border-2 border-stone-200 text-stone-700 font-bold rounded-xl hover:bg-stone-50 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={creating}
-                    className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-2 bg-stone-900 text-white font-bold rounded-xl shadow-md hover:shadow-lg hover:bg-stone-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {creating ? 'Creating...' : 'Create Reservation'}
                   </button>
@@ -485,35 +485,35 @@ function BookingsPageContent() {
           )}
 
           {/* Filters Section */}
-          <div className="mb-6 bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="mb-6 bg-white rounded-3xl border-2 border-stone-200 overflow-hidden">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors"
+              className="w-full p-4 flex items-center justify-between text-left hover:bg-stone-50 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <span className="text-xl">🔍</span>
-                <span className="font-semibold text-slate-800">Filters</span>
+                <span className="text-xl text-lime-600">◎</span>
+                <span className="font-bold text-stone-900">Filters</span>
                 {activeFilterCount > 0 && (
-                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+                  <span className="px-2 py-0.5 bg-lime-100 text-lime-700 text-xs font-bold rounded-full">
                     {activeFilterCount} active
                   </span>
                 )}
               </div>
-              <span className="text-slate-400">{showFilters ? '▲' : '▼'}</span>
+              <span className="text-stone-400">{showFilters ? '▲' : '▼'}</span>
             </button>
 
             {showFilters && (
-              <div className="p-6 border-t border-slate-200">
+              <div className="p-6 border-t border-stone-200">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {/* Status Filter */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-stone-700 mb-1">
                       Status
                     </label>
                     <select
                       value={filters.status}
                       onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                      className="w-full px-3 py-2 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none text-sm"
                     >
                       <option value="">All Statuses</option>
                       <option value="PENDING">Pending</option>
@@ -524,7 +524,7 @@ function BookingsPageContent() {
 
                   {/* Guest Name Filter */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-stone-700 mb-1">
                       Guest Name
                     </label>
                     <input
@@ -532,19 +532,19 @@ function BookingsPageContent() {
                       value={filters.guestName}
                       onChange={(e) => setFilters({ ...filters, guestName: e.target.value })}
                       placeholder="Search by name..."
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                      className="w-full px-3 py-2 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none text-sm"
                     />
                   </div>
 
                   {/* Currency Filter */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-stone-700 mb-1">
                       Currency
                     </label>
                     <select
                       value={filters.currency}
                       onChange={(e) => setFilters({ ...filters, currency: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                      className="w-full px-3 py-2 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none text-sm"
                     >
                       <option value="">All Currencies</option>
                       <option value="USD">USD</option>
@@ -556,90 +556,90 @@ function BookingsPageContent() {
 
                   {/* Check-in Date Range */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-stone-700 mb-1">
                       Check-in From
                     </label>
                     <input
                       type="date"
                       value={filters.checkInFrom}
                       onChange={(e) => setFilters({ ...filters, checkInFrom: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                      className="w-full px-3 py-2 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-stone-700 mb-1">
                       Check-in To
                     </label>
                     <input
                       type="date"
                       value={filters.checkInTo}
                       onChange={(e) => setFilters({ ...filters, checkInTo: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                      className="w-full px-3 py-2 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none text-sm"
                     />
                   </div>
 
                   {/* Check-out Date Range */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-stone-700 mb-1">
                       Check-out From
                     </label>
                     <input
                       type="date"
                       value={filters.checkOutFrom}
                       onChange={(e) => setFilters({ ...filters, checkOutFrom: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                      className="w-full px-3 py-2 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-stone-700 mb-1">
                       Check-out To
                     </label>
                     <input
                       type="date"
                       value={filters.checkOutTo}
                       onChange={(e) => setFilters({ ...filters, checkOutTo: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                      className="w-full px-3 py-2 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none text-sm"
                     />
                   </div>
 
                   {/* Created Date Range (Event Sourcing Audit) */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-stone-700 mb-1">
                       Created From
-                      <span className="ml-1 text-xs text-slate-400">(audit)</span>
+                      <span className="ml-1 text-xs text-stone-400">(audit)</span>
                     </label>
                     <input
                       type="date"
                       value={filters.createdFrom}
                       onChange={(e) => setFilters({ ...filters, createdFrom: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                      className="w-full px-3 py-2 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-stone-700 mb-1">
                       Created To
-                      <span className="ml-1 text-xs text-slate-400">(audit)</span>
+                      <span className="ml-1 text-xs text-stone-400">(audit)</span>
                     </label>
                     <input
                       type="date"
                       value={filters.createdTo}
                       onChange={(e) => setFilters({ ...filters, createdTo: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                      className="w-full px-3 py-2 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none text-sm"
                     />
                   </div>
                 </div>
 
                 {/* Filter Actions */}
-                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-stone-100">
                   <button
                     onClick={handleClearFilters}
-                    className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="px-4 py-2 text-sm text-stone-600 hover:text-stone-800 hover:bg-stone-100 rounded-xl transition-colors font-medium"
                   >
                     Clear All
                   </button>
                   <button
                     onClick={handleApplyFilters}
-                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                    className="px-4 py-2 bg-stone-900 text-white text-sm font-bold rounded-xl hover:bg-stone-800 transition-colors"
                   >
                     Apply Filters
                   </button>
@@ -649,13 +649,13 @@ function BookingsPageContent() {
           </div>
 
           {/* Reservations List */}
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div className="p-6 border-b border-slate-200">
+          <div className="bg-white rounded-3xl border-2 border-stone-200 overflow-hidden">
+            <div className="p-6 border-b border-stone-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-slate-800">
+                <h2 className="text-xl font-black text-stone-900">
                   Reservations
                   {activeFilterCount > 0 && (
-                    <span className="ml-2 text-sm font-normal text-slate-500">
+                    <span className="ml-2 text-sm font-normal text-stone-500">
                       (filtered)
                     </span>
                   )}
@@ -663,22 +663,22 @@ function BookingsPageContent() {
                 <button
                   onClick={() => fetchReservations()}
                   disabled={loading}
-                  className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-2"
+                  className="px-4 py-2 text-sm text-stone-600 hover:text-stone-800 hover:bg-stone-100 rounded-xl transition-colors flex items-center gap-2 font-medium"
                 >
-                  <span className={loading ? 'animate-spin' : ''}>🔄</span>
+                  <span className={loading ? 'animate-spin' : ''}>&#x21bb;</span>
                   Refresh
                 </button>
               </div>
             </div>
 
             {loading ? (
-              <div className="p-12 text-center text-slate-500">
+              <div className="p-12 text-center text-stone-500">
                 <div className="animate-pulse">Loading reservations...</div>
               </div>
             ) : reservations.length === 0 ? (
-              <div className="p-12 text-center text-slate-500">
-                <div className="text-4xl mb-4">📋</div>
-                <p className="text-lg font-medium">
+              <div className="p-12 text-center text-stone-500">
+                <div className="text-4xl mb-4">▣</div>
+                <p className="text-lg font-bold">
                   {activeFilterCount > 0 ? 'No matching reservations' : 'No reservations yet'}
                 </p>
                 <p className="text-sm mt-1">
@@ -690,51 +690,51 @@ function BookingsPageContent() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-slate-50">
+                  <thead className="bg-stone-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider">
                         Guest
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider">
                         Room
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider">
                         Check-in
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider">
                         Check-out
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider">
                         Amount
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 uppercase tracking-wider">
                         Created
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200">
+                  <tbody className="divide-y divide-stone-200">
                     {reservations.map((reservation) => {
                       const room = rooms.find((r) => r.id === reservation.roomId);
                       return (
                         <tr
                           key={reservation.id}
-                          className="hover:bg-slate-50 transition-colors cursor-pointer"
+                          className="hover:bg-stone-50 transition-colors cursor-pointer"
                           onClick={() => router.push(`/hotel-cms/bookings/${reservation.id}`)}
                         >
                           <td className="px-6 py-4">
-                            <div className="font-medium text-slate-800">
+                            <div className="font-bold text-stone-900">
                               {reservation.guestName}
                             </div>
-                            <div className="text-xs text-slate-500 font-mono">
+                            <div className="text-xs text-stone-500 font-mono">
                               {reservation.id.slice(0, 8)}...
                             </div>
                           </td>
                           <td className="px-6 py-4">
                             <span
-                              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                              className={`inline-flex px-2 py-1 text-xs font-bold rounded-lg ${getStatusColor(
                                 reservation.status
                               )}`}
                             >
@@ -745,28 +745,28 @@ function BookingsPageContent() {
                             {room ? (
                               <div className="flex items-center gap-2">
                                 <div
-                                  className="w-3 h-3 rounded-full flex-shrink-0"
+                                  className="w-3 h-3 rounded-lg flex-shrink-0"
                                   style={{ backgroundColor: room.color }}
                                 />
-                                <span className="text-slate-600">#{room.roomNumber}</span>
+                                <span className="text-stone-600">#{room.roomNumber}</span>
                               </div>
                             ) : (
-                              <span className="text-slate-400">-</span>
+                              <span className="text-stone-400">-</span>
                             )}
                           </td>
-                          <td className="px-6 py-4 text-slate-600">
+                          <td className="px-6 py-4 text-stone-600">
                             {reservation.checkInDate}
                           </td>
-                          <td className="px-6 py-4 text-slate-600">
+                          <td className="px-6 py-4 text-stone-600">
                             {reservation.checkOutDate}
                           </td>
-                          <td className="px-6 py-4 text-slate-800 font-medium">
+                          <td className="px-6 py-4 text-stone-900 font-bold">
                             {reservation.totalAmount?.toLocaleString('en-US', {
                               style: 'currency',
                               currency: reservation.currency || 'USD',
                             })}
                           </td>
-                          <td className="px-6 py-4 text-slate-500 text-sm">
+                          <td className="px-6 py-4 text-stone-500 text-sm">
                             {reservation.createdAt
                               ? new Date(reservation.createdAt).toLocaleDateString()
                               : '-'}
@@ -788,11 +788,11 @@ function BookingsPageContent() {
 export default function BookingsPage() {
   return (
     <Suspense fallback={
-      <div className="flex min-h-screen bg-slate-50">
+      <div className="flex min-h-screen bg-stone-100">
         <HotelSidebar />
-        <main className="flex-1 ml-64 p-8">
+        <main className="flex-1 ml-72 p-8">
           <div className="max-w-7xl mx-auto">
-            <div className="animate-pulse text-center text-slate-500 py-12">
+            <div className="animate-pulse text-center text-stone-500 py-12">
               Loading...
             </div>
           </div>

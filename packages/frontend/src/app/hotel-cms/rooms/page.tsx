@@ -58,9 +58,9 @@ const ROOM_TYPES: { value: RoomType; label: string }[] = [
 ];
 
 const ROOM_STATUSES: { value: RoomStatus; label: string; color: string }[] = [
-  { value: 'AVAILABLE', label: 'Available', color: 'bg-green-100 text-green-800' },
-  { value: 'OCCUPIED', label: 'Occupied', color: 'bg-blue-100 text-blue-800' },
-  { value: 'MAINTENANCE', label: 'Maintenance', color: 'bg-orange-100 text-orange-800' },
+  { value: 'AVAILABLE', label: 'Available', color: 'bg-lime-100 text-lime-700' },
+  { value: 'OCCUPIED', label: 'Occupied', color: 'bg-violet-100 text-violet-700' },
+  { value: 'MAINTENANCE', label: 'Maintenance', color: 'bg-amber-100 text-amber-700' },
 ];
 
 const DEFAULT_COLORS = [
@@ -407,32 +407,32 @@ export default function RoomsPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-stone-100">
       <HotelSidebar />
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 ml-72 p-8">
         <div className="max-w-7xl mx-auto">
           {/* Page Header */}
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-4xl font-bold text-slate-800 mb-2">Rooms</h1>
-              <p className="text-slate-600">
+              <h1 className="text-4xl font-black text-stone-900 mb-2">Rooms</h1>
+              <p className="text-stone-500">
                 Manage hotel rooms and their availability
               </p>
             </div>
             <button
               onClick={openCreateModal}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+              className="px-6 py-3 bg-stone-900 text-white font-bold rounded-2xl hover:bg-stone-800 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
             >
-              <span className="text-xl">+</span>
+              <span className="text-xl text-lime-400">+</span>
               Add Room
             </button>
           </div>
 
           {/* Success Message */}
           {successMessage && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 flex items-center justify-between">
+            <div className="mb-6 p-4 bg-lime-50 border-2 border-lime-200 rounded-2xl text-lime-700 flex items-center justify-between">
               <span>{successMessage}</span>
-              <button onClick={() => setSuccessMessage(null)} className="text-green-500 hover:text-green-700">
+              <button onClick={() => setSuccessMessage(null)} className="text-lime-500 hover:text-lime-700">
                 &times;
               </button>
             </div>
@@ -440,7 +440,7 @@ export default function RoomsPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center justify-between">
+            <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-2xl text-red-700 flex items-center justify-between">
               <span>{error}</span>
               <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">
                 &times;
@@ -449,7 +449,7 @@ export default function RoomsPage() {
           )}
 
           {/* Filters */}
-          <div className="bg-white rounded-xl shadow-lg p-4 mb-6">
+          <div className="bg-white rounded-3xl border-2 border-stone-200 p-4 mb-6">
             <div className="flex flex-wrap gap-4 items-center">
               {/* Search */}
               <div className="flex-1 min-w-[200px]">
@@ -458,7 +458,7 @@ export default function RoomsPage() {
                   placeholder="Search rooms..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
                 />
               </div>
 
@@ -466,7 +466,7 @@ export default function RoomsPage() {
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value as RoomType | '')}
-                className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
               >
                 <option value="">All Types</option>
                 {ROOM_TYPES.map((type) => (
@@ -480,7 +480,7 @@ export default function RoomsPage() {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value as RoomStatus | '')}
-                className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
               >
                 <option value="">All Statuses</option>
                 {ROOM_STATUSES.map((status) => (
@@ -494,7 +494,7 @@ export default function RoomsPage() {
               <button
                 onClick={fetchRooms}
                 disabled={loading}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-2"
+                className="px-4 py-2 text-stone-600 hover:bg-stone-100 rounded-xl transition-colors flex items-center gap-2 font-medium"
               >
                 <span className={loading ? 'animate-spin' : ''}>&#x21bb;</span>
                 Refresh
@@ -503,15 +503,15 @@ export default function RoomsPage() {
           </div>
 
           {/* Rooms Table */}
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="bg-white rounded-3xl border-2 border-stone-200 overflow-hidden">
             {loading ? (
-              <div className="p-12 text-center text-slate-500">
+              <div className="p-12 text-center text-stone-500">
                 <div className="animate-pulse">Loading rooms...</div>
               </div>
             ) : filteredRooms.length === 0 ? (
-              <div className="p-12 text-center text-slate-500">
-                <div className="text-4xl mb-4">&#x1F6CF;</div>
-                <p className="text-lg font-medium">No rooms found</p>
+              <div className="p-12 text-center text-stone-500">
+                <div className="text-4xl mb-4">▤</div>
+                <p className="text-lg font-bold">No rooms found</p>
                 <p className="text-sm mt-1">
                   {rooms.length === 0
                     ? 'Create your first room to get started'
@@ -520,7 +520,7 @@ export default function RoomsPage() {
                 {rooms.length === 0 && (
                   <button
                     onClick={openCreateModal}
-                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    className="mt-4 px-4 py-2 bg-stone-900 text-white rounded-xl hover:bg-stone-800 font-bold"
                   >
                     Add First Room
                   </button>
@@ -528,63 +528,63 @@ export default function RoomsPage() {
               </div>
             ) : (
               <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-stone-50 border-b border-stone-200">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 uppercase tracking-wider">
                       Room
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 uppercase tracking-wider">
                       Type
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 uppercase tracking-wider">
                       Rate Code
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 uppercase tracking-wider">
                       Capacity
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-4 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-right text-xs font-bold text-stone-600 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200">
+                <tbody className="divide-y divide-stone-200">
                   {filteredRooms.map((room) => (
-                    <tr key={room.id} className="hover:bg-slate-50 transition-colors">
+                    <tr key={room.id} className="hover:bg-stone-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div
-                            className="w-4 h-4 rounded-full flex-shrink-0"
+                            className="w-4 h-4 rounded-lg flex-shrink-0"
                             style={{ backgroundColor: room.color }}
                           />
                           <div>
-                            <div className="font-medium text-slate-800">{room.name}</div>
-                            <div className="text-sm text-slate-500">#{room.roomNumber}</div>
+                            <div className="font-bold text-stone-900">{room.name}</div>
+                            <div className="text-sm text-stone-500">#{room.roomNumber}</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-slate-700">
+                        <div className="text-stone-700 font-medium">
                           {room.roomTypeEntity?.name ?? ROOM_TYPES.find((t) => t.value === room.type)?.label ?? room.type}
                         </div>
                         {room.roomTypeEntity && (
-                          <div className="text-xs text-slate-500">{room.roomTypeEntity.code}</div>
+                          <div className="text-xs text-stone-500">{room.roomTypeEntity.code}</div>
                         )}
                       </td>
                       <td className="px-6 py-4">
                         {room.rateCode ? (
                           <div>
-                            <div className="text-slate-700">{room.rateCode.name}</div>
-                            <div className="text-xs text-slate-500">{room.rateCode.code}</div>
+                            <div className="text-stone-700 font-medium">{room.rateCode.name}</div>
+                            <div className="text-xs text-stone-500">{room.rateCode.code}</div>
                           </div>
                         ) : (
-                          <span className="text-slate-400 text-sm">-</span>
+                          <span className="text-stone-400 text-sm">-</span>
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-slate-700">{room.capacity} guests</span>
+                        <span className="text-stone-700">{room.capacity} guests</span>
                       </td>
                       <td className="px-6 py-4">
                         <button
@@ -597,7 +597,7 @@ export default function RoomsPage() {
                       <td className="px-6 py-4 text-right">
                         <button
                           onClick={() => openEditModal(room)}
-                          className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                          className="px-3 py-1 text-sm text-lime-600 hover:bg-lime-50 rounded-lg transition-colors font-bold"
                         >
                           Edit
                         </button>
@@ -611,7 +611,7 @@ export default function RoomsPage() {
 
           {/* Room Count */}
           {!loading && filteredRooms.length > 0 && (
-            <div className="mt-4 text-sm text-slate-500 text-center">
+            <div className="mt-4 text-sm text-stone-500 text-center">
               Showing {filteredRooms.length} of {rooms.length} rooms
             </div>
           )}
@@ -620,23 +620,23 @@ export default function RoomsPage() {
         {/* Create/Edit Modal */}
         {isModalOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4">
-              <div className="p-6 border-b border-slate-200">
-                <h2 className="text-xl font-semibold text-slate-800">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 border-2 border-stone-200">
+              <div className="p-6 border-b border-stone-200">
+                <h2 className="text-xl font-black text-stone-900">
                   {editingRoom ? 'Edit Room' : 'Add New Room'}
                 </h2>
               </div>
 
               <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 {formError && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                  <div className="p-3 bg-red-50 border-2 border-red-200 rounded-xl text-red-700 text-sm">
                     {formError}
                   </div>
                 )}
 
                 {/* Room Name */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-bold text-stone-700 mb-1">
                     Room Name
                   </label>
                   <input
@@ -645,13 +645,13 @@ export default function RoomsPage() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="e.g., Ocean View Suite"
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
                   />
                 </div>
 
                 {/* Room Number */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-bold text-stone-700 mb-1">
                     Room Number
                   </label>
                   <input
@@ -660,19 +660,19 @@ export default function RoomsPage() {
                     value={formData.roomNumber}
                     onChange={(e) => setFormData({ ...formData, roomNumber: e.target.value })}
                     placeholder="e.g., 101"
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
                   />
                 </div>
 
                 {/* Room Type (Legacy) */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-bold text-stone-700 mb-1">
                     Room Type (Legacy)
                   </label>
                   <select
                     value={formData.type}
                     onChange={(e) => setFormData({ ...formData, type: e.target.value as RoomType })}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
                   >
                     {ROOM_TYPES.map((type) => (
                       <option key={type.value} value={type.value}>
@@ -685,13 +685,13 @@ export default function RoomsPage() {
                 {/* Room Type Entity */}
                 {roomTypeEntities.length > 0 && (
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-stone-700 mb-1">
                       Room Type
                     </label>
                     <select
                       value={formData.roomTypeId}
                       onChange={(e) => setFormData({ ...formData, roomTypeId: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
                     >
                       <option value="">Select room type...</option>
                       {roomTypeEntities.map((rt) => (
@@ -706,13 +706,13 @@ export default function RoomsPage() {
                 {/* Rate Code */}
                 {rateCodes.length > 0 && (
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-bold text-stone-700 mb-1">
                       Rate Code
                     </label>
                     <select
                       value={formData.rateCodeId}
                       onChange={(e) => setFormData({ ...formData, rateCodeId: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
                     >
                       <option value="">Select rate code (optional)...</option>
                       {rateCodes.map((rc) => (
@@ -726,7 +726,7 @@ export default function RoomsPage() {
 
                 {/* Capacity */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-bold text-stone-700 mb-1">
                     Capacity (guests)
                   </label>
                   <input
@@ -736,13 +736,13 @@ export default function RoomsPage() {
                     max={10}
                     value={formData.capacity}
                     onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 1 })}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
                   />
                 </div>
 
                 {/* Color */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-bold text-stone-700 mb-1">
                     Calendar Color
                   </label>
                   <div className="flex items-center gap-2">
@@ -750,7 +750,7 @@ export default function RoomsPage() {
                       type="color"
                       value={formData.color}
                       onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                      className="w-12 h-10 border border-slate-200 rounded cursor-pointer"
+                      className="w-12 h-10 border-2 border-stone-200 rounded-lg cursor-pointer"
                     />
                     <div className="flex gap-1">
                       {DEFAULT_COLORS.map((color) => (
@@ -758,8 +758,8 @@ export default function RoomsPage() {
                           key={color}
                           type="button"
                           onClick={() => setFormData({ ...formData, color })}
-                          className={`w-6 h-6 rounded-full transition-transform ${
-                            formData.color === color ? 'ring-2 ring-offset-2 ring-blue-500 scale-110' : ''
+                          className={`w-6 h-6 rounded-lg transition-transform ${
+                            formData.color === color ? 'ring-2 ring-offset-2 ring-lime-400 scale-110' : ''
                           }`}
                           style={{ backgroundColor: color }}
                         />
@@ -773,14 +773,14 @@ export default function RoomsPage() {
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+                    className="flex-1 px-4 py-2 border-2 border-stone-200 text-stone-700 rounded-xl hover:bg-stone-50 transition-colors font-bold"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={saving}
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    className="flex-1 px-4 py-2 bg-stone-900 text-white rounded-xl hover:bg-stone-800 transition-colors disabled:opacity-50 font-bold"
                   >
                     {saving ? 'Saving...' : editingRoom ? 'Update Room' : 'Create Room'}
                   </button>
@@ -793,12 +793,12 @@ export default function RoomsPage() {
         {/* Status Change Modal */}
         {statusModalRoom && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4">
-              <div className="p-6 border-b border-slate-200">
-                <h2 className="text-xl font-semibold text-slate-800">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm mx-4 border-2 border-stone-200">
+              <div className="p-6 border-b border-stone-200">
+                <h2 className="text-xl font-black text-stone-900">
                   Change Room Status
                 </h2>
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="text-sm text-stone-500 mt-1">
                   {statusModalRoom.name} (#{statusModalRoom.roomNumber})
                 </p>
               </div>
@@ -809,10 +809,10 @@ export default function RoomsPage() {
                   {ROOM_STATUSES.map((status) => (
                     <label
                       key={status.value}
-                      className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-colors ${
                         newStatus === status.value
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-slate-200 hover:bg-slate-50'
+                          ? 'border-lime-400 bg-lime-50'
+                          : 'border-stone-200 hover:bg-stone-50'
                       }`}
                     >
                       <input
@@ -821,9 +821,9 @@ export default function RoomsPage() {
                         value={status.value}
                         checked={newStatus === status.value}
                         onChange={() => setNewStatus(status.value)}
-                        className="text-blue-600"
+                        className="text-lime-600 focus:ring-lime-400"
                       />
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${status.color}`}>
+                      <span className={`px-2 py-1 text-xs font-bold rounded-lg ${status.color}`}>
                         {status.label}
                       </span>
                     </label>
@@ -832,7 +832,7 @@ export default function RoomsPage() {
 
                 {/* Reason (optional) */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-bold text-stone-700 mb-1">
                     Reason (optional)
                   </label>
                   <input
@@ -840,7 +840,7 @@ export default function RoomsPage() {
                     value={statusReason}
                     onChange={(e) => setStatusReason(e.target.value)}
                     placeholder="e.g., Plumbing repairs"
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
                   />
                 </div>
 
@@ -849,14 +849,14 @@ export default function RoomsPage() {
                   <button
                     type="button"
                     onClick={closeStatusModal}
-                    className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+                    className="flex-1 px-4 py-2 border-2 border-stone-200 text-stone-700 rounded-xl hover:bg-stone-50 transition-colors font-bold"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleStatusChange}
                     disabled={saving || newStatus === statusModalRoom.status}
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    className="flex-1 px-4 py-2 bg-stone-900 text-white rounded-xl hover:bg-stone-800 transition-colors disabled:opacity-50 font-bold"
                   >
                     {saving ? 'Saving...' : 'Update Status'}
                   </button>

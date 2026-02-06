@@ -1,0 +1,179 @@
+# Voucher types and operations
+
+type CustomerData {
+  name: String
+  street: String
+  houseNumber: String
+  city: String
+  postalCode: String
+  country: String
+  email: String
+  tel: String
+  company: String
+  cin: String
+  tin: String
+}
+
+type GiftData {
+  name: String
+  street: String
+  houseNumber: String
+  city: String
+  postalCode: String
+  country: String
+  email: String
+  tel: String
+}
+
+type Voucher {
+  id: ID!
+  code: String
+  number: String!
+  hotel: Int!
+  lang: String!
+  createdAt: String
+  usedAt: String
+  canceledAt: String
+  paidAt: String
+  variableSymbol: Int!
+  active: Boolean!
+  price: Float!
+  purchasePrice: Float!
+  currency: String!
+  validity: String!
+  paymentType: String!
+  deliveryType: String!
+  deliveryPrice: Float!
+  note: String
+  format: String!
+  gift: String
+  giftMessage: String
+  usedIn: String
+  reservationNumber: String
+  valueTotal: Float!
+  valueRemaining: Float!
+  valueUsed: Float!
+  applicableInBookolo: Boolean!
+  isPrivateType: Boolean!
+  isFreeType: Boolean!
+  customerData: CustomerData!
+  giftData: GiftData!
+  version: Int!
+  updatedAt: String
+}
+
+input CustomerDataInput {
+  name: String
+  street: String
+  houseNumber: String
+  city: String
+  postalCode: String
+  country: String
+  email: String
+  tel: String
+  company: String
+  cin: String
+  tin: String
+}
+
+input GiftDataInput {
+  name: String
+  street: String
+  houseNumber: String
+  city: String
+  postalCode: String
+  country: String
+  email: String
+  tel: String
+}
+
+input CreateVoucherInput {
+  code: String
+  hotel: Int
+  lang: String
+  price: Float!
+  purchasePrice: Float
+  currency: String
+  validity: String!
+  paymentType: String
+  deliveryType: String
+  deliveryPrice: Float
+  note: String
+  format: String
+  gift: String
+  giftMessage: String
+  applicableInBookolo: Boolean
+  isPrivateType: Boolean
+  isFreeType: Boolean
+  customerData: CustomerDataInput!
+  giftData: GiftDataInput
+}
+
+input UpdateVoucherInput {
+  code: String
+  price: Float
+  purchasePrice: Float
+  currency: String
+  validity: String
+  paymentType: String
+  deliveryType: String
+  deliveryPrice: Float
+  note: String
+  format: String
+  gift: String
+  giftMessage: String
+  active: Boolean
+  applicableInBookolo: Boolean
+  isPrivateType: Boolean
+  customerData: CustomerDataInput
+  giftData: GiftDataInput
+}
+
+input UseVoucherInput {
+  amount: Float!
+  reservationNumber: String
+  usedIn: String
+}
+
+type CreateVoucherResult {
+  voucher: Voucher
+  events: [StoredEvent!]!
+}
+
+type UpdateVoucherResult {
+  voucher: Voucher
+  events: [StoredEvent!]!
+}
+
+type CancelVoucherResult {
+  voucher: Voucher
+  events: [StoredEvent!]!
+}
+
+type UseVoucherResult {
+  voucher: Voucher
+  events: [StoredEvent!]!
+}
+
+type DeleteVoucherResult {
+  success: Boolean!
+  events: [StoredEvent!]!
+}
+
+extend type Query {
+  voucher(id: ID!): Voucher
+  vouchers(
+    includeInactive: Boolean
+    hotel: Int
+    status: String
+  ): [Voucher!]!
+}
+
+extend type Mutation {
+  createVoucher(input: CreateVoucherInput!): CreateVoucherResult!
+  updateVoucher(id: ID!, input: UpdateVoucherInput!): UpdateVoucherResult!
+  cancelVoucher(id: ID!, reason: String): CancelVoucherResult!
+  useVoucher(id: ID!, input: UseVoucherInput!): UseVoucherResult!
+  deleteVoucher(id: ID!): DeleteVoucherResult!
+  markVoucherPaid(id: ID!): UpdateVoucherResult!
+}

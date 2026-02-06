@@ -196,3 +196,23 @@ export {
   WellnessBookingRepository,
   wellnessBookingRepository,
 } from './wellness-booking-repository';
+
+// Voucher
+export {
+  VoucherAggregate,
+  type VoucherState,
+  type VoucherDetails,
+  type CustomerData,
+  type GiftData,
+} from './voucher-aggregate';
+
+export {
+  applyVoucherProjection,
+  getVoucher,
+  listVouchers,
+} from './voucher-projections';
+
+export {
+  VoucherRepository,
+  voucherRepository,
+} from './voucher-repository';

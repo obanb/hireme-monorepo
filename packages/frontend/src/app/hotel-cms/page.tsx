@@ -6,16 +6,16 @@ import LiveRates from './LiveRates';
 
 export default function HotelCMSDashboard() {
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-stone-100">
       <HotelSidebar />
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 ml-72 p-8">
         <div className="max-w-7xl mx-auto">
           {/* Page Header */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold text-slate-800 mb-2">
+            <h1 className="text-4xl font-black text-stone-900 mb-2">
               Dashboard
             </h1>
-            <p className="text-slate-600">
+            <p className="text-stone-500">
               Welcome back! Here&apos;s what&apos;s happening at your hotel today.
             </p>
           </div>
@@ -28,10 +28,10 @@ export default function HotelCMSDashboard() {
           {/* Calendar Section */}
           <div className="mb-8">
             <div className="mb-4">
-              <h2 className="text-2xl font-bold text-slate-800 mb-2">
+              <h2 className="text-2xl font-black text-stone-900 mb-2">
                 Room Availability Calendar
               </h2>
-              <p className="text-slate-600">
+              <p className="text-stone-500">
                 View and manage bookings across all room types
               </p>
             </div>
@@ -41,16 +41,16 @@ export default function HotelCMSDashboard() {
           {/* Federated Live Data */}
           <div className="mb-8">
             <div className="mb-4">
-              <h2 className="text-2xl font-bold text-slate-800 mb-2">
+              <h2 className="text-2xl font-black text-stone-900 mb-2">
                 Federated Live Data
               </h2>
-              <p className="text-slate-600">
+              <p className="text-stone-500">
                 Server component fetching from the new GraphQL subgraph
               </p>
             </div>
             <Suspense
               fallback={
-                <div className="rounded-xl border border-slate-200 bg-white p-6 text-slate-500">
+                <div className="rounded-3xl border-2 border-stone-200 bg-white p-6 text-stone-500">
                   Loading live hotel rates...
                 </div>
               }
@@ -60,8 +60,8 @@ export default function HotelCMSDashboard() {
           </div>
 
           {/* Recent Activity Section */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-2xl font-bold text-slate-800 mb-4">
+          <div className="bg-white rounded-3xl border-2 border-stone-200 p-6">
+            <h2 className="text-2xl font-black text-stone-900 mb-4">
               Recent Activity
             </h2>
             <div className="space-y-4">
@@ -90,32 +90,34 @@ export default function HotelCMSDashboard() {
               ].map((activity, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                  className="flex items-center gap-4 p-4 bg-stone-50 rounded-2xl hover:bg-stone-100 transition-colors"
                 >
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                       activity.type === 'booking'
-                        ? 'bg-blue-100 text-blue-600'
+                        ? 'bg-lime-100 text-lime-700'
                         : activity.type === 'checkin'
-                        ? 'bg-green-100 text-green-600'
-                        : 'bg-orange-100 text-orange-600'
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'bg-amber-100 text-amber-700'
                     }`}
                   >
-                    {activity.type === 'booking'
-                      ? '📋'
-                      : activity.type === 'checkin'
-                      ? '🔑'
-                      : '🚪'}
+                    <span className="text-lg">
+                      {activity.type === 'booking'
+                        ? '◎'
+                        : activity.type === 'checkin'
+                        ? '◈'
+                        : '◇'}
+                    </span>
                   </div>
                   <div className="flex-1">
-                    <p className="font-semibold text-slate-800">
+                    <p className="font-bold text-stone-900">
                       {activity.action}
                     </p>
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-stone-500">
                       {activity.guest} - {activity.room}
                     </p>
                   </div>
-                  <div className="text-sm text-slate-500">{activity.time}</div>
+                  <div className="text-sm text-stone-400">{activity.time}</div>
                 </div>
               ))}
             </div>

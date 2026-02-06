@@ -263,6 +263,54 @@ export async function initializeDatabase(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_wellness_bookings_status ON wellness_bookings(status);
     `);
 
+    // Create vouchers read model table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS vouchers (
+        id UUID PRIMARY KEY,
+        code VARCHAR(50),
+        number VARCHAR(50) NOT NULL,
+        hotel INT NOT NULL DEFAULT 0,
+        lang VARCHAR(10) DEFAULT 'cs',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        used_at TIMESTAMPTZ,
+        canceled_at TIMESTAMPTZ,
+        paid_at TIMESTAMPTZ,
+        variable_symbol INT NOT NULL,
+        active BOOLEAN NOT NULL DEFAULT true,
+        price DECIMAL(12,2) NOT NULL,
+        purchase_price DECIMAL(12,2) NOT NULL,
+        currency VARCHAR(3) DEFAULT 'CZK',
+        validity DATE NOT NULL,
+        payment_type VARCHAR(50) DEFAULT 'payment-online-card',
+        delivery_type VARCHAR(50) DEFAULT 'email',
+        delivery_price DECIMAL(12,2) DEFAULT 0,
+        note TEXT,
+        format VARCHAR(10) DEFAULT 'DL',
+        gift VARCHAR(200),
+        gift_message TEXT,
+        used_in VARCHAR(100),
+        reservation_number VARCHAR(50),
+        value_total DECIMAL(12,2) NOT NULL,
+        value_remaining DECIMAL(12,2) NOT NULL,
+        value_used DECIMAL(12,2) NOT NULL DEFAULT 0,
+        applicable_in_bookolo BOOLEAN DEFAULT false,
+        is_private_type BOOLEAN DEFAULT false,
+        is_free_type BOOLEAN DEFAULT false,
+        customer_data JSONB DEFAULT '{}',
+        gift_data JSONB DEFAULT '{}',
+        version INT NOT NULL DEFAULT 0,
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Create indexes for vouchers
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_vouchers_number ON vouchers(number);
+      CREATE INDEX IF NOT EXISTS idx_vouchers_hotel ON vouchers(hotel);
+      CREATE INDEX IF NOT EXISTS idx_vouchers_active ON vouchers(active);
+      CREATE INDEX IF NOT EXISTS idx_vouchers_validity ON vouchers(validity);
+    `);
+
     console.log('Database schema initialized successfully');
   } finally {
     client.release();
