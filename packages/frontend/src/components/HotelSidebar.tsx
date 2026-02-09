@@ -20,6 +20,7 @@ const menuItems: MenuItem[] = [
   { name: 'Rooms', href: '/hotel-cms/rooms', icon: '▤' },
   { name: 'Room Types', href: '/hotel-cms/room-types', icon: '◧' },
   { name: 'Rate Codes', href: '/hotel-cms/rate-codes', icon: '◉' },
+  { name: 'Statistics', href: '/hotel-cms/statistics', icon: '◑' },
   { name: 'Guests', href: '/hotel-cms/guests', icon: '◐' },
   { name: 'Settings', href: '/hotel-cms/settings', icon: '⚙' },
 ];

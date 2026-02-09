@@ -216,3 +216,8 @@ export {
   VoucherRepository,
   voucherRepository,
 } from './voucher-repository';
+
+// Statistics
+export {
+  statisticsRepository,
+} from './statistics-repository';

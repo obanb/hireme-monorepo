@@ -504,3 +504,15 @@
 [NX Daemon Server] - 2025-04-22T09:28:43.129Z - Closed a connection. Number of open connections: 0
 [NX Daemon Server] - 2025-04-22T09:28:43.130Z - [WATCHER]: Stopping the watcher for C:\hireme (outputs)
 [NX Daemon Server] - 2025-04-22T09:28:43.130Z - Server stopped because: "Request to shutdown"
+[NX Daemon Server] - 2026-02-09T10:32:47.597Z - Started listening on: \\.\pipe\nx\C:\Users\ondra\AppData\Local\Temp\89906984e8ba1bb8fa88\d.sock
+[NX Daemon Server] - 2026-02-09T10:32:47.603Z - [WATCHER]: Subscribed to changes within: C:\hireme (native)
+[NX Daemon Server] - 2026-02-09T10:32:47.605Z - Established a connection. Number of open connections: 1
+[NX Daemon Server] - 2026-02-09T10:32:47.606Z - Established a connection. Number of open connections: 2
+[NX Daemon Server] - 2026-02-09T10:32:47.608Z - Closed a connection. Number of open connections: 1
+[NX Daemon Server] - 2026-02-09T10:32:47.611Z - [REQUEST]: Responding to the client. Shutdown initiated
+[NX Daemon Server] - 2026-02-09T10:32:47.613Z - Done responding to the client Shutdown initiated
+[NX Daemon Server] - 2026-02-09T10:32:47.613Z - Handled FORCE_SHUTDOWN. Handling time: 0. Response time: 2.
+[NX Daemon Server] - 2026-02-09T10:32:47.614Z - Closed a connection. Number of open connections: 0
+[NX Daemon Server] - 2026-02-09T10:32:47.614Z - [WATCHER]: Stopping the watcher for C:\hireme (sources)
+[NX Daemon Server] - 2026-02-09T10:32:47.615Z - [WATCHER]: Stopping the watcher for C:\hireme (outputs)
+[NX Daemon Server] - 2026-02-09T10:32:47.615Z - Server stopped because: "Request to shutdown"

@@ -1,0 +1,22 @@
+{
+  "name": "mcp",
+  "private": true,
+  "version": "1.0.0",
+  "description": "MCP server exposing hotel CMS data as tools",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "author": "obanb",
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.9.0",
+    "zod": "^3.24.0",
+    "dotenv": "16.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5"
+  }
+}

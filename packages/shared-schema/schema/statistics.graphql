@@ -1,0 +1,53 @@
+enum TimelineGranularity {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+type ReservationStats {
+  totalCount: Int!
+  pendingCount: Int!
+  confirmedCount: Int!
+  cancelledCount: Int!
+  totalRevenue: Float!
+  averageAmount: Float!
+  averageStayDays: Float!
+}
+
+type ReservationTimelinePoint {
+  date: String!
+  count: Int!
+  revenue: Float!
+}
+
+type RoomOccupancyStats {
+  totalRooms: Int!
+  availableRooms: Int!
+  occupiedRooms: Int!
+  maintenanceRooms: Int!
+  occupancyRate: Float!
+}
+
+type RevenueTimelinePoint {
+  month: String!
+  revenue: Float!
+}
+
+input StatisticsFilterInput {
+  dateFrom: String
+  dateTo: String
+  currency: String
+}
+
+input TimelineFilterInput {
+  dateFrom: String!
+  dateTo: String!
+  granularity: TimelineGranularity
+}
+
+extend type Query {
+  reservationStats(filter: StatisticsFilterInput): ReservationStats!
+  reservationTimeline(filter: TimelineFilterInput!): [ReservationTimelinePoint!]!
+  roomOccupancyStats: RoomOccupancyStats!
+  revenueTimeline(filter: StatisticsFilterInput): [RevenueTimelinePoint!]!
+}
