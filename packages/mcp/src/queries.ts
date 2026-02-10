@@ -3,6 +3,7 @@ export const GET_RESERVATIONS = `
     reservations(filter: $filter, limit: $limit, offset: $offset) {
       id
       guestName
+      guestEmail
       status
       checkInDate
       checkOutDate
@@ -20,6 +21,7 @@ export const GET_RESERVATION_BY_ID = `
     reservation(id: $id) {
       id
       guestName
+      guestEmail
       status
       checkInDate
       checkOutDate
@@ -86,6 +88,7 @@ export const CREATE_RESERVATION = `
       reservation {
         id
         guestName
+      guestEmail
         status
         checkInDate
         checkOutDate
@@ -105,6 +108,7 @@ export const CONFIRM_RESERVATION = `
       reservation {
         id
         guestName
+      guestEmail
         status
         version
       }
@@ -118,6 +122,7 @@ export const CANCEL_RESERVATION = `
       reservation {
         id
         guestName
+      guestEmail
         status
         version
       }

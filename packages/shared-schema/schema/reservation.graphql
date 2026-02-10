@@ -8,6 +8,7 @@ type Reservation {
   id: ID!
   originId: String
   guestName: String
+  guestEmail: String
   status: ReservationStatus!
   checkInDate: String
   checkOutDate: String
@@ -34,6 +35,7 @@ input CreateReservationInput {
   originId: String
   guestFirstName: String
   guestLastName: String
+  guestEmail: String
   checkInDate: String
   checkOutDate: String
   totalAmount: Float

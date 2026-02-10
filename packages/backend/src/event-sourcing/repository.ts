@@ -67,6 +67,7 @@ export class ReservationRepository {
       arrivalTime?: string;
       departureTime?: string;
       roomId?: string;
+      guestEmail?: string;
       customer?: {
         firstName?: string;
         lastName?: string;
@@ -275,6 +276,7 @@ export class ReservationRepository {
       id: row.id,
       originId: row.origin_id,
       guestName: row.guest_name,
+      guestEmail: row.guest_email,
       status: row.status,
       checkInDate: row.check_in_date,
       checkOutDate: row.check_out_date,
