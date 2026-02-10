@@ -51,6 +51,7 @@ async function handleReservationCreated(
       arrivalTime?: string;
       departureTime?: string;
       roomId?: string;
+      guestEmail?: string;
       customer?: {
         firstName?: string;
         lastName?: string;
@@ -65,12 +66,13 @@ async function handleReservationCreated(
 
   await client.query(
     `INSERT INTO reservations (
-      id, origin_id, guest_name, status, check_in_date, check_out_date,
+      id, origin_id, guest_name, guest_email, status, check_in_date, check_out_date,
       total_amount, currency, room_id, version, created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
     ON CONFLICT (id) DO UPDATE SET
       origin_id = EXCLUDED.origin_id,
       guest_name = EXCLUDED.guest_name,
+      guest_email = EXCLUDED.guest_email,
       status = EXCLUDED.status,
       check_in_date = EXCLUDED.check_in_date,
       check_out_date = EXCLUDED.check_out_date,
@@ -83,6 +85,7 @@ async function handleReservationCreated(
       streamId,
       booking.originId || null,
       guestName,
+      booking.guestEmail || null,
       'PENDING',
       booking.arrivalTime ? new Date(booking.arrivalTime).toISOString().split('T')[0] : null,
       booking.departureTime ? new Date(booking.departureTime).toISOString().split('T')[0] : null,
@@ -153,6 +156,7 @@ export async function getReservation(
   id: string;
   originId: string | null;
   guestName: string | null;
+  guestEmail: string | null;
   status: string;
   checkInDate: Date | null;
   checkOutDate: Date | null;
@@ -167,6 +171,7 @@ export async function getReservation(
     id: string;
     origin_id: string | null;
     guest_name: string | null;
+    guest_email: string | null;
     status: string;
     check_in_date: Date | null;
     check_out_date: Date | null;
@@ -190,6 +195,7 @@ export async function getReservation(
     id: row.id,
     originId: row.origin_id,
     guestName: row.guest_name,
+    guestEmail: row.guest_email,
     status: row.status,
     checkInDate: row.check_in_date,
     checkOutDate: row.check_out_date,

@@ -2,8 +2,8 @@ import { createServer, Server } from 'http';
 import express from 'express';
 import { Server as SocketIOServer } from 'socket.io';
 import { config } from '../config';
-import { getMcpClient, closeMcpClient } from '../mcp/mcp-client';
 import { getOrCreateSession, getSession, handleChatMessage } from '../chat/service';
+import { getMcpClient, closeMcpClient } from '../mcp/mcp-client';
 import { initializeRagDatabase, startIndexer, stopIndexer, closeRagPool } from '../rag';
 
 export type ServerStatus =

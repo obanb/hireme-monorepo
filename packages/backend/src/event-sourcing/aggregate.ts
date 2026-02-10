@@ -267,6 +267,7 @@ export interface BookingDetails {
   arrivalTime?: string;
   departureTime?: string;
   roomId?: string;
+  guestEmail?: string;
   customer?: {
     firstName?: string;
     lastName?: string;

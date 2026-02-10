@@ -2,8 +2,8 @@ export const config = {
   port: parseInt(process.env.LLM_PORT || '4010', 10),
   llm: {
     baseUrl: process.env.LLM_BASE_URL || 'https://router.requesty.ai/v1',
-    apiKey: process.env.LLM_API_KEY || '',
-    model: process.env.LLM_MODEL || 'anthropic/claude-sonnet-4-20250514',
+    apiKey: process.env.LLM_API_KEY || 'REMOVED_SECRET',
+    model: process.env.LLM_MODEL || 'bedrock/claude-haiku-4-5',
     maxTokens: parseInt(process.env.LLM_MAX_TOKENS || '4096', 10),
     temperature: parseFloat(process.env.LLM_TEMPERATURE || '0.7'),
   },

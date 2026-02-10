@@ -11,14 +11,10 @@ export async function getMcpClient(): Promise<Client> {
   transport = new StdioClientTransport({
     command: config.mcp.serverCommand,
     args: config.mcp.serverArgs,
-    env: {
-      ...process.env as Record<string, string>,
-      GRAPHQL_ENDPOINT: config.graphql.endpoint,
-    },
   });
 
   client = new Client({
-    name: 'hotel-cms-llm',
+    name: 'llm-mcp-client',
     version: '1.0.0',
   });
 
@@ -43,7 +39,10 @@ export async function listMcpTools(): Promise<any[]> {
   return result.tools;
 }
 
-export async function callMcpTool(name: string, args: Record<string, any>): Promise<any> {
+export async function callMcpTool(
+  name: string,
+  args: Record<string, unknown>
+): Promise<any> {
   const c = await getMcpClient();
   return c.callTool({ name, arguments: args });
 }

@@ -66,6 +66,26 @@ import {
   sendVerificationEmail,
   sendPasswordResetEmail,
 } from "./auth";
+import {
+  initializeCampaignTables,
+  seedDefaultTemplates,
+  createTemplate,
+  findTemplateById,
+  updateTemplate,
+  deleteTemplate,
+  listTemplates,
+  createCampaign,
+  findCampaignById,
+  updateCampaign as updateCampaignRepo,
+  deleteCampaign,
+  listCampaigns,
+  listSends,
+  getCampaignStats,
+  previewAudience,
+  executeCampaign,
+  sendTestEmail,
+  mountTrackingRoutes,
+} from "./campaigns";
 
 // Use types from shared-schema
 const hotels: Hotel[] = [
@@ -95,6 +115,7 @@ function formatReservation(reservation: {
   id: string;
   originId: string | null;
   guestName: string | null;
+  guestEmail?: string | null;
   status: string;
   checkInDate: Date | null;
   checkOutDate: Date | null;
@@ -109,6 +130,7 @@ function formatReservation(reservation: {
     id: reservation.id,
     originId: reservation.originId,
     guestName: reservation.guestName,
+    guestEmail: reservation.guestEmail || null,
     status: reservation.status,
     checkInDate: reservation.checkInDate?.toISOString().split('T')[0] || null,
     checkOutDate: reservation.checkOutDate?.toISOString().split('T')[0] || null,
@@ -409,6 +431,51 @@ function formatUser(user: { id: string; email: string; name: string; role: strin
   };
 }
 
+// Helper to format email template for GraphQL response
+function formatEmailTemplate(t: { id: string; name: string; subject: string; html_body: string; preview_text: string | null; is_active: boolean; created_at: Date; updated_at: Date }) {
+  return {
+    id: t.id,
+    name: t.name,
+    subject: t.subject,
+    htmlBody: t.html_body,
+    previewText: t.preview_text,
+    isActive: t.is_active,
+    createdAt: t.created_at.toISOString(),
+    updatedAt: t.updated_at.toISOString(),
+  };
+}
+
+// Helper to format campaign for GraphQL response
+function formatCampaign(c: { id: string; name: string; template_id: string; targeting_rules: Record<string, unknown>; status: string; scheduled_at: Date | null; sent_at: Date | null; total_recipients: number; total_sent: number; total_failed: number; created_at: Date; updated_at: Date }) {
+  return {
+    id: c.id,
+    name: c.name,
+    templateId: c.template_id,
+    targetingRules: JSON.stringify(c.targeting_rules),
+    status: c.status,
+    scheduledAt: c.scheduled_at?.toISOString() || null,
+    sentAt: c.sent_at?.toISOString() || null,
+    totalRecipients: c.total_recipients,
+    totalSent: c.total_sent,
+    totalFailed: c.total_failed,
+    createdAt: c.created_at.toISOString(),
+    updatedAt: c.updated_at.toISOString(),
+  };
+}
+
+// Helper to format campaign send for GraphQL response
+function formatCampaignSend(s: { id: string; recipient_email: string; recipient_name: string | null; status: string; opened_at: Date | null; clicked_at: Date | null; sent_at: Date | null }) {
+  return {
+    id: s.id,
+    recipientEmail: s.recipient_email,
+    recipientName: s.recipient_name,
+    status: s.status,
+    openedAt: s.opened_at?.toISOString() || null,
+    clickedAt: s.clicked_at?.toISOString() || null,
+    sentAt: s.sent_at?.toISOString() || null,
+  };
+}
+
 // Use generated resolver types from shared-schema
 // Context typed as any to satisfy buildSubgraphSchema's GraphQLResolverMap<unknown>
 const resolvers: any = {
@@ -630,6 +697,58 @@ const resolvers: any = {
       const user = await findUserById(args.id);
       return user ? formatUser(user) : null;
     },
+
+    // Campaign queries
+    emailTemplates: async (_: unknown, args: { includeInactive?: boolean }, context: AuthContext) => {
+      requireAuth(context);
+      const templates = await listTemplates(args.includeInactive);
+      return templates.map(formatEmailTemplate);
+    },
+
+    emailTemplate: async (_: unknown, args: { id: string }, context: AuthContext) => {
+      requireAuth(context);
+      const template = await findTemplateById(args.id);
+      return template ? formatEmailTemplate(template) : null;
+    },
+
+    campaigns: async (_: unknown, __: unknown, context: AuthContext) => {
+      requireAuth(context);
+      const campaigns = await listCampaigns();
+      return campaigns.map(formatCampaign);
+    },
+
+    campaign: async (_: unknown, args: { id: string }, context: AuthContext) => {
+      requireAuth(context);
+      const campaign = await findCampaignById(args.id);
+      return campaign ? formatCampaign(campaign) : null;
+    },
+
+    campaignStats: async (_: unknown, args: { campaignId: string }, context: AuthContext) => {
+      requireAuth(context);
+      const stats = await getCampaignStats(args.campaignId);
+      const totalSent = stats.total_sent || 1; // avoid division by zero
+      return {
+        totalRecipients: stats.total_recipients,
+        totalSent: stats.total_sent,
+        totalFailed: stats.total_failed,
+        totalOpened: stats.total_opened,
+        totalClicked: stats.total_clicked,
+        openRate: stats.total_sent > 0 ? stats.total_opened / totalSent : 0,
+        clickRate: stats.total_sent > 0 ? stats.total_clicked / totalSent : 0,
+      };
+    },
+
+    campaignSends: async (_: unknown, args: { campaignId: string; limit?: number; offset?: number }, context: AuthContext) => {
+      requireAuth(context);
+      const sends = await listSends(args.campaignId, args.limit, args.offset);
+      return sends.map(formatCampaignSend);
+    },
+
+    previewTargetAudience: async (_: unknown, args: { targetingRules: string }, context: AuthContext) => {
+      requireAuth(context);
+      const rules = JSON.parse(args.targetingRules);
+      return previewAudience(rules);
+    },
   },
 
   Mutation: {
@@ -641,6 +760,7 @@ const resolvers: any = {
           originId?: string;
           guestFirstName?: string;
           guestLastName?: string;
+          guestEmail?: string;
           checkInDate?: string;
           checkOutDate?: string;
           totalAmount?: number;
@@ -659,6 +779,7 @@ const resolvers: any = {
         arrivalTime: args.input.checkInDate,
         departureTime: args.input.checkOutDate,
         roomId: args.input.roomId,
+        guestEmail: args.input.guestEmail,
         customer: {
           firstName: args.input.guestFirstName,
           lastName: args.input.guestLastName,
@@ -1346,6 +1467,56 @@ const resolvers: any = {
       return { success: true, events: events.map(formatStoredEvent) };
     },
 
+    // Campaign mutations
+    createEmailTemplate: async (_: unknown, args: { input: { name: string; subject: string; htmlBody: string; previewText?: string } }, context: AuthContext) => {
+      requireAuth(context);
+      const template = await createTemplate(args.input);
+      return formatEmailTemplate(template);
+    },
+
+    updateEmailTemplate: async (_: unknown, args: { id: string; input: { name?: string; subject?: string; htmlBody?: string; previewText?: string; isActive?: boolean } }, context: AuthContext) => {
+      requireAuth(context);
+      const template = await updateTemplate(args.id, args.input);
+      if (!template) throw new Error('Template not found');
+      return formatEmailTemplate(template);
+    },
+
+    deleteEmailTemplate: async (_: unknown, args: { id: string }, context: AuthContext) => {
+      requireRole(context, 'ADMIN');
+      return deleteTemplate(args.id);
+    },
+
+    createCampaign: async (_: unknown, args: { input: { name: string; templateId: string; targetingRules: string; scheduledAt?: string } }, context: AuthContext) => {
+      requireAuth(context);
+      const campaign = await createCampaign(args.input);
+      return formatCampaign(campaign);
+    },
+
+    updateCampaign: async (_: unknown, args: { id: string; input: { name?: string; templateId?: string; targetingRules?: string; scheduledAt?: string } }, context: AuthContext) => {
+      requireAuth(context);
+      const campaign = await updateCampaignRepo(args.id, args.input);
+      if (!campaign) throw new Error('Campaign not found');
+      return formatCampaign(campaign);
+    },
+
+    deleteCampaign: async (_: unknown, args: { id: string }, context: AuthContext) => {
+      requireRole(context, 'ADMIN');
+      return deleteCampaign(args.id);
+    },
+
+    sendCampaign: async (_: unknown, args: { id: string }, context: AuthContext) => {
+      requireAuth(context);
+      await executeCampaign(args.id);
+      const campaign = await findCampaignById(args.id);
+      if (!campaign) throw new Error('Campaign not found');
+      return formatCampaign(campaign);
+    },
+
+    sendTestEmail: async (_: unknown, args: { templateId: string; recipientEmail: string }, context: AuthContext) => {
+      requireAuth(context);
+      return sendTestEmail(args.templateId, args.recipientEmail);
+    },
+
     // Auth mutations
     register: async (_: unknown, args: { input: { email: string; password: string; name: string } }, context: { res: express.Response }) => {
       const existing = await findByEmail(args.input.email);
@@ -1553,6 +1724,13 @@ const resolvers: any = {
     },
   },
 
+  Campaign: {
+    template: async (parent: { templateId: string }) => {
+      const template = await findTemplateById(parent.templateId);
+      return template ? formatEmailTemplate(template) : null;
+    },
+  },
+
   WellnessBooking: {
     service: async (parent: { serviceId?: string | null }) => {
       if (!parent.serviceId) return null;
@@ -1596,8 +1774,15 @@ async function startServer() {
   // Seed default room types
   await seedDefaultRoomTypes();
 
+  // Initialize campaign tables and seed templates
+  await initializeCampaignTables();
+  await seedDefaultTemplates();
+
   const app = express();
   app.use(cookieParser());
+
+  // Mount campaign tracking routes (before GraphQL middleware)
+  mountTrackingRoutes(app);
 
   const server = new ApolloServer({ schema });
   await server.start();

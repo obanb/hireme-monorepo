@@ -132,13 +132,14 @@ export function createMcpServer(): McpServer {
     {
       guestFirstName: z.string().describe('Guest first name'),
       guestLastName: z.string().describe('Guest last name'),
+      guestEmail: z.string().optional().describe('Guest email address'),
       checkInDate: z.string().describe('Check-in date (ISO date string)'),
       checkOutDate: z.string().describe('Check-out date (ISO date string)'),
       roomId: z.string().optional().describe('Room ID to assign'),
       totalAmount: z.number().optional().describe('Total reservation amount'),
       currency: z.string().optional().describe('Currency code (e.g. EUR, USD)'),
     },
-    async ({ guestFirstName, guestLastName, checkInDate, checkOutDate, roomId, totalAmount, currency }) => {
+    async ({ guestFirstName, guestLastName, guestEmail, checkInDate, checkOutDate, roomId, totalAmount, currency }) => {
       try {
         const input: Record<string, any> = {
           guestFirstName,
@@ -146,6 +147,7 @@ export function createMcpServer(): McpServer {
           checkInDate,
           checkOutDate,
         };
+        if (guestEmail) input.guestEmail = guestEmail;
         if (roomId) input.roomId = roomId;
         if (totalAmount !== undefined) input.totalAmount = totalAmount;
         if (currency) input.currency = currency;

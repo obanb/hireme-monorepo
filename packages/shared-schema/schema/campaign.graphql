@@ -1,0 +1,105 @@
+type EmailTemplate {
+  id: ID!
+  name: String!
+  subject: String!
+  htmlBody: String!
+  previewText: String
+  isActive: Boolean!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Campaign {
+  id: ID!
+  name: String!
+  template: EmailTemplate!
+  targetingRules: String!
+  status: String!
+  scheduledAt: String
+  sentAt: String
+  totalRecipients: Int!
+  totalSent: Int!
+  totalFailed: Int!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type CampaignSend {
+  id: ID!
+  recipientEmail: String!
+  recipientName: String
+  status: String!
+  openedAt: String
+  clickedAt: String
+  sentAt: String
+}
+
+type CampaignStats {
+  totalRecipients: Int!
+  totalSent: Int!
+  totalFailed: Int!
+  totalOpened: Int!
+  totalClicked: Int!
+  openRate: Float!
+  clickRate: Float!
+}
+
+type TargetAudiencePreview {
+  count: Int!
+  sampleRecipients: [TargetRecipient!]!
+}
+
+type TargetRecipient {
+  email: String!
+  name: String
+}
+
+input CreateEmailTemplateInput {
+  name: String!
+  subject: String!
+  htmlBody: String!
+  previewText: String
+}
+
+input UpdateEmailTemplateInput {
+  name: String
+  subject: String
+  htmlBody: String
+  previewText: String
+  isActive: Boolean
+}
+
+input CreateCampaignInput {
+  name: String!
+  templateId: ID!
+  targetingRules: String!
+  scheduledAt: String
+}
+
+input UpdateCampaignInput {
+  name: String
+  templateId: ID
+  targetingRules: String
+  scheduledAt: String
+}
+
+extend type Query {
+  emailTemplates(includeInactive: Boolean): [EmailTemplate!]!
+  emailTemplate(id: ID!): EmailTemplate
+  campaigns: [Campaign!]!
+  campaign(id: ID!): Campaign
+  campaignStats(campaignId: ID!): CampaignStats!
+  campaignSends(campaignId: ID!, limit: Int, offset: Int): [CampaignSend!]!
+  previewTargetAudience(targetingRules: String!): TargetAudiencePreview!
+}
+
+extend type Mutation {
+  createEmailTemplate(input: CreateEmailTemplateInput!): EmailTemplate!
+  updateEmailTemplate(id: ID!, input: UpdateEmailTemplateInput!): EmailTemplate!
+  deleteEmailTemplate(id: ID!): Boolean!
+  createCampaign(input: CreateCampaignInput!): Campaign!
+  updateCampaign(id: ID!, input: UpdateCampaignInput!): Campaign!
+  deleteCampaign(id: ID!): Boolean!
+  sendCampaign(id: ID!): Campaign!
+  sendTestEmail(templateId: ID!, recipientEmail: String!): Boolean!
+}
