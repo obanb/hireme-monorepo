@@ -26,5 +26,6 @@ export interface StreamCallbacks {
   onEnd: (fullMessage: string) => void;
   onToolStart: (toolName: string, args: Record<string, any>) => void;
   onToolResult: (toolName: string, result: any) => void;
+  onNavigate: (path: string) => void;
   onError: (error: string) => void;
 }

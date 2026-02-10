@@ -53,6 +53,9 @@ io.on('connection', (socket) => {
       onToolResult: (toolName: string, result: any) => {
         socket.emit('chat:tool:result', { tool: toolName, result });
       },
+      onNavigate: (path: string) => {
+        socket.emit('chat:navigate', { path });
+      },
       onError: (error: string) => {
         socket.emit('chat:error', { error });
       },

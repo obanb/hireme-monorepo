@@ -51,6 +51,7 @@ export default function RoomTypesPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `
             query ListRoomTypes($includeInactive: Boolean) {
@@ -225,6 +226,7 @@ export default function RoomTypesPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `
             mutation DeleteRoomType($id: ID!) {
@@ -259,6 +261,7 @@ export default function RoomTypesPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `
             mutation UpdateRoomType($id: ID!, $input: UpdateRoomTypeInput!) {

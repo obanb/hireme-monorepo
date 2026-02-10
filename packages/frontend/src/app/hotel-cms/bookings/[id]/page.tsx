@@ -66,6 +66,7 @@ export default function ReservationDetailPage() {
         fetch(GRAPHQL_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             query: `
               query GetReservation($id: ID!) {
@@ -98,6 +99,7 @@ export default function ReservationDetailPage() {
         fetch(GRAPHQL_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             query: `
               query GetEventHistory($id: ID!) {

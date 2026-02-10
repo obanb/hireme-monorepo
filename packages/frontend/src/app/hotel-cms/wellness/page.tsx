@@ -128,6 +128,7 @@ export default function WellnessPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `query { wellnessServices(includeInactive: ${includeInactive}) {
             id name priceNormal priceOBE priceOVE vatCharge serviceTypeBitMask
@@ -147,6 +148,7 @@ export default function WellnessPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `query { wellnessTherapists(includeInactive: ${includeInactive}) {
             id code name serviceTypesBitMask isVirtual isActive
@@ -165,6 +167,7 @@ export default function WellnessPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `query { wellnessRoomTypes(includeInactive: ${includeInactive}) {
             id name bit maskValue isActive
@@ -183,6 +186,7 @@ export default function WellnessPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `query($filter: WellnessBookingFilterInput) {
             wellnessBookings(filter: $filter) {
@@ -210,6 +214,7 @@ export default function WellnessPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `query {
             reservations(filter: { status: "CONFIRMED" }) {
@@ -246,6 +251,7 @@ export default function WellnessPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `mutation($input: CreateWellnessServiceInput!) {
             createWellnessService(input: $input) { service { id name } }
@@ -273,6 +279,7 @@ export default function WellnessPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `mutation($id: ID!, $input: UpdateWellnessServiceInput!) {
             updateWellnessService(id: $id, input: $input) { service { id } }
@@ -299,6 +306,7 @@ export default function WellnessPage() {
       await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `mutation { deleteWellnessService(id: "${id}") { success } }`,
         }),
@@ -316,6 +324,7 @@ export default function WellnessPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `mutation($input: CreateWellnessTherapistInput!) {
             createWellnessTherapist(input: $input) { therapist { id } }
@@ -343,6 +352,7 @@ export default function WellnessPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `mutation($id: ID!, $input: UpdateWellnessTherapistInput!) {
             updateWellnessTherapist(id: $id, input: $input) { therapist { id } }
@@ -369,6 +379,7 @@ export default function WellnessPage() {
       await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `mutation { deleteWellnessTherapist(id: "${id}") { success } }`,
         }),
@@ -386,6 +397,7 @@ export default function WellnessPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `mutation($input: CreateWellnessRoomTypeInput!) {
             createWellnessRoomType(input: $input) { roomType { id } }
@@ -413,6 +425,7 @@ export default function WellnessPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `mutation($id: ID!, $input: UpdateWellnessRoomTypeInput!) {
             updateWellnessRoomType(id: $id, input: $input) { roomType { id } }
@@ -439,6 +452,7 @@ export default function WellnessPage() {
       await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `mutation { deleteWellnessRoomType(id: "${id}") { success } }`,
         }),
@@ -467,6 +481,7 @@ export default function WellnessPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `mutation($input: CreateWellnessBookingInput!) {
             createWellnessBooking(input: $input) { booking { id } }
@@ -496,6 +511,7 @@ export default function WellnessPage() {
       await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `mutation { cancelWellnessBooking(id: "${id}") { booking { id } } }`,
         }),

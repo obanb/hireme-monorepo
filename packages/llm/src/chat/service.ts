@@ -157,6 +157,16 @@ export async function handleChatMessage(
               ?.map((c: any) => c.text)
               .join('\n') || JSON.stringify(result);
 
+            // Detect navigation action from navigate_to tool
+            try {
+              const parsed = JSON.parse(resultText);
+              if (parsed.__action === 'navigate' && parsed.path) {
+                callbacks.onNavigate(parsed.path);
+              }
+            } catch {
+              // Not JSON or no navigation action — ignore
+            }
+
             callbacks.onToolResult(toolName, resultText);
 
             session.messages.push({

@@ -1,6 +1,9 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
+import cookieParser from "cookie-parser";
+import bcrypt from "bcryptjs";
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 import { buildSubgraphSchema } from "@apollo/subgraph";
@@ -26,6 +29,43 @@ import {
   RoomStatus,
   seedDefaultRoomTypes,
 } from "./event-sourcing";
+import {
+  authConfig,
+  initializeAuthTables,
+  seedAdminUser,
+  extractAuthContext,
+  AuthContext,
+  requireAuth,
+  requireRole,
+  findByEmail,
+  findById as findUserById,
+  createUser,
+  updatePassword,
+  updateRole,
+  updateStatus,
+  setEmailVerified,
+  findByVerificationToken,
+  setPasswordResetToken,
+  findByResetToken,
+  clearResetToken,
+  listAll as listAllUsers,
+  createRefreshToken,
+  findByTokenHash,
+  deleteByTokenHash,
+  deleteAllForUser,
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+  hashToken,
+  generateRandomToken,
+  COOKIE_ACCESS,
+  COOKIE_REFRESH,
+  accessCookieOptions,
+  refreshCookieOptions,
+  clearCookieOptions,
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+} from "./auth";
 
 // Use types from shared-schema
 const hotels: Hotel[] = [
@@ -355,8 +395,23 @@ function formatVoucher(voucher: {
   };
 }
 
+// Helper to format user for GraphQL response
+function formatUser(user: { id: string; email: string; name: string; role: string; is_active: boolean; email_verified: boolean; created_at: Date; updated_at: Date }) {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    isActive: user.is_active,
+    emailVerified: user.email_verified,
+    createdAt: user.created_at.toISOString(),
+    updatedAt: user.updated_at.toISOString(),
+  };
+}
+
 // Use generated resolver types from shared-schema
-const resolvers = {
+// Context typed as any to satisfy buildSubgraphSchema's GraphQLResolverMap<unknown>
+const resolvers: any = {
   Query: {
     // Hotel queries
     hotels: () => hotels,
@@ -553,6 +608,28 @@ const resolvers = {
     ) => {
       return statisticsRepository.getRevenueTimeline(args.filter ?? undefined);
     },
+
+    // Auth queries
+    me: async (_: unknown, __: unknown, context: AuthContext) => {
+      if (!context.user) return null;
+      if (authConfig.mock) {
+        return { id: context.user.id, email: context.user.email, name: context.user.name, role: context.user.role, isActive: true, emailVerified: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      }
+      const user = await findUserById(context.user.id);
+      return user ? formatUser(user) : null;
+    },
+
+    users: async (_: unknown, __: unknown, context: AuthContext) => {
+      requireRole(context, 'ADMIN');
+      const users = await listAllUsers();
+      return users.map(formatUser);
+    },
+
+    user: async (_: unknown, args: { id: string }, context: AuthContext) => {
+      requireRole(context, 'ADMIN');
+      const user = await findUserById(args.id);
+      return user ? formatUser(user) : null;
+    },
   },
 
   Mutation: {
@@ -570,8 +647,10 @@ const resolvers = {
           currency?: string;
           roomId?: string;
         };
-      }
+      },
+      context: AuthContext
     ) => {
+      requireAuth(context);
       const reservationId = uuidv4();
       const { aggregate, events } = await reservationRepository.create(reservationId, {
         originId: args.input.originId,
@@ -601,8 +680,10 @@ const resolvers = {
     // Confirm an existing reservation
     confirmReservation: async (
       _: unknown,
-      args: { input: { reservationId: string; confirmedBy?: string } }
+      args: { input: { reservationId: string; confirmedBy?: string } },
+      context: AuthContext
     ) => {
+      requireAuth(context);
       const { aggregate, events } = await reservationRepository.confirm(
         args.input.reservationId,
         args.input.confirmedBy
@@ -623,8 +704,10 @@ const resolvers = {
     // Cancel an existing reservation
     cancelReservation: async (
       _: unknown,
-      args: { input: { reservationId: string; reason: string } }
+      args: { input: { reservationId: string; reason: string } },
+      context: AuthContext
     ) => {
+      requireAuth(context);
       const { aggregate, events } = await reservationRepository.cancel(
         args.input.reservationId,
         args.input.reason
@@ -645,8 +728,10 @@ const resolvers = {
     // Assign a room to an existing reservation
     assignRoom: async (
       _: unknown,
-      args: { input: { reservationId: string; roomId: string } }
+      args: { input: { reservationId: string; roomId: string } },
+      context: AuthContext
     ) => {
+      requireAuth(context);
       const { aggregate, events } = await reservationRepository.assignRoom(
         args.input.reservationId,
         args.input.roomId
@@ -711,8 +796,10 @@ const resolvers = {
           roomTypeId?: string;
           rateCodeId?: string;
         };
-      }
+      },
+      context: AuthContext
     ) => {
+      requireRole(context, 'ADMIN', 'USER');
       const roomId = uuidv4();
       const { events } = await roomRepository.create(roomId, {
         name: args.input.name,
@@ -1258,6 +1345,182 @@ const resolvers = {
       const { events } = await voucherRepository.delete(args.id);
       return { success: true, events: events.map(formatStoredEvent) };
     },
+
+    // Auth mutations
+    register: async (_: unknown, args: { input: { email: string; password: string; name: string } }, context: { res: express.Response }) => {
+      const existing = await findByEmail(args.input.email);
+      if (existing) {
+        throw new Error('Email already registered');
+      }
+
+      const passwordHash = await bcrypt.hash(args.input.password, authConfig.bcryptRounds);
+      const verificationToken = generateRandomToken();
+      const user = await createUser({
+        email: args.input.email,
+        passwordHash,
+        name: args.input.name,
+        emailVerificationToken: verificationToken,
+      });
+
+      // Send verification email (async, don't block)
+      sendVerificationEmail(user.email, user.name, verificationToken).catch(err =>
+        console.error('[auth] Failed to send verification email:', err)
+      );
+
+      // Issue tokens
+      const tokenPayload = { userId: user.id, role: user.role };
+      const accessToken = signAccessToken(tokenPayload);
+      const refreshToken = signRefreshToken(tokenPayload);
+
+      // Store refresh token
+      await createRefreshToken(user.id, hashToken(refreshToken), new Date(Date.now() + authConfig.refreshTokenTtlMs));
+
+      // Set cookies
+      context.res.cookie(COOKIE_ACCESS, accessToken, accessCookieOptions());
+      context.res.cookie(COOKIE_REFRESH, refreshToken, refreshCookieOptions());
+
+      return { user: formatUser(user), message: 'Registration successful. Please verify your email.' };
+    },
+
+    login: async (_: unknown, args: { input: { email: string; password: string } }, context: { res: express.Response }) => {
+      const user = await findByEmail(args.input.email);
+      if (!user) {
+        throw new Error('Invalid email or password');
+      }
+
+      const valid = await bcrypt.compare(args.input.password, user.password_hash);
+      if (!valid) {
+        throw new Error('Invalid email or password');
+      }
+
+      if (!user.is_active) {
+        throw new Error('Account is deactivated');
+      }
+
+      const tokenPayload = { userId: user.id, role: user.role };
+      const accessToken = signAccessToken(tokenPayload);
+      const refreshToken = signRefreshToken(tokenPayload);
+
+      await createRefreshToken(user.id, hashToken(refreshToken), new Date(Date.now() + authConfig.refreshTokenTtlMs));
+
+      context.res.cookie(COOKIE_ACCESS, accessToken, accessCookieOptions());
+      context.res.cookie(COOKIE_REFRESH, refreshToken, refreshCookieOptions());
+
+      return { user: formatUser(user) };
+    },
+
+    logout: async (_: unknown, __: unknown, context: AuthContext & { req: express.Request; res: express.Response }) => {
+      const refreshToken = context.req.cookies?.[COOKIE_REFRESH];
+      if (refreshToken) {
+        await deleteByTokenHash(hashToken(refreshToken));
+      }
+
+      context.res.clearCookie(COOKIE_ACCESS, clearCookieOptions());
+      context.res.clearCookie(COOKIE_REFRESH, clearCookieOptions());
+
+      return { success: true, message: 'Logged out' };
+    },
+
+    refreshToken: async (_: unknown, __: unknown, context: { req: express.Request; res: express.Response }) => {
+      const token = context.req.cookies?.[COOKIE_REFRESH];
+      if (!token) {
+        throw new Error('No refresh token');
+      }
+
+      let payload;
+      try {
+        payload = verifyRefreshToken(token);
+      } catch {
+        throw new Error('Invalid refresh token');
+      }
+
+      const stored = await findByTokenHash(hashToken(token));
+      if (!stored) {
+        throw new Error('Refresh token not found');
+      }
+
+      // Delete old token
+      await deleteByTokenHash(hashToken(token));
+
+      const user = await findUserById(payload.userId);
+      if (!user || !user.is_active) {
+        throw new Error('User not found or deactivated');
+      }
+
+      // Issue new pair
+      const newPayload = { userId: user.id, role: user.role };
+      const newAccessToken = signAccessToken(newPayload);
+      const newRefreshToken = signRefreshToken(newPayload);
+
+      await createRefreshToken(user.id, hashToken(newRefreshToken), new Date(Date.now() + authConfig.refreshTokenTtlMs));
+
+      context.res.cookie(COOKIE_ACCESS, newAccessToken, accessCookieOptions());
+      context.res.cookie(COOKIE_REFRESH, newRefreshToken, refreshCookieOptions());
+
+      return { user: formatUser(user) };
+    },
+
+    changePassword: async (_: unknown, args: { input: { currentPassword: string; newPassword: string } }, context: AuthContext) => {
+      const authUser = requireAuth(context);
+      const user = await findUserById(authUser.id);
+      if (!user) throw new Error('User not found');
+
+      const valid = await bcrypt.compare(args.input.currentPassword, user.password_hash);
+      if (!valid) throw new Error('Current password is incorrect');
+
+      const newHash = await bcrypt.hash(args.input.newPassword, authConfig.bcryptRounds);
+      await updatePassword(user.id, newHash);
+
+      return { success: true, message: 'Password changed' };
+    },
+
+    requestPasswordReset: async (_: unknown, args: { input: { email: string } }) => {
+      const user = await findByEmail(args.input.email);
+      if (user) {
+        const token = generateRandomToken();
+        const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+        await setPasswordResetToken(user.id, token, expires);
+        sendPasswordResetEmail(user.email, user.name, token).catch(err =>
+          console.error('[auth] Failed to send reset email:', err)
+        );
+      }
+      // Always return success (don't leak email existence)
+      return { success: true, message: 'If the email exists, a reset link has been sent.' };
+    },
+
+    resetPassword: async (_: unknown, args: { input: { token: string; newPassword: string } }) => {
+      const user = await findByResetToken(args.input.token);
+      if (!user) throw new Error('Invalid or expired reset token');
+
+      const newHash = await bcrypt.hash(args.input.newPassword, authConfig.bcryptRounds);
+      await updatePassword(user.id, newHash);
+      await clearResetToken(user.id);
+      await deleteAllForUser(user.id); // Invalidate all sessions
+
+      return { success: true, message: 'Password has been reset. Please login.' };
+    },
+
+    verifyEmail: async (_: unknown, args: { token: string }) => {
+      const user = await findByVerificationToken(args.token);
+      if (!user) throw new Error('Invalid verification token');
+
+      await setEmailVerified(user.id);
+      return { success: true, message: 'Email verified' };
+    },
+
+    updateUserRole: async (_: unknown, args: { input: { userId: string; role: string } }, context: AuthContext) => {
+      requireRole(context, 'ADMIN');
+      const user = await updateRole(args.input.userId, args.input.role);
+      if (!user) throw new Error('User not found');
+      return formatUser(user);
+    },
+
+    updateUserStatus: async (_: unknown, args: { input: { userId: string; isActive: boolean } }, context: AuthContext) => {
+      requireRole(context, 'ADMIN');
+      const user = await updateStatus(args.input.userId, args.input.isActive);
+      if (!user) throw new Error('User not found');
+      return formatUser(user);
+    },
   },
 
   Hotel: {
@@ -1326,21 +1589,38 @@ async function startServer() {
   await initializeDatabase();
   console.log('Database schema ready');
 
+  // Initialize auth tables and seed admin
+  await initializeAuthTables();
+  await seedAdminUser();
+
   // Seed default room types
   await seedDefaultRoomTypes();
 
   const app = express();
+  app.use(cookieParser());
+
   const server = new ApolloServer({ schema });
   await server.start();
 
+  const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:3000';
+
   app.use(
     "/graphql",
-    cors<cors.CorsRequest>(),
+    cors<cors.CorsRequest>({
+      origin: corsOrigin,
+      credentials: true,
+    }),
     bodyParser.json(),
     expressMiddleware(server, {
-      context: async () => ({
-        requestId: `req_${Date.now()}`
-      })
+      context: async ({ req, res }) => {
+        const authContext = await extractAuthContext(req);
+        return {
+          ...authContext,
+          req,
+          res,
+          requestId: `req_${Date.now()}`,
+        };
+      }
     })
   );
 

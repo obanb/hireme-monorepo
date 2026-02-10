@@ -54,6 +54,7 @@ export default function RateCodesPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `
             query ListRateCodes($includeInactive: Boolean) {
@@ -235,6 +236,7 @@ export default function RateCodesPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `
             mutation DeleteRateCode($id: ID!) {
@@ -269,6 +271,7 @@ export default function RateCodesPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `
             mutation UpdateRateCode($id: ID!, $input: UpdateRateCodeInput!) {

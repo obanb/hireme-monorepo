@@ -356,6 +356,7 @@ export default function VouchersPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `query { vouchers { id number code active price currency validity createdAt paidAt usedAt canceledAt valueTotal valueRemaining valueUsed customerData { name email } } }`,
         }),
@@ -486,6 +487,7 @@ export default function VouchersPage() {
         const response = await fetch(GRAPHQL_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             query: `mutation($input: CreateVoucherInput!) { createVoucher(input: $input) { voucher { id } } }`,
             variables: { input: newVoucher },

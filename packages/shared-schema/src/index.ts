@@ -50,8 +50,12 @@ export function getStatisticsSchema(): string {
   return readFileSync(join(getSchemaDir(), "statistics.graphql"), "utf-8");
 }
 
+export function getAuthSchema(): string {
+  return readFileSync(join(getSchemaDir(), "auth.graphql"), "utf-8");
+}
+
 export function getCombinedSchema(): string {
-  return getCommonSchema() + "\n" + getHotelSchema() + "\n" + getRoomTypeSchema() + "\n" + getRateCodeSchema() + "\n" + getRoomSchema() + "\n" + getReservationSchema() + "\n" + getWellnessSchema() + "\n" + getStatisticsSchema();
+  return getCommonSchema() + "\n" + getHotelSchema() + "\n" + getRoomTypeSchema() + "\n" + getRateCodeSchema() + "\n" + getRoomSchema() + "\n" + getReservationSchema() + "\n" + getWellnessSchema() + "\n" + getStatisticsSchema() + "\n" + getAuthSchema();
 }
 
 // Re-export generated types (will be available after codegen runs)

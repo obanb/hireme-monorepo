@@ -1,0 +1,80 @@
+enum UserRole {
+  ADMIN
+  USER
+  VIEWER
+}
+
+type User {
+  id: ID!
+  email: String!
+  name: String!
+  role: UserRole!
+  isActive: Boolean!
+  emailVerified: Boolean!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type AuthPayload {
+  user: User!
+  message: String
+}
+
+type AuthMessage {
+  success: Boolean!
+  message: String!
+}
+
+input RegisterInput {
+  email: String!
+  password: String!
+  name: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input ChangePasswordInput {
+  currentPassword: String!
+  newPassword: String!
+}
+
+input RequestPasswordResetInput {
+  email: String!
+}
+
+input ResetPasswordInput {
+  token: String!
+  newPassword: String!
+}
+
+input UpdateUserRoleInput {
+  userId: ID!
+  role: UserRole!
+}
+
+input UpdateUserStatusInput {
+  userId: ID!
+  isActive: Boolean!
+}
+
+extend type Query {
+  me: User
+  users: [User!]!
+  user(id: ID!): User
+}
+
+extend type Mutation {
+  register(input: RegisterInput!): AuthPayload!
+  login(input: LoginInput!): AuthPayload!
+  logout: AuthMessage!
+  refreshToken: AuthPayload!
+  changePassword(input: ChangePasswordInput!): AuthMessage!
+  requestPasswordReset(input: RequestPasswordResetInput!): AuthMessage!
+  resetPassword(input: ResetPasswordInput!): AuthMessage!
+  updateUserRole(input: UpdateUserRoleInput!): User!
+  updateUserStatus(input: UpdateUserStatusInput!): User!
+  verifyEmail(token: String!): AuthMessage!
+}

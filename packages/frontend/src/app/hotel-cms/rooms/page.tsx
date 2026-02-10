@@ -109,6 +109,7 @@ export default function RoomsPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `
             query ListRooms($type: RoomType, $status: RoomStatus) {
@@ -359,6 +360,7 @@ export default function RoomsPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `
             mutation ChangeRoomStatus($input: ChangeRoomStatusInput!) {

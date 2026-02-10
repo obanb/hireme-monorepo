@@ -21,13 +21,19 @@ export interface ToolCallInfo {
   status: 'running' | 'done' | 'error';
 }
 
-export function useChat() {
+export interface UseChatOptions {
+  onNavigate?: (path: string) => void;
+}
+
+export function useChat(options?: UseChatOptions) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const streamingRef = useRef<string>('');
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
 
   useEffect(() => {
     const socket = io(LLM_URL, {
@@ -142,6 +148,10 @@ export function useChat() {
         ];
       });
       setIsLoading(false);
+    });
+
+    socket.on('chat:navigate', (data: { path: string }) => {
+      optionsRef.current?.onNavigate?.(data.path);
     });
 
     return () => {

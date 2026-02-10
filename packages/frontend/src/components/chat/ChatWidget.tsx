@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useChat, ChatMessage, ToolCallInfo } from '../../hooks/useChat';
 
@@ -84,7 +85,15 @@ export default function ChatWidget() {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { messages, isConnected, isLoading, sendMessage, clearMessages } = useChat();
+  const router = useRouter();
+
+  const handleNavigate = useCallback((path: string) => {
+    router.push(path);
+  }, [router]);
+
+  const { messages, isConnected, isLoading, sendMessage, clearMessages } = useChat({
+    onNavigate: handleNavigate,
+  });
 
   useEffect(() => {
     if (messagesEndRef.current) {

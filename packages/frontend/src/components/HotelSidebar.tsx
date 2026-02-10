@@ -3,31 +3,44 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '../context/AuthContext';
 
 interface MenuItem {
   name: string;
   href: string;
   icon: string;
+  roles?: string[]; // if set, only these roles can see the item
 }
 
 const menuItems: MenuItem[] = [
   { name: 'Dashboard', href: '/hotel-cms', icon: '◈' },
-  { name: 'Reception', href: '/hotel-cms/reception', icon: '◎' },
+  { name: 'Reception', href: '/hotel-cms/reception', icon: '◎', roles: ['ADMIN', 'USER'] },
   { name: 'Calendar', href: '/hotel-cms/calendar', icon: '◫' },
   { name: 'Bookings', href: '/hotel-cms/bookings', icon: '▣' },
-  { name: 'Wellness', href: '/hotel-cms/wellness', icon: '✦' },
-  { name: 'Vouchers', href: '/hotel-cms/vouchers', icon: '◆' },
-  { name: 'Rooms', href: '/hotel-cms/rooms', icon: '▤' },
-  { name: 'Room Types', href: '/hotel-cms/room-types', icon: '◧' },
-  { name: 'Rate Codes', href: '/hotel-cms/rate-codes', icon: '◉' },
+  { name: 'Wellness', href: '/hotel-cms/wellness', icon: '✦', roles: ['ADMIN', 'USER'] },
+  { name: 'Vouchers', href: '/hotel-cms/vouchers', icon: '◆', roles: ['ADMIN', 'USER'] },
+  { name: 'Rooms', href: '/hotel-cms/rooms', icon: '▤', roles: ['ADMIN', 'USER'] },
+  { name: 'Room Types', href: '/hotel-cms/room-types', icon: '◧', roles: ['ADMIN', 'USER'] },
+  { name: 'Rate Codes', href: '/hotel-cms/rate-codes', icon: '◉', roles: ['ADMIN', 'USER'] },
   { name: 'Statistics', href: '/hotel-cms/statistics', icon: '◑' },
-  { name: 'Guests', href: '/hotel-cms/guests', icon: '◐' },
+  { name: 'Guests', href: '/hotel-cms/guests', icon: '◐', roles: ['ADMIN', 'USER'] },
+  { name: 'Users', href: '/hotel-cms/users', icon: '◑', roles: ['ADMIN'] },
   { name: 'Settings', href: '/hotel-cms/settings', icon: '⚙' },
 ];
 
 export default function HotelSidebar() {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { user, logout } = useAuth();
+
+  const visibleItems = menuItems.filter((item) => {
+    if (!item.roles) return true;
+    return user ? item.roles.includes(user.role) : false;
+  });
+
+  const initials = user?.name
+    ? user.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
+    : '??';
 
   return (
     <div
@@ -64,7 +77,7 @@ export default function HotelSidebar() {
 
       {/* Navigation Menu */}
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-        {menuItems.map((item) => {
+        {visibleItems.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
@@ -95,20 +108,26 @@ export default function HotelSidebar() {
       {/* User Profile */}
       <div className="p-4 border-t border-stone-100">
         <div
-          className={`flex items-center gap-3 p-3 rounded-xl hover:bg-stone-50 transition-colors cursor-pointer ${
+          className={`flex items-center gap-3 p-3 rounded-xl hover:bg-stone-50 transition-colors ${
             isCollapsed ? 'justify-center' : ''
           }`}
         >
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-violet-500/25 flex-shrink-0">
-            <span className="text-white font-bold text-sm">JD</span>
+            <span className="text-white font-bold text-sm">{initials}</span>
           </div>
           {!isCollapsed && (
             <>
               <div className="flex-1 min-w-0">
-                <p className="text-stone-900 font-semibold text-sm truncate">John Doe</p>
-                <p className="text-stone-400 text-xs truncate">Admin</p>
+                <p className="text-stone-900 font-semibold text-sm truncate">{user?.name ?? 'Loading...'}</p>
+                <p className="text-stone-400 text-xs truncate">{user?.role ?? ''}</p>
               </div>
-              <div className="w-2 h-2 rounded-full bg-lime-400 shadow-lg shadow-lime-400/50" />
+              <button
+                onClick={logout}
+                className="p-1.5 hover:bg-stone-200 rounded-lg transition-colors text-stone-400 hover:text-stone-600 text-xs"
+                title="Logout"
+              >
+                ↪
+              </button>
             </>
           )}
         </div>

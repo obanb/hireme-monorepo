@@ -124,6 +124,7 @@ function BookingsPageContent() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `
             query ListRooms {
@@ -158,6 +159,7 @@ function BookingsPageContent() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `
             query ListReservations($filter: ReservationFilterInput) {
@@ -223,6 +225,7 @@ function BookingsPageContent() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           query: `
             mutation CreateReservation($input: CreateReservationInput!) {

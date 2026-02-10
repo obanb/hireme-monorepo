@@ -81,6 +81,7 @@ export default function StatisticsPage() {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ query }),
       });
       const result = await response.json();

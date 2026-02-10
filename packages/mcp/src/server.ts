@@ -195,5 +195,46 @@ export function createMcpServer(): McpServer {
     }
   );
 
+  server.tool(
+    'navigate_to',
+    'Navigate the frontend application to a specific page. Use this after fetching data when the user wants to see/view/show a specific entity.',
+    {
+      page: z.enum([
+        'dashboard', 'bookings', 'booking_detail', 'calendar',
+        'rooms', 'room_types', 'rate_codes', 'reception',
+        'wellness', 'vouchers', 'statistics',
+      ]).describe('The page to navigate to'),
+      entityId: z.string().optional().describe('Entity ID for detail pages (e.g. reservation ID for booking_detail)'),
+    },
+    // @ts-expect-error TS2589 - MCP SDK zod type inference depth limit
+    async ({ page, entityId }: { page: string; entityId?: string }) => {
+      const routes: Record<string, string> = {
+        dashboard: '/hotel-cms',
+        bookings: '/hotel-cms/bookings',
+        booking_detail: `/hotel-cms/bookings/${entityId}`,
+        calendar: '/hotel-cms/calendar',
+        rooms: '/hotel-cms/rooms',
+        room_types: '/hotel-cms/room-types',
+        rate_codes: '/hotel-cms/rate-codes',
+        reception: '/hotel-cms/reception',
+        wellness: '/hotel-cms/wellness',
+        vouchers: '/hotel-cms/vouchers',
+        statistics: '/hotel-cms/statistics',
+      };
+
+      const path = routes[page];
+      if (!path) {
+        return { content: [{ type: 'text' as const, text: `Unknown page: ${page}` }], isError: true };
+      }
+
+      return {
+        content: [{
+          type: 'text' as const,
+          text: JSON.stringify({ __action: 'navigate', path }),
+        }],
+      };
+    }
+  );
+
   return server;
 }

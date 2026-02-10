@@ -86,6 +86,7 @@ export default function CalendarPage() {
         fetch(GRAPHQL_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             query: `
               query ListRooms {
@@ -105,6 +106,7 @@ export default function CalendarPage() {
         fetch(GRAPHQL_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             query: `
               query ListReservations($filter: ReservationFilterInput) {
