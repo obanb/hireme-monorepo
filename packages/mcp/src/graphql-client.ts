@@ -1,4 +1,4 @@
-const GRAPHQL_ENDPOINT = process.env.GRAPHQL_ENDPOINT || 'http://localhost:8080/graphql';
+const GRAPHQL_ENDPOINT = process.env.GRAPHQL_ENDPOINT || 'http://127.0.0.1:4001/graphql';
 
 interface GraphQLResponse<T> {
   data?: T;

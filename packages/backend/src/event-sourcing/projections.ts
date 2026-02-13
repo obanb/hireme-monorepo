@@ -157,6 +157,7 @@ export async function getReservation(
   originId: string | null;
   guestName: string | null;
   guestEmail: string | null;
+  guestId: string | null;
   status: string;
   checkInDate: Date | null;
   checkOutDate: Date | null;
@@ -172,6 +173,7 @@ export async function getReservation(
     origin_id: string | null;
     guest_name: string | null;
     guest_email: string | null;
+    guest_id: string | null;
     status: string;
     check_in_date: Date | null;
     check_out_date: Date | null;
@@ -196,6 +198,7 @@ export async function getReservation(
     originId: row.origin_id,
     guestName: row.guest_name,
     guestEmail: row.guest_email,
+    guestId: row.guest_id ?? null,
     status: row.status,
     checkInDate: row.check_in_date,
     checkOutDate: row.check_out_date,

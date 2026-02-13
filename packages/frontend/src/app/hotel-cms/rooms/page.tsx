@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import HotelSidebar from '@/components/HotelSidebar';
+import { useLocale } from '@/context/LocaleContext';
 
 type RoomType = 'SINGLE' | 'DOUBLE' | 'SUITE' | 'DELUXE' | 'PENTHOUSE';
 type RoomStatus = 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE';
@@ -79,6 +80,7 @@ const emptyFormData: RoomFormData = {
 };
 
 export default function RoomsPage() {
+  const { t } = useLocale();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [roomTypeEntities, setRoomTypeEntities] = useState<RoomTypeEntity[]>([]);
   const [rateCodes, setRateCodes] = useState<RateCode[]>([]);
@@ -409,16 +411,16 @@ export default function RoomsPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-stone-100">
+    <div className="flex min-h-screen bg-stone-100 dark:bg-stone-900">
       <HotelSidebar />
       <main className="flex-1 ml-72 p-8">
         <div className="max-w-7xl mx-auto">
           {/* Page Header */}
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-4xl font-black text-stone-900 mb-2">Rooms</h1>
-              <p className="text-stone-500">
-                Manage hotel rooms and their availability
+              <h1 className="text-4xl font-black text-stone-900 dark:text-stone-100 mb-2">{t('rooms.title')}</h1>
+              <p className="text-stone-500 dark:text-stone-400">
+                {t('rooms.subtitle')}
               </p>
             </div>
             <button
@@ -426,7 +428,7 @@ export default function RoomsPage() {
               className="px-6 py-3 bg-stone-900 text-white font-bold rounded-2xl hover:bg-stone-800 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
             >
               <span className="text-xl text-lime-400">+</span>
-              Add Room
+              {t('rooms.addRoom')}
             </button>
           </div>
 
@@ -451,16 +453,16 @@ export default function RoomsPage() {
           )}
 
           {/* Filters */}
-          <div className="bg-white rounded-3xl border-2 border-stone-200 p-4 mb-6">
+          <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 p-4 mb-6">
             <div className="flex flex-wrap gap-4 items-center">
               {/* Search */}
               <div className="flex-1 min-w-[200px]">
                 <input
                   type="text"
-                  placeholder="Search rooms..."
+                  placeholder={t('rooms.searchRooms')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
+                  className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 dark:bg-stone-700 dark:text-stone-100"
                 />
               </div>
 
@@ -468,9 +470,9 @@ export default function RoomsPage() {
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value as RoomType | '')}
-                className="px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
+                className="px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 dark:bg-stone-700 dark:text-stone-100"
               >
-                <option value="">All Types</option>
+                <option value="">{t('rooms.allTypes')}</option>
                 {ROOM_TYPES.map((type) => (
                   <option key={type.value} value={type.value}>
                     {type.label}
@@ -482,9 +484,9 @@ export default function RoomsPage() {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value as RoomStatus | '')}
-                className="px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
+                className="px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 dark:bg-stone-700 dark:text-stone-100"
               >
-                <option value="">All Statuses</option>
+                <option value="">{t('rooms.allStatuses')}</option>
                 {ROOM_STATUSES.map((status) => (
                   <option key={status.value} value={status.value}>
                     {status.label}
@@ -496,65 +498,65 @@ export default function RoomsPage() {
               <button
                 onClick={fetchRooms}
                 disabled={loading}
-                className="px-4 py-2 text-stone-600 hover:bg-stone-100 rounded-xl transition-colors flex items-center gap-2 font-medium"
+                className="px-4 py-2 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-xl transition-colors flex items-center gap-2 font-medium"
               >
                 <span className={loading ? 'animate-spin' : ''}>&#x21bb;</span>
-                Refresh
+                {t('common.refresh')}
               </button>
             </div>
           </div>
 
           {/* Rooms Table */}
-          <div className="bg-white rounded-3xl border-2 border-stone-200 overflow-hidden">
+          <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 overflow-hidden">
             {loading ? (
-              <div className="p-12 text-center text-stone-500">
-                <div className="animate-pulse">Loading rooms...</div>
+              <div className="p-12 text-center text-stone-500 dark:text-stone-400">
+                <div className="animate-pulse">{t('rooms.loadingRooms')}</div>
               </div>
             ) : filteredRooms.length === 0 ? (
-              <div className="p-12 text-center text-stone-500">
-                <div className="text-4xl mb-4">▤</div>
-                <p className="text-lg font-bold">No rooms found</p>
+              <div className="p-12 text-center text-stone-500 dark:text-stone-400">
+                <div className="text-4xl mb-4">&#x25A4;</div>
+                <p className="text-lg font-bold">{t('rooms.noRooms')}</p>
                 <p className="text-sm mt-1">
                   {rooms.length === 0
-                    ? 'Create your first room to get started'
-                    : 'Try adjusting your filters'}
+                    ? t('rooms.createFirst')
+                    : t('common.tryAdjusting')}
                 </p>
                 {rooms.length === 0 && (
                   <button
                     onClick={openCreateModal}
                     className="mt-4 px-4 py-2 bg-stone-900 text-white rounded-xl hover:bg-stone-800 font-bold"
                   >
-                    Add First Room
+                    {t('rooms.addFirst')}
                   </button>
                 )}
               </div>
             ) : (
               <table className="w-full">
-                <thead className="bg-stone-50 border-b border-stone-200">
+                <thead className="bg-stone-50 dark:bg-stone-700 border-b border-stone-200 dark:border-stone-700">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 uppercase tracking-wider">
-                      Room
+                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                      {t('bookings.room')}
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 uppercase tracking-wider">
-                      Type
+                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                      {t('rooms.roomType')}
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 uppercase tracking-wider">
-                      Rate Code
+                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                      {t('rooms.rateCode')}
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 uppercase tracking-wider">
-                      Capacity
+                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                      {t('rooms.capacity')}
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 uppercase tracking-wider">
-                      Status
+                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                      {t('common.status')}
                     </th>
-                    <th className="px-6 py-4 text-right text-xs font-bold text-stone-600 uppercase tracking-wider">
-                      Actions
+                    <th className="px-6 py-4 text-right text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                      {t('common.actions')}
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-stone-200">
+                <tbody className="divide-y divide-stone-200 dark:divide-stone-700">
                   {filteredRooms.map((room) => (
-                    <tr key={room.id} className="hover:bg-stone-50 transition-colors">
+                    <tr key={room.id} className="hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div
@@ -562,31 +564,31 @@ export default function RoomsPage() {
                             style={{ backgroundColor: room.color }}
                           />
                           <div>
-                            <div className="font-bold text-stone-900">{room.name}</div>
-                            <div className="text-sm text-stone-500">#{room.roomNumber}</div>
+                            <div className="font-bold text-stone-900 dark:text-stone-100">{room.name}</div>
+                            <div className="text-sm text-stone-500 dark:text-stone-400">#{room.roomNumber}</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-stone-700 font-medium">
+                        <div className="text-stone-700 dark:text-stone-300 font-medium">
                           {room.roomTypeEntity?.name ?? ROOM_TYPES.find((t) => t.value === room.type)?.label ?? room.type}
                         </div>
                         {room.roomTypeEntity && (
-                          <div className="text-xs text-stone-500">{room.roomTypeEntity.code}</div>
+                          <div className="text-xs text-stone-500 dark:text-stone-400">{room.roomTypeEntity.code}</div>
                         )}
                       </td>
                       <td className="px-6 py-4">
                         {room.rateCode ? (
                           <div>
-                            <div className="text-stone-700 font-medium">{room.rateCode.name}</div>
-                            <div className="text-xs text-stone-500">{room.rateCode.code}</div>
+                            <div className="text-stone-700 dark:text-stone-300 font-medium">{room.rateCode.name}</div>
+                            <div className="text-xs text-stone-500 dark:text-stone-400">{room.rateCode.code}</div>
                           </div>
                         ) : (
                           <span className="text-stone-400 text-sm">-</span>
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-stone-700">{room.capacity} guests</span>
+                        <span className="text-stone-700 dark:text-stone-300">{t('rooms.capacityGuests', { count: room.capacity })}</span>
                       </td>
                       <td className="px-6 py-4">
                         <button
@@ -601,7 +603,7 @@ export default function RoomsPage() {
                           onClick={() => openEditModal(room)}
                           className="px-3 py-1 text-sm text-lime-600 hover:bg-lime-50 rounded-lg transition-colors font-bold"
                         >
-                          Edit
+                          {t('common.edit')}
                         </button>
                       </td>
                     </tr>
@@ -613,7 +615,7 @@ export default function RoomsPage() {
 
           {/* Room Count */}
           {!loading && filteredRooms.length > 0 && (
-            <div className="mt-4 text-sm text-stone-500 text-center">
+            <div className="mt-4 text-sm text-stone-500 dark:text-stone-400 text-center">
               Showing {filteredRooms.length} of {rooms.length} rooms
             </div>
           )}
@@ -622,10 +624,10 @@ export default function RoomsPage() {
         {/* Create/Edit Modal */}
         {isModalOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 border-2 border-stone-200">
-              <div className="p-6 border-b border-stone-200">
-                <h2 className="text-xl font-black text-stone-900">
-                  {editingRoom ? 'Edit Room' : 'Add New Room'}
+            <div className="bg-white dark:bg-stone-800 rounded-3xl shadow-2xl w-full max-w-md mx-4 border-2 border-stone-200 dark:border-stone-700">
+              <div className="p-6 border-b border-stone-200 dark:border-stone-700">
+                <h2 className="text-xl font-black text-stone-900 dark:text-stone-100">
+                  {editingRoom ? t('rooms.editRoom') : t('rooms.addNewRoom')}
                 </h2>
               </div>
 
@@ -638,8 +640,8 @@ export default function RoomsPage() {
 
                 {/* Room Name */}
                 <div>
-                  <label className="block text-sm font-bold text-stone-700 mb-1">
-                    Room Name
+                  <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
+                    {t('rooms.roomName')}
                   </label>
                   <input
                     type="text"
@@ -647,14 +649,14 @@ export default function RoomsPage() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="e.g., Ocean View Suite"
-                    className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
+                    className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 dark:bg-stone-700 dark:text-stone-100"
                   />
                 </div>
 
                 {/* Room Number */}
                 <div>
-                  <label className="block text-sm font-bold text-stone-700 mb-1">
-                    Room Number
+                  <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
+                    {t('rooms.roomNumber')}
                   </label>
                   <input
                     type="text"
@@ -662,19 +664,19 @@ export default function RoomsPage() {
                     value={formData.roomNumber}
                     onChange={(e) => setFormData({ ...formData, roomNumber: e.target.value })}
                     placeholder="e.g., 101"
-                    className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
+                    className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 dark:bg-stone-700 dark:text-stone-100"
                   />
                 </div>
 
                 {/* Room Type (Legacy) */}
                 <div>
-                  <label className="block text-sm font-bold text-stone-700 mb-1">
-                    Room Type (Legacy)
+                  <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
+                    {t('rooms.roomTypeLegacy')}
                   </label>
                   <select
                     value={formData.type}
                     onChange={(e) => setFormData({ ...formData, type: e.target.value as RoomType })}
-                    className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
+                    className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 dark:bg-stone-700 dark:text-stone-100"
                   >
                     {ROOM_TYPES.map((type) => (
                       <option key={type.value} value={type.value}>
@@ -687,15 +689,15 @@ export default function RoomsPage() {
                 {/* Room Type Entity */}
                 {roomTypeEntities.length > 0 && (
                   <div>
-                    <label className="block text-sm font-bold text-stone-700 mb-1">
-                      Room Type
+                    <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
+                      {t('rooms.roomType')}
                     </label>
                     <select
                       value={formData.roomTypeId}
                       onChange={(e) => setFormData({ ...formData, roomTypeId: e.target.value })}
-                      className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
+                      className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 dark:bg-stone-700 dark:text-stone-100"
                     >
-                      <option value="">Select room type...</option>
+                      <option value="">{t('rooms.selectRoomType')}</option>
                       {roomTypeEntities.map((rt) => (
                         <option key={rt.id} value={rt.id}>
                           {rt.name} ({rt.code})
@@ -708,15 +710,15 @@ export default function RoomsPage() {
                 {/* Rate Code */}
                 {rateCodes.length > 0 && (
                   <div>
-                    <label className="block text-sm font-bold text-stone-700 mb-1">
-                      Rate Code
+                    <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
+                      {t('rooms.rateCode')}
                     </label>
                     <select
                       value={formData.rateCodeId}
                       onChange={(e) => setFormData({ ...formData, rateCodeId: e.target.value })}
-                      className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
+                      className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 dark:bg-stone-700 dark:text-stone-100"
                     >
-                      <option value="">Select rate code (optional)...</option>
+                      <option value="">{t('rooms.selectRateCode')}</option>
                       {rateCodes.map((rc) => (
                         <option key={rc.id} value={rc.id}>
                           {rc.name} ({rc.code})
@@ -728,8 +730,8 @@ export default function RoomsPage() {
 
                 {/* Capacity */}
                 <div>
-                  <label className="block text-sm font-bold text-stone-700 mb-1">
-                    Capacity (guests)
+                  <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
+                    {t('rooms.capacity')}
                   </label>
                   <input
                     type="number"
@@ -738,21 +740,21 @@ export default function RoomsPage() {
                     max={10}
                     value={formData.capacity}
                     onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 1 })}
-                    className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
+                    className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 dark:bg-stone-700 dark:text-stone-100"
                   />
                 </div>
 
                 {/* Color */}
                 <div>
-                  <label className="block text-sm font-bold text-stone-700 mb-1">
-                    Calendar Color
+                  <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
+                    {t('rooms.calendarColor')}
                   </label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
                       value={formData.color}
                       onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                      className="w-12 h-10 border-2 border-stone-200 rounded-lg cursor-pointer"
+                      className="w-12 h-10 border-2 border-stone-200 dark:border-stone-700 rounded-lg cursor-pointer"
                     />
                     <div className="flex gap-1">
                       {DEFAULT_COLORS.map((color) => (
@@ -775,16 +777,16 @@ export default function RoomsPage() {
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="flex-1 px-4 py-2 border-2 border-stone-200 text-stone-700 rounded-xl hover:bg-stone-50 transition-colors font-bold"
+                    className="flex-1 px-4 py-2 border-2 border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors font-bold"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
                     disabled={saving}
                     className="flex-1 px-4 py-2 bg-stone-900 text-white rounded-xl hover:bg-stone-800 transition-colors disabled:opacity-50 font-bold"
                   >
-                    {saving ? 'Saving...' : editingRoom ? 'Update Room' : 'Create Room'}
+                    {saving ? t('common.saving') : editingRoom ? `${t('common.update')} ${t('bookings.room')}` : `${t('common.create')} ${t('bookings.room')}`}
                   </button>
                 </div>
               </form>
@@ -795,12 +797,12 @@ export default function RoomsPage() {
         {/* Status Change Modal */}
         {statusModalRoom && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm mx-4 border-2 border-stone-200">
-              <div className="p-6 border-b border-stone-200">
-                <h2 className="text-xl font-black text-stone-900">
-                  Change Room Status
+            <div className="bg-white dark:bg-stone-800 rounded-3xl shadow-2xl w-full max-w-sm mx-4 border-2 border-stone-200 dark:border-stone-700">
+              <div className="p-6 border-b border-stone-200 dark:border-stone-700">
+                <h2 className="text-xl font-black text-stone-900 dark:text-stone-100">
+                  {t('rooms.changeStatus')}
                 </h2>
-                <p className="text-sm text-stone-500 mt-1">
+                <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">
                   {statusModalRoom.name} (#{statusModalRoom.roomNumber})
                 </p>
               </div>
@@ -814,7 +816,7 @@ export default function RoomsPage() {
                       className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-colors ${
                         newStatus === status.value
                           ? 'border-lime-400 bg-lime-50'
-                          : 'border-stone-200 hover:bg-stone-50'
+                          : 'border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-700'
                       }`}
                     >
                       <input
@@ -834,15 +836,15 @@ export default function RoomsPage() {
 
                 {/* Reason (optional) */}
                 <div>
-                  <label className="block text-sm font-bold text-stone-700 mb-1">
-                    Reason (optional)
+                  <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
+                    {t('rooms.reason')}
                   </label>
                   <input
                     type="text"
                     value={statusReason}
                     onChange={(e) => setStatusReason(e.target.value)}
                     placeholder="e.g., Plumbing repairs"
-                    className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
+                    className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 dark:bg-stone-700 dark:text-stone-100"
                   />
                 </div>
 
@@ -851,16 +853,16 @@ export default function RoomsPage() {
                   <button
                     type="button"
                     onClick={closeStatusModal}
-                    className="flex-1 px-4 py-2 border-2 border-stone-200 text-stone-700 rounded-xl hover:bg-stone-50 transition-colors font-bold"
+                    className="flex-1 px-4 py-2 border-2 border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors font-bold"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                   <button
                     onClick={handleStatusChange}
                     disabled={saving || newStatus === statusModalRoom.status}
                     className="flex-1 px-4 py-2 bg-stone-900 text-white rounded-xl hover:bg-stone-800 transition-colors disabled:opacity-50 font-bold"
                   >
-                    {saving ? 'Saving...' : 'Update Status'}
+                    {saving ? t('common.saving') : t('rooms.updateStatus')}
                   </button>
                 </div>
               </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import HotelSidebar from '@/components/HotelSidebar';
+import { useLocale } from '@/context/LocaleContext';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:4001/graphql';
 
@@ -50,6 +51,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function CampaignsPage() {
+  const { t } = useLocale();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -228,28 +230,28 @@ export default function CampaignsPage() {
     : campaigns;
 
   return (
-    <div className="flex min-h-screen bg-stone-50">
+    <div className="flex min-h-screen bg-stone-50 dark:bg-stone-900">
       <HotelSidebar />
       <main className="flex-1 ml-72 p-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-2xl font-bold text-stone-900">Email Campaigns</h1>
-              <p className="text-stone-500 text-sm mt-1">Create and manage email campaigns for your guests</p>
+              <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-100">{t('campaigns.title')}</h1>
+              <p className="text-stone-500 dark:text-stone-400 text-sm mt-1">{t('campaigns.subtitle')}</p>
             </div>
             <div className="flex gap-3">
               <Link
                 href="/hotel-cms/campaigns/templates"
-                className="px-4 py-2.5 rounded-xl border border-stone-200 text-stone-700 text-sm font-medium hover:bg-stone-100 transition-colors"
+                className="px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 text-sm font-medium hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors"
               >
-                Manage Templates
+                {t('campaigns.manageTemplates')}
               </Link>
               <button
                 onClick={() => { resetForm(); setShowModal(true); }}
                 className="px-4 py-2.5 rounded-xl bg-stone-900 text-white text-sm font-semibold hover:bg-stone-800 transition-colors"
               >
-                + New Campaign
+                {t('campaigns.newCampaign')}
               </button>
             </div>
           </div>
@@ -270,48 +272,48 @@ export default function CampaignsPage() {
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   statusFilter === s
                     ? 'bg-stone-900 text-white'
-                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                    : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
                 }`}
               >
-                {s || 'All'}
+                {s || t('common.all')}
               </button>
             ))}
           </div>
 
           {/* Campaigns table */}
           {loading ? (
-            <div className="text-center py-12 text-stone-400">Loading campaigns...</div>
+            <div className="text-center py-12 text-stone-400">{t('common.loading')}</div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-12 text-stone-400">
-              No campaigns found. Create your first campaign to get started.
+              {t('campaigns.noCampaigns')}
             </div>
           ) : (
-            <div className="bg-white rounded-2xl shadow-xl shadow-stone-200/50 border border-stone-200 overflow-hidden">
+            <div className="bg-white dark:bg-stone-800 rounded-2xl shadow-xl shadow-stone-200/50 dark:shadow-stone-900/50 border border-stone-200 dark:border-stone-700 overflow-hidden">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-stone-100">
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-stone-500 uppercase tracking-wider">Name</th>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-stone-500 uppercase tracking-wider">Template</th>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-stone-500 uppercase tracking-wider">Status</th>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-stone-500 uppercase tracking-wider">Sent</th>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-stone-500 uppercase tracking-wider">Created</th>
-                    <th className="text-right px-6 py-4 text-xs font-semibold text-stone-500 uppercase tracking-wider">Actions</th>
+                  <tr className="border-b border-stone-100 dark:border-stone-700">
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">{t('common.name')}</th>
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">{t('campaigns.template')}</th>
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">{t('common.status')}</th>
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">{t('campaigns.sent')}</th>
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">{t('common.created')}</th>
+                    <th className="text-right px-6 py-4 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((campaign) => (
-                    <tr key={campaign.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
-                      <td className="px-6 py-4 text-sm font-medium text-stone-900">{campaign.name}</td>
-                      <td className="px-6 py-4 text-sm text-stone-600">{campaign.template.name}</td>
+                    <tr key={campaign.id} className="border-b border-stone-50 dark:border-stone-700 hover:bg-stone-50/50 dark:hover:bg-stone-700/50 transition-colors">
+                      <td className="px-6 py-4 text-sm font-medium text-stone-900 dark:text-stone-100">{campaign.name}</td>
+                      <td className="px-6 py-4 text-sm text-stone-600 dark:text-stone-300">{campaign.template.name}</td>
                       <td className="px-6 py-4">
                         <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${STATUS_COLORS[campaign.status] || 'bg-stone-100 text-stone-600'}`}>
                           {campaign.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-stone-600">
+                      <td className="px-6 py-4 text-sm text-stone-600 dark:text-stone-300">
                         {campaign.totalSent > 0 ? `${campaign.totalSent}/${campaign.totalRecipients}` : '-'}
                       </td>
-                      <td className="px-6 py-4 text-sm text-stone-500">
+                      <td className="px-6 py-4 text-sm text-stone-500 dark:text-stone-400">
                         {new Date(campaign.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -321,22 +323,22 @@ export default function CampaignsPage() {
                               onClick={() => handleViewStats(campaign.id)}
                               className="px-3 py-1.5 rounded-lg text-xs font-medium bg-lime-50 text-lime-700 hover:bg-lime-100 transition-colors"
                             >
-                              Stats
+                              {t('campaigns.stats')}
                             </button>
                           )}
                           {campaign.status === 'DRAFT' && (
                             <>
                               <button
                                 onClick={() => openEdit(campaign)}
-                                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-stone-100 text-stone-600 hover:bg-stone-200 transition-colors"
+                                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors"
                               >
-                                Edit
+                                {t('common.edit')}
                               </button>
                               <button
                                 onClick={() => handleSend(campaign.id)}
                                 className="px-3 py-1.5 rounded-lg text-xs font-medium bg-stone-900 text-white hover:bg-stone-800 transition-colors"
                               >
-                                Send
+                                {t('campaigns.send')}
                               </button>
                             </>
                           )}
@@ -344,7 +346,7 @@ export default function CampaignsPage() {
                             onClick={() => handleDelete(campaign.id)}
                             className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
                           >
-                            Delete
+                            {t('common.delete')}
                           </button>
                         </div>
                       </td>
@@ -359,85 +361,85 @@ export default function CampaignsPage() {
         {/* Create/Edit Campaign Modal */}
         {showModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-              <div className="p-6 border-b border-stone-100">
-                <h2 className="text-lg font-bold text-stone-900">
-                  {editingCampaign ? 'Edit Campaign' : 'New Campaign'}
+            <div className="bg-white dark:bg-stone-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-stone-100 dark:border-stone-700">
+                <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100">
+                  {editingCampaign ? t('campaigns.editCampaign') : t('campaigns.newCampaign')}
                 </h2>
               </div>
 
               <div className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-1.5">Campaign Name</label>
+                  <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">{t('campaigns.campaignName')}</label>
                   <input
                     type="text"
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-900/10"
+                    className="w-full px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-sm text-stone-800 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10"
                     placeholder="e.g. Winter Special"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-1.5">Template</label>
+                  <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">{t('campaigns.template')}</label>
                   <select
                     value={formTemplateId}
                     onChange={(e) => setFormTemplateId(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-900/10"
+                    className="w-full px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-sm text-stone-800 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10"
                   >
-                    <option value="">Select a template...</option>
-                    {templates.map((t) => (
-                      <option key={t.id} value={t.id}>{t.name} — {t.subject}</option>
+                    <option value="">{t('campaigns.selectTemplate')}</option>
+                    {templates.map((tpl) => (
+                      <option key={tpl.id} value={tpl.id}>{tpl.name} — {tpl.subject}</option>
                     ))}
                   </select>
                 </div>
 
-                <div className="border-t border-stone-100 pt-4">
-                  <h3 className="text-sm font-semibold text-stone-700 mb-3">Targeting Rules</h3>
+                <div className="border-t border-stone-100 dark:border-stone-700 pt-4">
+                  <h3 className="text-sm font-semibold text-stone-700 dark:text-stone-300 mb-3">{t('campaigns.targetingRules')}</h3>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs text-stone-500 mb-1">Check-out from</label>
-                      <input type="date" value={formRules.checkOutFrom} onChange={(e) => setFormRules({ ...formRules, checkOutFrom: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm" />
+                      <label className="block text-xs text-stone-500 dark:text-stone-400 mb-1">{t('filters.checkOutFrom')}</label>
+                      <input type="date" value={formRules.checkOutFrom} onChange={(e) => setFormRules({ ...formRules, checkOutFrom: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100" />
                     </div>
                     <div>
-                      <label className="block text-xs text-stone-500 mb-1">Check-out to</label>
-                      <input type="date" value={formRules.checkOutTo} onChange={(e) => setFormRules({ ...formRules, checkOutTo: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm" />
+                      <label className="block text-xs text-stone-500 dark:text-stone-400 mb-1">{t('filters.checkOutTo')}</label>
+                      <input type="date" value={formRules.checkOutTo} onChange={(e) => setFormRules({ ...formRules, checkOutTo: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100" />
                     </div>
                     <div>
-                      <label className="block text-xs text-stone-500 mb-1">Check-in from</label>
-                      <input type="date" value={formRules.checkInFrom} onChange={(e) => setFormRules({ ...formRules, checkInFrom: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm" />
+                      <label className="block text-xs text-stone-500 dark:text-stone-400 mb-1">{t('filters.checkInFrom')}</label>
+                      <input type="date" value={formRules.checkInFrom} onChange={(e) => setFormRules({ ...formRules, checkInFrom: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100" />
                     </div>
                     <div>
-                      <label className="block text-xs text-stone-500 mb-1">Check-in to</label>
-                      <input type="date" value={formRules.checkInTo} onChange={(e) => setFormRules({ ...formRules, checkInTo: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm" />
+                      <label className="block text-xs text-stone-500 dark:text-stone-400 mb-1">{t('filters.checkInTo')}</label>
+                      <input type="date" value={formRules.checkInTo} onChange={(e) => setFormRules({ ...formRules, checkInTo: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100" />
                     </div>
                     <div>
-                      <label className="block text-xs text-stone-500 mb-1">Status</label>
-                      <select value={formRules.status} onChange={(e) => setFormRules({ ...formRules, status: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm">
-                        <option value="">Any</option>
+                      <label className="block text-xs text-stone-500 dark:text-stone-400 mb-1">{t('common.status')}</label>
+                      <select value={formRules.status} onChange={(e) => setFormRules({ ...formRules, status: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100">
+                        <option value="">{t('common.all')}</option>
                         <option value="PENDING">Pending</option>
                         <option value="CONFIRMED">Confirmed</option>
                         <option value="CANCELLED">Cancelled</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs text-stone-500 mb-1">Min amount</label>
-                      <input type="number" value={formRules.minAmount} onChange={(e) => setFormRules({ ...formRules, minAmount: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm" />
+                      <label className="block text-xs text-stone-500 dark:text-stone-400 mb-1">{t('campaigns.minAmount')}</label>
+                      <input type="number" value={formRules.minAmount} onChange={(e) => setFormRules({ ...formRules, minAmount: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100" />
                     </div>
                   </div>
 
                   <button
                     onClick={handlePreviewAudience}
-                    className="mt-3 px-4 py-2 rounded-lg text-xs font-medium bg-stone-100 text-stone-600 hover:bg-stone-200 transition-colors"
+                    className="mt-3 px-4 py-2 rounded-lg text-xs font-medium bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors"
                   >
-                    Preview Audience
+                    {t('campaigns.previewAudience')}
                   </button>
 
                   {audiencePreview && (
-                    <div className="mt-3 p-3 rounded-lg bg-stone-50 border border-stone-200">
-                      <p className="text-sm font-medium text-stone-700">{audiencePreview.count} recipient(s) match</p>
+                    <div className="mt-3 p-3 rounded-lg bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700">
+                      <p className="text-sm font-medium text-stone-700 dark:text-stone-300">{audiencePreview.count} {t('campaigns.recipientsMatch')}</p>
                       {audiencePreview.sampleRecipients.length > 0 && (
-                        <ul className="mt-2 text-xs text-stone-500 space-y-1">
+                        <ul className="mt-2 text-xs text-stone-500 dark:text-stone-400 space-y-1">
                           {audiencePreview.sampleRecipients.map((r, i) => (
                             <li key={i}>{r.email} {r.name ? `(${r.name})` : ''}</li>
                           ))}
@@ -448,19 +450,19 @@ export default function CampaignsPage() {
                 </div>
               </div>
 
-              <div className="p-6 border-t border-stone-100 flex gap-3 justify-end">
+              <div className="p-6 border-t border-stone-100 dark:border-stone-700 flex gap-3 justify-end">
                 <button
                   onClick={() => { setShowModal(false); resetForm(); }}
-                  className="px-4 py-2.5 rounded-xl border border-stone-200 text-stone-600 text-sm font-medium hover:bg-stone-50 transition-colors"
+                  className="px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 text-sm font-medium hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={handleCreateOrUpdate}
                   disabled={!formName || !formTemplateId}
                   className="px-4 py-2.5 rounded-xl bg-stone-900 text-white text-sm font-semibold hover:bg-stone-800 transition-colors disabled:opacity-50"
                 >
-                  {editingCampaign ? 'Save Changes' : 'Create Campaign'}
+                  {editingCampaign ? t('campaigns.saveChanges') : t('campaigns.createCampaign')}
                 </button>
               </div>
             </div>
@@ -470,44 +472,44 @@ export default function CampaignsPage() {
         {/* Stats Modal */}
         {showStatsModal && stats && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-              <div className="p-6 border-b border-stone-100">
-                <h2 className="text-lg font-bold text-stone-900">Campaign Stats</h2>
+            <div className="bg-white dark:bg-stone-800 rounded-2xl shadow-2xl w-full max-w-md">
+              <div className="p-6 border-b border-stone-100 dark:border-stone-700">
+                <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100">{t('campaigns.campaignStats')}</h2>
               </div>
               <div className="p-6 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl bg-stone-50">
-                    <p className="text-xs text-stone-500">Recipients</p>
-                    <p className="text-2xl font-bold text-stone-900">{stats.totalRecipients}</p>
+                  <div className="p-4 rounded-xl bg-stone-50 dark:bg-stone-900">
+                    <p className="text-xs text-stone-500 dark:text-stone-400">{t('campaigns.recipients')}</p>
+                    <p className="text-2xl font-bold text-stone-900 dark:text-stone-100">{stats.totalRecipients}</p>
                   </div>
                   <div className="p-4 rounded-xl bg-lime-50">
-                    <p className="text-xs text-lime-600">Sent</p>
+                    <p className="text-xs text-lime-600">{t('campaigns.sent')}</p>
                     <p className="text-2xl font-bold text-lime-700">{stats.totalSent}</p>
                   </div>
                   <div className="p-4 rounded-xl bg-blue-50">
-                    <p className="text-xs text-blue-600">Opened</p>
+                    <p className="text-xs text-blue-600">{t('campaigns.opened')}</p>
                     <p className="text-2xl font-bold text-blue-700">{stats.totalOpened}</p>
                     <p className="text-xs text-blue-500 mt-1">{(stats.openRate * 100).toFixed(1)}%</p>
                   </div>
                   <div className="p-4 rounded-xl bg-violet-50">
-                    <p className="text-xs text-violet-600">Clicked</p>
+                    <p className="text-xs text-violet-600">{t('campaigns.clicked')}</p>
                     <p className="text-2xl font-bold text-violet-700">{stats.totalClicked}</p>
                     <p className="text-xs text-violet-500 mt-1">{(stats.clickRate * 100).toFixed(1)}%</p>
                   </div>
                 </div>
                 {stats.totalFailed > 0 && (
                   <div className="p-4 rounded-xl bg-red-50">
-                    <p className="text-xs text-red-600">Failed</p>
+                    <p className="text-xs text-red-600">{t('campaigns.failed')}</p>
                     <p className="text-2xl font-bold text-red-700">{stats.totalFailed}</p>
                   </div>
                 )}
               </div>
-              <div className="p-6 border-t border-stone-100 flex justify-end">
+              <div className="p-6 border-t border-stone-100 dark:border-stone-700 flex justify-end">
                 <button
                   onClick={() => { setShowStatsModal(null); setStats(null); }}
-                  className="px-4 py-2.5 rounded-xl border border-stone-200 text-stone-600 text-sm font-medium hover:bg-stone-50 transition-colors"
+                  className="px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 text-sm font-medium hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors"
                 >
-                  Close
+                  {t('common.close')}
                 </button>
               </div>
             </div>

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import HotelSidebar from '@/components/HotelSidebar';
+import { useLocale } from '@/context/LocaleContext';
 
 interface Room {
   id: string;
@@ -45,6 +46,7 @@ const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhos
 export default function ReservationDetailPage() {
   const params = useParams();
   const reservationId = params.id as string;
+  const { t } = useLocale();
 
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const [events, setEvents] = useState<StoredEvent[]>([]);
@@ -344,12 +346,12 @@ export default function ReservationDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-stone-100">
+      <div className="flex min-h-screen bg-stone-100 dark:bg-stone-900">
         <HotelSidebar />
         <main className="flex-1 ml-72 p-8">
           <div className="max-w-4xl mx-auto">
-            <div className="animate-pulse text-center text-stone-500 py-12">
-              Loading reservation...
+            <div className="animate-pulse text-center text-stone-500 dark:text-stone-400 py-12">
+              {t('bookingDetail.loadingReservation')}
             </div>
           </div>
         </main>
@@ -359,18 +361,18 @@ export default function ReservationDetailPage() {
 
   if (!reservation) {
     return (
-      <div className="flex min-h-screen bg-stone-100">
+      <div className="flex min-h-screen bg-stone-100 dark:bg-stone-900">
         <HotelSidebar />
         <main className="flex-1 ml-72 p-8">
           <div className="max-w-4xl mx-auto">
             <div className="text-center py-12">
-              <div className="text-4xl mb-4">▣</div>
-              <p className="text-lg font-bold text-stone-700">Reservation not found</p>
+              <div className="text-4xl mb-4">&#x25A3;</div>
+              <p className="text-lg font-bold text-stone-700 dark:text-stone-300">{t('bookingDetail.notFound')}</p>
               <Link
                 href="/hotel-cms/bookings"
-                className="mt-4 inline-block px-4 py-2 bg-stone-900 text-white rounded-xl hover:bg-stone-800 transition-colors font-bold"
+                className="mt-4 inline-block px-4 py-2 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-xl hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors font-bold"
               >
-                Back to Bookings
+                {t('bookingDetail.backToBookings')}
               </Link>
             </div>
           </div>
@@ -380,7 +382,7 @@ export default function ReservationDetailPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-stone-100">
+    <div className="flex min-h-screen bg-stone-100 dark:bg-stone-900">
       <HotelSidebar />
       <main className="flex-1 ml-72 p-8">
         <div className="max-w-4xl mx-auto">
@@ -388,41 +390,41 @@ export default function ReservationDetailPage() {
           <div className="mb-6">
             <Link
               href="/hotel-cms/calendar"
-              className="text-lime-600 hover:text-lime-700 flex items-center gap-2 text-sm font-medium"
+              className="text-lime-600 hover:text-lime-700 dark:text-lime-500 dark:hover:text-lime-400 flex items-center gap-2 text-sm font-medium"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              Back to Calendar
+              {t('bookingDetail.backToCalendar')}
             </Link>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-2xl text-red-700">
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border-2 border-red-200 dark:border-red-800 rounded-2xl text-red-700 dark:text-red-300">
               {error}
               <button
                 onClick={() => setError(null)}
-                className="ml-4 text-red-500 hover:text-red-700"
+                className="ml-4 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
               >
-                Dismiss
+                {t('common.dismiss')}
               </button>
             </div>
           )}
 
           {/* Reservation Header */}
-          <div className="bg-white rounded-3xl border-2 border-stone-200 p-6 mb-6">
+          <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 p-6 mb-6">
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-black text-stone-900">{reservation.guestName}</h1>
+                  <h1 className="text-3xl font-black text-stone-900 dark:text-stone-100">{reservation.guestName}</h1>
                   <span className={`px-3 py-1 text-sm font-bold rounded-xl border-2 ${getStatusColor(reservation.status)}`}>
                     {reservation.status}
                   </span>
                 </div>
-                <p className="text-stone-500 font-mono text-sm">ID: {reservation.id}</p>
+                <p className="text-stone-500 dark:text-stone-400 font-mono text-sm">ID: {reservation.id}</p>
                 {reservation.originId && (
-                  <p className="text-stone-500 text-sm mt-1">Origin: {reservation.originId}</p>
+                  <p className="text-stone-500 dark:text-stone-400 text-sm mt-1">{t('bookingDetail.origin')}: {reservation.originId}</p>
                 )}
               </div>
               <div className="flex gap-3">
@@ -432,7 +434,7 @@ export default function ReservationDetailPage() {
                     disabled={actionLoading}
                     className="px-4 py-2 bg-lime-500 text-white font-bold rounded-xl hover:bg-lime-600 transition-colors disabled:opacity-50"
                   >
-                    {actionLoading ? 'Processing...' : 'Confirm'}
+                    {actionLoading ? t('common.processing') : t('bookingDetail.confirm')}
                   </button>
                 )}
                 {reservation.status !== 'CANCELLED' && (
@@ -441,7 +443,7 @@ export default function ReservationDetailPage() {
                     disabled={actionLoading}
                     className="px-4 py-2 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                 )}
               </div>
@@ -451,20 +453,20 @@ export default function ReservationDetailPage() {
           {/* Reservation Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Stay Details */}
-            <div className="bg-white rounded-3xl border-2 border-stone-200 p-6">
-              <h2 className="text-lg font-black text-stone-900 mb-4">Stay Details</h2>
+            <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 p-6">
+              <h2 className="text-lg font-black text-stone-900 dark:text-stone-100 mb-4">{t('bookingDetail.stayDetails')}</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm text-stone-500">Check-in</label>
-                  <p className="text-stone-900 font-bold">{reservation.checkInDate}</p>
+                  <label className="text-sm text-stone-500 dark:text-stone-400">{t('bookings.checkIn')}</label>
+                  <p className="text-stone-900 dark:text-stone-100 font-bold">{reservation.checkInDate}</p>
                 </div>
                 <div>
-                  <label className="text-sm text-stone-500">Check-out</label>
-                  <p className="text-stone-900 font-bold">{reservation.checkOutDate}</p>
+                  <label className="text-sm text-stone-500 dark:text-stone-400">{t('bookings.checkOut')}</label>
+                  <p className="text-stone-900 dark:text-stone-100 font-bold">{reservation.checkOutDate}</p>
                 </div>
                 <div>
-                  <label className="text-sm text-stone-500">Total Amount</label>
-                  <p className="text-stone-900 font-black text-lg">
+                  <label className="text-sm text-stone-500 dark:text-stone-400">{t('bookings.totalAmount')}</label>
+                  <p className="text-stone-900 dark:text-stone-100 font-black text-lg">
                     {reservation.totalAmount?.toLocaleString('en-US', {
                       style: 'currency',
                       currency: reservation.currency || 'USD',
@@ -475,18 +477,18 @@ export default function ReservationDetailPage() {
             </div>
 
             {/* Room Details */}
-            <div className="bg-white rounded-3xl border-2 border-stone-200 p-6">
+            <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-black text-stone-900">Room</h2>
+                <h2 className="text-lg font-black text-stone-900 dark:text-stone-100">{t('bookingDetail.roomDetails')}</h2>
                 {reservation.status !== 'CANCELLED' && (
                   <button
                     onClick={() => {
                       setSelectedRoomId(reservation.roomId || '');
                       setShowRoomDialog(true);
                     }}
-                    className="px-3 py-1 text-sm text-lime-600 hover:bg-lime-50 rounded-lg transition-colors font-bold"
+                    className="px-3 py-1 text-sm text-lime-600 hover:bg-lime-50 dark:hover:bg-lime-900/30 rounded-lg transition-colors font-bold"
                   >
-                    {reservation.room ? 'Change' : 'Assign'}
+                    {reservation.room ? t('bookingDetail.change') : t('bookingDetail.assign')}
                   </button>
                 )}
               </div>
@@ -498,24 +500,24 @@ export default function ReservationDetailPage() {
                       style={{ backgroundColor: reservation.room.color }}
                     />
                     <div>
-                      <p className="text-stone-900 font-bold">{reservation.room.name}</p>
-                      <p className="text-sm text-stone-500">#{reservation.room.roomNumber}</p>
+                      <p className="text-stone-900 dark:text-stone-100 font-bold">{reservation.room.name}</p>
+                      <p className="text-sm text-stone-500 dark:text-stone-400">#{reservation.room.roomNumber}</p>
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm text-stone-500">Room Type</label>
-                    <p className="text-stone-900">{reservation.room.type}</p>
+                    <label className="text-sm text-stone-500 dark:text-stone-400">{t('bookingDetail.roomType')}</label>
+                    <p className="text-stone-900 dark:text-stone-100">{reservation.room.type}</p>
                   </div>
                 </div>
               ) : (
                 <div className="text-center py-4">
-                  <p className="text-stone-500 mb-3">No room assigned</p>
+                  <p className="text-stone-500 dark:text-stone-400 mb-3">{t('bookingDetail.noRoomAssigned')}</p>
                   {reservation.status !== 'CANCELLED' && (
                     <button
                       onClick={() => setShowRoomDialog(true)}
-                      className="px-4 py-2 bg-stone-900 text-white text-sm rounded-xl hover:bg-stone-800 transition-colors font-bold"
+                      className="px-4 py-2 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 text-sm rounded-xl hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors font-bold"
                     >
-                      Assign Room
+                      {t('bookingDetail.assignRoom')}
                     </button>
                   )}
                 </div>
@@ -524,38 +526,38 @@ export default function ReservationDetailPage() {
           </div>
 
           {/* Metadata */}
-          <div className="bg-white rounded-3xl border-2 border-stone-200 p-6 mb-6">
-            <h2 className="text-lg font-black text-stone-900 mb-4">Metadata</h2>
+          <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 p-6 mb-6">
+            <h2 className="text-lg font-black text-stone-900 dark:text-stone-100 mb-4">{t('bookingDetail.metadata')}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
-                <label className="text-stone-500">Version</label>
-                <p className="text-stone-900 font-mono">{reservation.version}</p>
+                <label className="text-stone-500 dark:text-stone-400">{t('common.version')}</label>
+                <p className="text-stone-900 dark:text-stone-100 font-mono">{reservation.version}</p>
               </div>
               <div>
-                <label className="text-stone-500">Created</label>
-                <p className="text-stone-900">{new Date(reservation.createdAt).toLocaleString()}</p>
+                <label className="text-stone-500 dark:text-stone-400">{t('common.created')}</label>
+                <p className="text-stone-900 dark:text-stone-100">{new Date(reservation.createdAt).toLocaleString()}</p>
               </div>
               <div>
-                <label className="text-stone-500">Updated</label>
-                <p className="text-stone-900">{new Date(reservation.updatedAt).toLocaleString()}</p>
+                <label className="text-stone-500 dark:text-stone-400">{t('common.updated')}</label>
+                <p className="text-stone-900 dark:text-stone-100">{new Date(reservation.updatedAt).toLocaleString()}</p>
               </div>
             </div>
           </div>
 
           {/* Event History (Audit Trail) */}
-          <div className="bg-white rounded-3xl border-2 border-stone-200 p-6">
-            <h2 className="text-lg font-black text-stone-900 mb-4">
-              Event History
-              <span className="ml-2 text-sm font-normal text-stone-500">
-                (Audit Trail)
+          <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 p-6">
+            <h2 className="text-lg font-black text-stone-900 dark:text-stone-100 mb-4">
+              {t('bookingDetail.eventHistory')}
+              <span className="ml-2 text-sm font-normal text-stone-500 dark:text-stone-400">
+                {t('bookingDetail.auditTrail')}
               </span>
             </h2>
             {events.length === 0 ? (
-              <p className="text-stone-500">No events recorded</p>
+              <p className="text-stone-500 dark:text-stone-400">{t('bookingDetail.noEvents')}</p>
             ) : (
               <div className="relative">
                 {/* Timeline line */}
-                <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-stone-200" />
+                <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-stone-200 dark:bg-stone-700" />
 
                 {/* Events */}
                 <div className="space-y-6">
@@ -569,21 +571,21 @@ export default function ReservationDetailPage() {
                         </div>
 
                         {/* Event content */}
-                        <div className="bg-stone-50 rounded-2xl p-4">
+                        <div className="bg-stone-50 dark:bg-stone-700 rounded-2xl p-4">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="font-bold text-stone-900">{event.type}</span>
-                            <span className="text-sm text-stone-500">
+                            <span className="font-bold text-stone-900 dark:text-stone-100">{event.type}</span>
+                            <span className="text-sm text-stone-500 dark:text-stone-400">
                               v{event.version}
                             </span>
                           </div>
-                          <p className="text-sm text-stone-600 mb-2">
+                          <p className="text-sm text-stone-600 dark:text-stone-300 mb-2">
                             {new Date(event.occurredAt).toLocaleString()}
                           </p>
                           <details className="text-sm">
-                            <summary className="cursor-pointer text-lime-600 hover:text-lime-700 font-medium">
-                              View event data
+                            <summary className="cursor-pointer text-lime-600 hover:text-lime-700 dark:text-lime-500 dark:hover:text-lime-400 font-medium">
+                              {t('bookingDetail.viewEventData')}
                             </summary>
-                            <pre className="mt-2 p-3 bg-stone-100 rounded-xl text-xs overflow-x-auto text-stone-700">
+                            <pre className="mt-2 p-3 bg-stone-100 dark:bg-stone-800 rounded-xl text-xs overflow-x-auto text-stone-700 dark:text-stone-300">
                               {formatEventData(event.data)}
                             </pre>
                           </details>
@@ -601,16 +603,16 @@ export default function ReservationDetailPage() {
       {/* Cancel Dialog */}
       {showCancelDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-3xl border-2 border-stone-200 shadow-2xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-black text-stone-900 mb-4">Cancel Reservation</h3>
-            <p className="text-stone-600 mb-4">
-              Please provide a reason for cancelling this reservation.
+          <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 shadow-2xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-black text-stone-900 dark:text-stone-100 mb-4">{t('bookingDetail.cancelReservation')}</h3>
+            <p className="text-stone-600 dark:text-stone-300 mb-4">
+              {t('bookingDetail.cancelReason')}
             </p>
             <textarea
               value={cancelReason}
               onChange={(e) => setCancelReason(e.target.value)}
-              placeholder="Cancellation reason..."
-              className="w-full px-4 py-3 border-2 border-stone-200 rounded-xl focus:ring-2 focus:ring-red-400 focus:border-red-400 outline-none resize-none"
+              placeholder={t('bookingDetail.cancelReasonPlaceholder')}
+              className="w-full px-4 py-3 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:ring-2 focus:ring-red-400 focus:border-red-400 outline-none resize-none bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100"
               rows={3}
             />
             <div className="flex justify-end gap-3 mt-4">
@@ -619,16 +621,16 @@ export default function ReservationDetailPage() {
                   setShowCancelDialog(false);
                   setCancelReason('');
                 }}
-                className="px-4 py-2 text-stone-600 hover:text-stone-800 hover:bg-stone-100 rounded-xl transition-colors font-bold"
+                className="px-4 py-2 text-stone-600 dark:text-stone-300 hover:text-stone-800 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-xl transition-colors font-bold"
               >
-                Back
+                {t('common.back')}
               </button>
               <button
                 onClick={handleCancel}
                 disabled={actionLoading || !cancelReason.trim()}
                 className="px-4 py-2 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50"
               >
-                {actionLoading ? 'Processing...' : 'Cancel Reservation'}
+                {actionLoading ? t('common.processing') : t('bookingDetail.cancelReservation')}
               </button>
             </div>
           </div>
@@ -638,24 +640,24 @@ export default function ReservationDetailPage() {
       {/* Room Assignment Dialog */}
       {showRoomDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-3xl border-2 border-stone-200 shadow-2xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-black text-stone-900 mb-4">
-              {reservation?.room ? 'Change Room' : 'Assign Room'}
+          <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 shadow-2xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-black text-stone-900 dark:text-stone-100 mb-4">
+              {reservation?.room ? t('bookingDetail.changeRoom') : t('bookingDetail.assignRoom')}
             </h3>
-            <p className="text-stone-600 mb-4">
-              Select a room for this reservation.
+            <p className="text-stone-600 dark:text-stone-300 mb-4">
+              {t('bookingDetail.selectRoom')}
             </p>
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {rooms.length === 0 ? (
-                <p className="text-stone-500 text-center py-4">No rooms available</p>
+                <p className="text-stone-500 dark:text-stone-400 text-center py-4">{t('bookingDetail.noRoomsAvailable')}</p>
               ) : (
                 rooms.map((room) => (
                   <label
                     key={room.id}
                     className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-colors ${
                       selectedRoomId === room.id
-                        ? 'border-lime-400 bg-lime-50'
-                        : 'border-stone-200 hover:bg-stone-50'
+                        ? 'border-lime-400 bg-lime-50 dark:bg-lime-900/30'
+                        : 'border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-700'
                     }`}
                   >
                     <input
@@ -671,8 +673,8 @@ export default function ReservationDetailPage() {
                       style={{ backgroundColor: room.color }}
                     />
                     <div className="flex-1">
-                      <p className="font-bold text-stone-900">{room.name}</p>
-                      <p className="text-sm text-stone-500">
+                      <p className="font-bold text-stone-900 dark:text-stone-100">{room.name}</p>
+                      <p className="text-sm text-stone-500 dark:text-stone-400">
                         #{room.roomNumber} - {room.type}
                       </p>
                     </div>
@@ -695,16 +697,16 @@ export default function ReservationDetailPage() {
                   setShowRoomDialog(false);
                   setSelectedRoomId('');
                 }}
-                className="px-4 py-2 text-stone-600 hover:text-stone-800 hover:bg-stone-100 rounded-xl transition-colors font-bold"
+                className="px-4 py-2 text-stone-600 dark:text-stone-300 hover:text-stone-800 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-xl transition-colors font-bold"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleAssignRoom}
                 disabled={actionLoading || !selectedRoomId}
-                className="px-4 py-2 bg-stone-900 text-white font-bold rounded-xl hover:bg-stone-800 transition-colors disabled:opacity-50"
+                className="px-4 py-2 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 font-bold rounded-xl hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors disabled:opacity-50"
               >
-                {actionLoading ? 'Assigning...' : 'Assign Room'}
+                {actionLoading ? t('bookingDetail.assigning') : t('bookingDetail.assignRoom')}
               </button>
             </div>
           </div>

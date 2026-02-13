@@ -9,6 +9,8 @@ type Reservation {
   originId: String
   guestName: String
   guestEmail: String
+  guestId: ID
+  guest: Guest
   status: ReservationStatus!
   checkInDate: String
   checkOutDate: String

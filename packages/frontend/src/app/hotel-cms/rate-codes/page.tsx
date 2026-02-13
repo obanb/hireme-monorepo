@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import HotelSidebar from '@/components/HotelSidebar';
+import { useLocale } from '@/context/LocaleContext';
 
 interface RateCode {
   id: string;
@@ -29,6 +30,7 @@ const emptyFormData: RateCodeFormData = {
 };
 
 export default function RateCodesPage() {
+  const { t } = useLocale();
   const [rateCodes, setRateCodes] = useState<RateCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -306,21 +308,21 @@ export default function RateCodesPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-stone-100">
+    <div className="flex min-h-screen bg-stone-100 dark:bg-stone-900">
       <HotelSidebar />
       <main className="flex-1 ml-72 p-8">
         <div className="max-w-7xl mx-auto">
           {/* Page Header */}
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-4xl font-black text-stone-900 mb-2">Rate Codes</h1>
-              <p className="text-stone-500">Manage pricing rate configurations</p>
+              <h1 className="text-4xl font-black text-stone-900 dark:text-stone-100 mb-2">{t('rateCodes.title')}</h1>
+              <p className="text-stone-500 dark:text-stone-400">{t('rateCodes.subtitle')}</p>
             </div>
             <button
               onClick={openCreateModal}
               className="px-4 py-2 bg-stone-900 text-white rounded-xl hover:bg-stone-800 transition-colors text-sm font-bold flex items-center gap-2"
             >
-              <span className="text-lime-400">+</span> Add Rate Code
+              <span className="text-lime-400">+</span> {t('rateCodes.addRateCode')}
             </button>
           </div>
 
@@ -345,16 +347,16 @@ export default function RateCodesPage() {
           )}
 
           {/* Filters */}
-          <div className="bg-white rounded-3xl border-2 border-stone-200 p-4 mb-6">
+          <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 p-4 mb-6">
             <div className="flex flex-wrap gap-4 items-center">
               {/* Search */}
               <div className="flex-1 min-w-[200px]">
                 <input
                   type="text"
-                  placeholder="Search by code, name, or description..."
+                  placeholder={t('rateCodes.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
+                  className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 dark:bg-stone-800 dark:text-stone-100"
                 />
               </div>
 
@@ -366,80 +368,80 @@ export default function RateCodesPage() {
                   onChange={(e) => setIncludeInactive(e.target.checked)}
                   className="w-4 h-4 text-lime-600 rounded focus:ring-lime-400"
                 />
-                <span className="text-sm text-stone-700 font-medium">Show inactive</span>
+                <span className="text-sm text-stone-700 dark:text-stone-300 font-medium">{t('rateCodes.showInactive')}</span>
               </label>
 
               {/* Refresh */}
               <button
                 onClick={fetchRateCodes}
                 disabled={loading}
-                className="px-4 py-2 text-stone-600 hover:bg-stone-100 rounded-xl transition-colors flex items-center gap-2 font-medium"
+                className="px-4 py-2 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-xl transition-colors flex items-center gap-2 font-medium"
               >
                 <span className={loading ? 'animate-spin' : ''}>&#x21bb;</span>
-                Refresh
+                {t('common.refresh')}
               </button>
             </div>
           </div>
 
           {/* Rate Codes Table */}
-          <div className="bg-white rounded-3xl border-2 border-stone-200 overflow-hidden">
+          <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 overflow-hidden">
             {loading ? (
-              <div className="p-12 text-center text-stone-500">
-                <div className="animate-pulse">Loading rate codes...</div>
+              <div className="p-12 text-center text-stone-500 dark:text-stone-400">
+                <div className="animate-pulse">{t('rateCodes.loadingRateCodes')}</div>
               </div>
             ) : filteredRateCodes.length === 0 ? (
-              <div className="p-12 text-center text-stone-500">
-                <div className="text-4xl mb-4">◉</div>
-                <p className="text-lg font-bold">No rate codes found</p>
+              <div className="p-12 text-center text-stone-500 dark:text-stone-400">
+                <div className="text-4xl mb-4">&#9673;</div>
+                <p className="text-lg font-bold">{t('rateCodes.noRateCodes')}</p>
                 <p className="text-sm mt-1">
                   {rateCodes.length === 0
-                    ? 'Create your first rate code to get started'
-                    : 'Try adjusting your search'}
+                    ? t('rateCodes.createFirst')
+                    : t('common.tryAdjusting')}
                 </p>
                 {rateCodes.length === 0 && (
                   <button
                     onClick={openCreateModal}
                     className="mt-4 px-4 py-2 bg-stone-900 text-white rounded-xl hover:bg-stone-800 font-bold"
                   >
-                    Add First Rate Code
+                    {t('rateCodes.addFirst')}
                   </button>
                 )}
               </div>
             ) : (
               <table className="w-full">
-                <thead className="bg-stone-50 border-b border-stone-200">
+                <thead className="bg-stone-50 dark:bg-stone-700 border-b border-stone-200 dark:border-stone-700">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 uppercase tracking-wider">
-                      Code
+                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                      {t('common.code')}
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 uppercase tracking-wider">
-                      Name
+                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                      {t('common.name')}
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 uppercase tracking-wider">
-                      Description
+                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                      {t('common.description')}
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 uppercase tracking-wider">
-                      Status
+                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                      {t('common.status')}
                     </th>
-                    <th className="px-6 py-4 text-right text-xs font-bold text-stone-600 uppercase tracking-wider">
-                      Actions
+                    <th className="px-6 py-4 text-right text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                      {t('common.actions')}
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-stone-200">
+                <tbody className="divide-y divide-stone-200 dark:divide-stone-700">
                   {filteredRateCodes.map((rateCode) => (
-                    <tr key={rateCode.id} className={`hover:bg-stone-50 transition-colors ${!rateCode.isActive ? 'opacity-60' : ''}`}>
+                    <tr key={rateCode.id} className={`hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors ${!rateCode.isActive ? 'opacity-60' : ''}`}>
                       <td className="px-6 py-4">
-                        <span className="font-mono text-sm bg-stone-100 px-2 py-1 rounded-lg">
+                        <span className="font-mono text-sm bg-stone-100 dark:bg-stone-700 px-2 py-1 rounded-lg">
                           {rateCode.code}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="font-bold text-stone-900">{rateCode.name}</span>
+                        <span className="font-bold text-stone-900 dark:text-stone-100">{rateCode.name}</span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-stone-600 text-sm">
-                          {rateCode.description || <span className="text-stone-400 italic">No description</span>}
+                        <span className="text-stone-600 dark:text-stone-300 text-sm">
+                          {rateCode.description || <span className="text-stone-400 italic">{t('rateCodes.noDescription')}</span>}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -450,7 +452,7 @@ export default function RateCodesPage() {
                               : 'bg-red-100 text-red-700'
                           }`}
                         >
-                          {rateCode.isActive ? 'Active' : 'Inactive'}
+                          {rateCode.isActive ? t('common.active') : t('common.inactive')}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -459,14 +461,14 @@ export default function RateCodesPage() {
                             onClick={() => openEditModal(rateCode)}
                             className="px-3 py-1 text-sm text-lime-600 hover:bg-lime-50 rounded-lg transition-colors font-bold"
                           >
-                            Edit
+                            {t('common.edit')}
                           </button>
                           {rateCode.isActive ? (
                             <button
                               onClick={() => setDeleteConfirm(rateCode)}
                               className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
                             >
-                              Deactivate
+                              {t('common.deactivate')}
                             </button>
                           ) : (
                             <button
@@ -474,7 +476,7 @@ export default function RateCodesPage() {
                               disabled={saving}
                               className="px-3 py-1 text-sm text-lime-600 hover:bg-lime-50 rounded-lg transition-colors disabled:opacity-50 font-medium"
                             >
-                              Reactivate
+                              {t('common.reactivate')}
                             </button>
                           )}
                         </div>
@@ -488,7 +490,7 @@ export default function RateCodesPage() {
 
           {/* Count */}
           {!loading && filteredRateCodes.length > 0 && (
-            <div className="mt-4 text-sm text-stone-500 text-center">
+            <div className="mt-4 text-sm text-stone-500 dark:text-stone-400 text-center">
               Showing {filteredRateCodes.length} of {rateCodes.length} rate codes
             </div>
           )}
@@ -498,10 +500,10 @@ export default function RateCodesPage() {
       {/* Create/Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-3xl border-2 border-stone-200 shadow-2xl w-full max-w-md mx-4">
-            <div className="p-6 border-b border-stone-200">
-              <h2 className="text-xl font-black text-stone-900">
-                {editingRateCode ? 'Edit Rate Code' : 'Add New Rate Code'}
+          <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 shadow-2xl w-full max-w-md mx-4">
+            <div className="p-6 border-b border-stone-200 dark:border-stone-700">
+              <h2 className="text-xl font-black text-stone-900 dark:text-stone-100">
+                {editingRateCode ? t('rateCodes.editRateCode') : t('rateCodes.addNew')}
               </h2>
             </div>
 
@@ -514,8 +516,8 @@ export default function RateCodesPage() {
 
               {/* Code */}
               <div>
-                <label className="block text-sm font-bold text-stone-700 mb-1">
-                  Code
+                <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
+                  {t('common.code')}
                 </label>
                 <input
                   type="text"
@@ -524,15 +526,15 @@ export default function RateCodesPage() {
                   onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                   placeholder="e.g., RACK"
                   maxLength={20}
-                  className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 font-mono uppercase"
+                  className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 font-mono uppercase dark:bg-stone-800 dark:text-stone-100"
                 />
-                <p className="text-xs text-stone-500 mt-1">Unique identifier, max 20 characters</p>
+                <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">{t('rateCodes.uniqueId')}</p>
               </div>
 
               {/* Name */}
               <div>
-                <label className="block text-sm font-bold text-stone-700 mb-1">
-                  Name
+                <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
+                  {t('common.name')}
                 </label>
                 <input
                   type="text"
@@ -541,21 +543,21 @@ export default function RateCodesPage() {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g., Rack Rate"
                   maxLength={100}
-                  className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
+                  className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 dark:bg-stone-800 dark:text-stone-100"
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-bold text-stone-700 mb-1">
-                  Description (optional)
+                <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
+                  {t('rateCodes.descriptionOptional')}
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Brief description of this rate code..."
                   rows={3}
-                  className="w-full px-4 py-2 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 resize-none"
+                  className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 resize-none dark:bg-stone-800 dark:text-stone-100"
                 />
               </div>
 
@@ -564,16 +566,16 @@ export default function RateCodesPage() {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 px-4 py-2 border-2 border-stone-200 text-stone-700 rounded-xl hover:bg-stone-50 transition-colors font-bold"
+                  className="flex-1 px-4 py-2 border-2 border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors font-bold"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
                   className="flex-1 px-4 py-2 bg-stone-900 text-white rounded-xl hover:bg-stone-800 transition-colors disabled:opacity-50 font-bold"
                 >
-                  {saving ? 'Saving...' : editingRateCode ? 'Update' : 'Create'}
+                  {saving ? t('common.saving') : editingRateCode ? t('common.update') : t('common.create')}
                 </button>
               </div>
             </form>
@@ -584,26 +586,26 @@ export default function RateCodesPage() {
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-3xl border-2 border-stone-200 shadow-2xl w-full max-w-sm mx-4 p-6">
-            <h2 className="text-xl font-black text-stone-900 mb-2">
-              Deactivate Rate Code
+          <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 shadow-2xl w-full max-w-sm mx-4 p-6">
+            <h2 className="text-xl font-black text-stone-900 dark:text-stone-100 mb-2">
+              {t('rateCodes.deactivateTitle')}
             </h2>
-            <p className="text-stone-600 mb-6">
+            <p className="text-stone-600 dark:text-stone-300 mb-6">
               Are you sure you want to deactivate &quot;{deleteConfirm.name}&quot;? This rate code will no longer be available for selection.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 px-4 py-2 border-2 border-stone-200 text-stone-700 rounded-xl hover:bg-stone-50 transition-colors font-bold"
+                className="flex-1 px-4 py-2 border-2 border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors font-bold"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm)}
                 disabled={saving}
                 className="flex-1 px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50 font-bold"
               >
-                {saving ? 'Deactivating...' : 'Deactivate'}
+                {saving ? t('common.deactivating') : t('common.deactivate')}
               </button>
             </div>
           </div>

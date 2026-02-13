@@ -277,6 +277,7 @@ export class ReservationRepository {
       originId: row.origin_id,
       guestName: row.guest_name,
       guestEmail: row.guest_email,
+      guestId: row.guest_id ?? null,
       status: row.status,
       checkInDate: row.check_in_date,
       checkOutDate: row.check_out_date,

@@ -71,8 +71,13 @@ export async function handleChatMessage(
   session.messages.push({ role: 'user', content: userMessage });
 
   try {
-    const mcpTools = await listMcpTools();
-    const openaiTools = mcpToolsToOpenAIFormat(mcpTools);
+    let openaiTools: OpenAI.ChatCompletionTool[] = [];
+    try {
+      const mcpTools = await listMcpTools();
+      openaiTools = mcpToolsToOpenAIFormat(mcpTools);
+    } catch {
+      console.warn('[chat] MCP tools unavailable, continuing without tools');
+    }
 
     let iterations = 0;
     const augmentedPrompt = await buildAugmentedSystemPrompt(userMessage);

@@ -11,67 +11,76 @@ import {
 
 let indexerInterval: ReturnType<typeof setInterval> | null = null;
 
-async function graphqlQuery<T>(query: string): Promise<T> {
-  const response = await fetch(config.graphql.endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`GraphQL HTTP error: ${response.status}`);
-  }
-
-  const json = await response.json();
-  if (json.errors?.length) {
-    throw new Error(`GraphQL errors: ${json.errors.map((e: any) => e.message).join(', ')}`);
-  }
-
-  return json.data;
-}
-
 async function fetchAllEntities(): Promise<EmbeddingDocument[]> {
+  const pool = getRagPool();
   const docs: EmbeddingDocument[] = [];
 
   try {
-    const resData = await graphqlQuery<{ reservations: any[] }>(`{
-      reservations(limit: 500) {
-        id guestName status checkInDate checkOutDate
-        totalAmount currency room { roomNumber }
-      }
-    }`);
-    docs.push(...resData.reservations.map(reservationToDocument));
+    const { rows } = await pool.query(`
+      SELECT r.id, r.guest_name, r.status, r.check_in_date, r.check_out_date,
+             r.total_amount, r.currency, rm.room_number
+      FROM reservations r
+      LEFT JOIN rooms rm ON r.room_id = rm.id
+      ORDER BY r.created_at DESC
+      LIMIT 500
+    `);
+    docs.push(...rows.map((r: any) => reservationToDocument({
+      id: r.id,
+      guestName: r.guest_name,
+      status: r.status,
+      checkInDate: r.check_in_date ? new Date(r.check_in_date).toISOString().split('T')[0] : null,
+      checkOutDate: r.check_out_date ? new Date(r.check_out_date).toISOString().split('T')[0] : null,
+      totalAmount: r.total_amount != null ? parseFloat(r.total_amount) : null,
+      currency: r.currency,
+      room: r.room_number ? { roomNumber: r.room_number } : null,
+    })));
   } catch (e) {
     console.warn('[rag-indexer] Failed to fetch reservations:', e);
   }
 
   try {
-    const roomData = await graphqlQuery<{ rooms: any[] }>(`{
-      rooms {
-        id name roomNumber type capacity status
-        roomTypeEntity { name }
-        rateCode { name }
-      }
-    }`);
-    docs.push(...roomData.rooms.map(roomToDocument));
+    const { rows } = await pool.query(`
+      SELECT r.id, r.name, r.room_number, r.type, r.capacity, r.status,
+             rt.name AS room_type_name, rc.name AS rate_code_name
+      FROM rooms r
+      LEFT JOIN room_types rt ON r.room_type_id = rt.id
+      LEFT JOIN rate_codes rc ON r.rate_code_id = rc.id
+    `);
+    docs.push(...rows.map((r: any) => roomToDocument({
+      id: r.id,
+      roomNumber: r.room_number,
+      name: r.name,
+      type: r.type,
+      capacity: r.capacity,
+      status: r.status,
+      roomTypeEntity: r.room_type_name ? { name: r.room_type_name } : null,
+      rateCode: r.rate_code_name ? { name: r.rate_code_name } : null,
+    })));
   } catch (e) {
     console.warn('[rag-indexer] Failed to fetch rooms:', e);
   }
 
   try {
-    const rtData = await graphqlQuery<{ roomTypes: any[] }>(`{
-      roomTypes(includeInactive: true) { id code name isActive }
-    }`);
-    docs.push(...rtData.roomTypes.map(roomTypeToDocument));
+    const { rows } = await pool.query(`SELECT id, code, name, is_active FROM room_types`);
+    docs.push(...rows.map((r: any) => roomTypeToDocument({
+      id: r.id,
+      code: r.code,
+      name: r.name,
+      isActive: r.is_active,
+    })));
   } catch (e) {
     console.warn('[rag-indexer] Failed to fetch room types:', e);
   }
 
   try {
-    const rcData = await graphqlQuery<{ rateCodes: any[] }>(`{
-      rateCodes(includeInactive: true) { id code name description isActive }
-    }`);
-    docs.push(...rcData.rateCodes.map(rateCodeToDocument));
+    const { rows } = await pool.query(`SELECT id, code, name, description, is_active FROM rate_codes`);
+    docs.push(...rows.map((r: any) => rateCodeToDocument({
+      id: r.id,
+      code: r.code,
+      name: r.name,
+      description: r.description,
+      isActive: r.is_active,
+    })));
   } catch (e) {
     console.warn('[rag-indexer] Failed to fetch rate codes:', e);
   }

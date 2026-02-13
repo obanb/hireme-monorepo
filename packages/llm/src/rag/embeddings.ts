@@ -1,10 +1,14 @@
-import { openai } from '../openai/openaiClient';
+import OpenAI from 'openai';
+import { config } from '../config';
 
-const EMBEDDING_MODEL = 'text-embedding-3-small';
+const embeddingsClient = new OpenAI({
+  baseURL: config.embeddings.baseUrl,
+  apiKey: config.embeddings.apiKey,
+});
 
 export async function generateEmbedding(text: string): Promise<number[]> {
-  const response = await openai.embeddings.create({
-    model: EMBEDDING_MODEL,
+  const response = await embeddingsClient.embeddings.create({
+    model: config.embeddings.model,
     input: text,
   });
 
@@ -14,8 +18,8 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 export async function generateEmbeddingsBatch(texts: string[]): Promise<number[][]> {
   if (texts.length === 0) return [];
 
-  const response = await openai.embeddings.create({
-    model: EMBEDDING_MODEL,
+  const response = await embeddingsClient.embeddings.create({
+    model: config.embeddings.model,
     input: texts,
   });
 

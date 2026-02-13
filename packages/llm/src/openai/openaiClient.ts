@@ -1,7 +1,9 @@
 import OpenAI from "openai";
+import { config } from "../config";
 
 const openaiClient = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY!
+    baseURL: config.llm.baseUrl,
+    apiKey: config.llm.apiKey,
 });
 
 export const openai = openaiClient;

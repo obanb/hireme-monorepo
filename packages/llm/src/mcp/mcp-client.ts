@@ -1,6 +1,10 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import path from 'path';
 import { config } from '../config';
+
+// Resolve repo root: packages/llm/dist/mcp/ -> ../../../.. from __dirname
+const repoRoot = path.resolve(__dirname, '..', '..', '..', '..');
 
 let client: Client | null = null;
 let transport: StdioClientTransport | null = null;
@@ -8,9 +12,13 @@ let transport: StdioClientTransport | null = null;
 export async function getMcpClient(): Promise<Client> {
   if (client) return client;
 
+  const args = config.mcp.serverArgs.map(a =>
+    a.endsWith('.js') ? path.resolve(repoRoot, a) : a
+  );
+
   transport = new StdioClientTransport({
     command: config.mcp.serverCommand,
-    args: config.mcp.serverArgs,
+    args,
   });
 
   client = new Client({

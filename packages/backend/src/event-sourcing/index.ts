@@ -217,6 +217,26 @@ export {
   voucherRepository,
 } from './voucher-repository';
 
+// Guest
+export {
+  GuestAggregate,
+  type GuestState,
+  type GuestDetails,
+  type GuestAddress,
+} from './guest-aggregate';
+
+export {
+  applyGuestProjection,
+  getGuest,
+  getGuestByEmail,
+  listGuests,
+} from './guest-projections';
+
+export {
+  GuestRepository,
+  guestRepository,
+} from './guest-repository';
+
 // Statistics
 export {
   statisticsRepository,

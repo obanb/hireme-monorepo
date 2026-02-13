@@ -1,0 +1,104 @@
+# Guest types and operations
+
+type GuestAddress {
+  street: String
+  city: String
+  postalCode: String
+  country: String
+}
+
+type Guest {
+  id: ID!
+  email: String!
+  firstName: String
+  lastName: String
+  phone: String
+  dateOfBirth: String
+  birthPlace: String
+  nationality: String
+  citizenship: String
+  passportNumber: String
+  visaNumber: String
+  purposeOfStay: String
+  homeAddress: GuestAddress
+  notes: String
+  isActive: Boolean!
+  version: Int!
+  createdAt: String
+  updatedAt: String
+  reservations: [Reservation!]
+  vouchers: [Voucher!]
+}
+
+input GuestAddressInput {
+  street: String
+  city: String
+  postalCode: String
+  country: String
+}
+
+input CreateGuestInput {
+  email: String!
+  firstName: String
+  lastName: String
+  phone: String
+  dateOfBirth: String
+  birthPlace: String
+  nationality: String
+  citizenship: String
+  passportNumber: String
+  visaNumber: String
+  purposeOfStay: String
+  homeAddress: GuestAddressInput
+  notes: String
+}
+
+input UpdateGuestInput {
+  email: String
+  firstName: String
+  lastName: String
+  phone: String
+  dateOfBirth: String
+  birthPlace: String
+  nationality: String
+  citizenship: String
+  passportNumber: String
+  visaNumber: String
+  purposeOfStay: String
+  homeAddress: GuestAddressInput
+  notes: String
+}
+
+input GuestFilterInput {
+  email: String
+  name: String
+  nationality: String
+  passportNumber: String
+}
+
+type CreateGuestResult {
+  guest: Guest
+  events: [StoredEvent!]!
+}
+
+type UpdateGuestResult {
+  guest: Guest
+  events: [StoredEvent!]!
+}
+
+type DeleteGuestResult {
+  success: Boolean!
+  events: [StoredEvent!]!
+}
+
+extend type Query {
+  guest(id: ID!): Guest
+  guestByEmail(email: String!): Guest
+  guests(filter: GuestFilterInput, limit: Int, offset: Int): [Guest!]!
+}
+
+extend type Mutation {
+  createGuest(input: CreateGuestInput!): CreateGuestResult!
+  updateGuest(id: ID!, input: UpdateGuestInput!): UpdateGuestResult!
+  deleteGuest(id: ID!): DeleteGuestResult!
+}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import HotelSidebar from '@/components/HotelSidebar';
+import { useLocale } from '@/context/LocaleContext';
 
 // Types
 interface CustomerData {
@@ -68,174 +69,6 @@ type TabType = 'all' | 'active' | 'used' | 'expired' | 'canceled';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:4001/graphql';
 
-// Mock data for demo (until backend API is ready)
-const MOCK_VOUCHERS: Voucher[] = [
-  {
-    id: 236815,
-    hotel: 1130,
-    code: '',
-    number: 'ZAFJTEMMDH',
-    lang: 'cs',
-    createdAt: '2025-12-12T09:13:30+01:00',
-    usedAt: null,
-    canceledAt: null,
-    paidAt: '2025-12-12T09:14:16+01:00',
-    variableSymbol: 25182498,
-    active: true,
-    price: 50000.0,
-    purchasePrice: 50000.0,
-    currency: 'CZK',
-    validity: '2026-12-12',
-    paymentType: 'payment-online-card',
-    deliveryType: 'email',
-    deliveryPrice: 0.0,
-    note: 'Nakupuji na firmu',
-    format: 'DL',
-    gift: null,
-    giftMessage: null,
-    usedIn: null,
-    reservationNumber: null,
-    valueTotal: 50000.0,
-    valueRemaining: 4770.0,
-    valueUsed: 45230.0,
-    applicableInBookolo: false,
-    isPrivateType: false,
-    isFreeType: false,
-    customerData: {
-      name: 'Sarka Komarkova',
-      street: 'Prusinovského',
-      houseNumber: '809',
-      city: 'Modřice',
-      postalCode: '66442',
-      country: 'CZ',
-      email: 'sarka_komarkova@spromotion.cz',
-      tel: '734799456',
-      company: 'S PROMOTION s.r.o.',
-      cin: '28276817',
-      tin: 'CZ28276817',
-    },
-    giftData: {
-      name: null,
-      street: null,
-      houseNumber: null,
-      city: null,
-      postalCode: null,
-      country: null,
-      email: null,
-      tel: null,
-    },
-  },
-  {
-    id: 236816,
-    hotel: 1130,
-    code: 'WELLNESS2024',
-    number: 'BKPL789XYZ',
-    lang: 'cs',
-    createdAt: '2025-11-01T14:22:00+01:00',
-    usedAt: '2025-12-01T10:00:00+01:00',
-    canceledAt: null,
-    paidAt: '2025-11-01T14:25:00+01:00',
-    variableSymbol: 25182499,
-    active: false,
-    price: 3000.0,
-    purchasePrice: 3000.0,
-    currency: 'CZK',
-    validity: '2026-11-01',
-    paymentType: 'payment-bank-transfer',
-    deliveryType: 'post',
-    deliveryPrice: 50.0,
-    note: null,
-    format: 'A5',
-    gift: 'Jan Novak',
-    giftMessage: 'Vse nejlepsi k narozeninam!',
-    usedIn: 'RES-2025-001234',
-    reservationNumber: 'RES-2025-001234',
-    valueTotal: 3000.0,
-    valueRemaining: 0.0,
-    valueUsed: 3000.0,
-    applicableInBookolo: true,
-    isPrivateType: false,
-    isFreeType: false,
-    customerData: {
-      name: 'Marie Svobodova',
-      street: 'Hlavni',
-      houseNumber: '123',
-      city: 'Praha',
-      postalCode: '11000',
-      country: 'CZ',
-      email: 'marie@example.com',
-      tel: '777123456',
-      company: null,
-      cin: null,
-      tin: null,
-    },
-    giftData: {
-      name: 'Jan Novak',
-      street: 'Vedlejsi',
-      houseNumber: '456',
-      city: 'Brno',
-      postalCode: '60200',
-      country: 'CZ',
-      email: 'jan@example.com',
-      tel: '777654321',
-    },
-  },
-  {
-    id: 236817,
-    hotel: 1130,
-    code: '',
-    number: 'CNCL456ABC',
-    lang: 'en',
-    createdAt: '2025-10-15T08:00:00+01:00',
-    usedAt: null,
-    canceledAt: '2025-10-20T12:00:00+01:00',
-    paidAt: '2025-10-15T08:05:00+01:00',
-    variableSymbol: 25182500,
-    active: false,
-    price: 5000.0,
-    purchasePrice: 5000.0,
-    currency: 'EUR',
-    validity: '2026-10-15',
-    paymentType: 'payment-online-card',
-    deliveryType: 'email',
-    deliveryPrice: 0.0,
-    note: 'Canceled - customer request',
-    format: 'DL',
-    gift: null,
-    giftMessage: null,
-    usedIn: null,
-    reservationNumber: null,
-    valueTotal: 5000.0,
-    valueRemaining: 5000.0,
-    valueUsed: 0.0,
-    applicableInBookolo: false,
-    isPrivateType: true,
-    isFreeType: false,
-    customerData: {
-      name: 'John Smith',
-      street: 'Main Street',
-      houseNumber: '100',
-      city: 'London',
-      postalCode: 'SW1A 1AA',
-      country: 'GB',
-      email: 'john.smith@example.com',
-      tel: '+44123456789',
-      company: 'Smith Ltd.',
-      cin: 'GB123456',
-      tin: 'GB123456789',
-    },
-    giftData: {
-      name: null,
-      street: null,
-      houseNumber: null,
-      city: null,
-      postalCode: null,
-      country: null,
-      email: null,
-      tel: null,
-    },
-  },
-];
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return '-';
@@ -264,7 +97,7 @@ function getVoucherStatus(voucher: Voucher): { label: string; color: string } {
     return { label: 'Canceled', color: 'bg-red-100 text-red-700' };
   }
   if (voucher.valueRemaining === 0 && voucher.valueUsed > 0) {
-    return { label: 'Used', color: 'bg-slate-100 text-slate-700' };
+    return { label: 'Used', color: 'bg-stone-100 text-stone-700' };
   }
   if (new Date(voucher.validity) < new Date()) {
     return { label: 'Expired', color: 'bg-orange-100 text-orange-700' };
@@ -275,7 +108,7 @@ function getVoucherStatus(voucher: Voucher): { label: string; color: string } {
     }
     return { label: 'Active', color: 'bg-green-100 text-green-700' };
   }
-  return { label: 'Inactive', color: 'bg-slate-100 text-slate-600' };
+  return { label: 'Inactive', color: 'bg-stone-100 text-stone-600' };
 }
 
 function isExpired(voucher: Voucher): boolean {
@@ -283,6 +116,7 @@ function isExpired(voucher: Voucher): boolean {
 }
 
 export default function VouchersPage() {
+  const { t } = useLocale();
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -365,12 +199,10 @@ export default function VouchersPage() {
       if (!result.errors && result.data?.vouchers) {
         setVouchers(result.data.vouchers);
       } else {
-        // Fall back to mock data
-        setVouchers(MOCK_VOUCHERS);
+        setError(result.errors?.[0]?.message || 'Failed to fetch vouchers');
       }
     } catch {
-      // Use mock data if API unavailable
-      setVouchers(MOCK_VOUCHERS);
+      setError('Failed to connect to the server');
     } finally {
       setLoading(false);
     }
@@ -822,14 +654,14 @@ export default function VouchersPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-stone-50 dark:bg-stone-900">
       <HotelSidebar />
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 ml-72 p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold text-slate-800 mb-2">Vouchers</h1>
-            <p className="text-slate-600">Manage gift vouchers and certificates</p>
+            <h1 className="text-4xl font-bold text-stone-800 dark:text-stone-100 mb-2">{t('vouchers.title')}</h1>
+            <p className="text-stone-600 dark:text-stone-300">{t('vouchers.subtitle')}</p>
           </div>
 
           {/* Messages */}
@@ -852,59 +684,59 @@ export default function VouchersPage() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-              <div className="text-sm text-slate-500">Total Vouchers</div>
-              <div className="text-2xl font-bold text-slate-800">{stats.total}</div>
+            <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 p-4">
+              <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.totalVouchers')}</div>
+              <div className="text-2xl font-bold text-stone-800 dark:text-stone-100">{stats.total}</div>
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-              <div className="text-sm text-slate-500">Active Vouchers</div>
+            <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 p-4">
+              <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.activeVouchers')}</div>
               <div className="text-2xl font-bold text-green-600">{stats.active}</div>
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-              <div className="text-sm text-slate-500">Total Value</div>
-              <div className="text-2xl font-bold text-slate-800">{formatCurrency(stats.totalValue, 'CZK')}</div>
+            <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 p-4">
+              <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.totalValue')}</div>
+              <div className="text-2xl font-bold text-stone-800 dark:text-stone-100">{formatCurrency(stats.totalValue, 'CZK')}</div>
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-              <div className="text-sm text-slate-500">Remaining Value</div>
+            <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 p-4">
+              <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.remainingValue')}</div>
               <div className="text-2xl font-bold text-blue-600">{formatCurrency(stats.remainingValue, 'CZK')}</div>
             </div>
           </div>
 
           {/* Filters */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
+          <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 p-4 mb-6">
             <div className="flex flex-wrap gap-4 items-center">
               <div className="flex-1 min-w-[200px]">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by number, code, customer..."
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={t('vouchers.searchPlaceholder')}
+                  className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-stone-900 dark:text-stone-100"
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm text-slate-600">From:</label>
+                <label className="text-sm text-stone-600 dark:text-stone-300">{t('vouchers.from')}</label>
                 <input
                   type="date"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
-                  className="px-3 py-2 border border-slate-200 rounded-lg"
+                  className="px-3 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm text-slate-600">To:</label>
+                <label className="text-sm text-stone-600 dark:text-stone-300">{t('vouchers.to')}</label>
                 <input
                   type="date"
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
-                  className="px-3 py-2 border border-slate-200 rounded-lg"
+                  className="px-3 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                 />
               </div>
               <button
                 onClick={fetchVouchers}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg transition-colors"
               >
-                Refresh
+                {t('common.refresh')}
               </button>
               <button
                 onClick={() => {
@@ -918,22 +750,22 @@ export default function VouchersPage() {
                 }}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                + Create Voucher
+                {t('vouchers.createVoucher')}
               </button>
             </div>
           </div>
 
           {/* Tabs */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-6">
-            <div className="flex border-b border-slate-200">
+          <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 mb-6">
+            <div className="flex border-b border-stone-200 dark:border-stone-700">
               {(['all', 'active', 'used', 'expired', 'canceled'] as TabType[]).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`flex-1 px-6 py-4 text-sm font-medium transition-colors capitalize ${
                     activeTab === tab
-                      ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50'
-                      : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50'
+                      ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 dark:bg-blue-900/30'
+                      : 'text-stone-600 dark:text-stone-300 hover:text-stone-800 dark:hover:text-stone-100 hover:bg-stone-50 dark:hover:bg-stone-700'
                   }`}
                 >
                   {tab}
@@ -943,84 +775,84 @@ export default function VouchersPage() {
           </div>
 
           {/* Vouchers Table */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 overflow-hidden">
             {loading ? (
-              <div className="p-8 text-center text-slate-500">
+              <div className="p-8 text-center text-stone-500 dark:text-stone-400">
                 <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-                Loading vouchers...
+                {t('common.loading')}
               </div>
             ) : filteredVouchers.length === 0 ? (
               <div className="p-12 text-center">
                 <div className="text-6xl mb-4">🎁</div>
-                <h3 className="text-xl font-semibold text-slate-800 mb-2">No vouchers found</h3>
-                <p className="text-slate-500">
-                  {searchQuery || dateFrom || dateTo ? 'Try adjusting your filters' : 'Create your first voucher to get started'}
+                <h3 className="text-xl font-semibold text-stone-800 dark:text-stone-100 mb-2">{t('vouchers.noVouchers')}</h3>
+                <p className="text-stone-500 dark:text-stone-400">
+                  {searchQuery || dateFrom || dateTo ? t('common.tryAdjusting') : t('vouchers.createFirst')}
                 </p>
               </div>
             ) : (
               <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-stone-50 dark:bg-stone-900 border-b border-stone-200 dark:border-stone-700">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Number
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                      {t('vouchers.number')}
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Customer
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                      {t('vouchers.customer')}
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Value
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                      {t('vouchers.value')}
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Remaining
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                      {t('vouchers.remaining')}
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Valid Until
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                      {t('vouchers.validUntil')}
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Status
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                      {t('common.status')}
                     </th>
-                    <th className="px-6 py-4 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Actions
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                      {t('common.actions')}
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200">
+                <tbody className="divide-y divide-stone-200 dark:divide-stone-700">
                   {filteredVouchers.map((voucher) => {
                     const status = getVoucherStatus(voucher);
                     return (
-                      <tr key={voucher.id} className="hover:bg-slate-50 transition-colors">
+                      <tr key={voucher.id} className="hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors">
                         <td className="px-6 py-4">
-                          <div className="font-mono font-semibold text-slate-800">{voucher.number}</div>
-                          {voucher.code && <div className="text-xs text-slate-500">Code: {voucher.code}</div>}
+                          <div className="font-mono font-semibold text-stone-800 dark:text-stone-100">{voucher.number}</div>
+                          {voucher.code && <div className="text-xs text-stone-500 dark:text-stone-400">Code: {voucher.code}</div>}
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-slate-800">{voucher.customerData.name || '-'}</div>
-                          <div className="text-xs text-slate-500">{voucher.customerData.email || ''}</div>
+                          <div className="text-stone-800 dark:text-stone-100">{voucher.customerData.name || '-'}</div>
+                          <div className="text-xs text-stone-500 dark:text-stone-400">{voucher.customerData.email || ''}</div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="font-semibold text-slate-800">
+                          <div className="font-semibold text-stone-800 dark:text-stone-100">
                             {formatCurrency(voucher.valueTotal, voucher.currency)}
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div
                             className={`font-semibold ${
-                              voucher.valueRemaining > 0 ? 'text-green-600' : 'text-slate-400'
+                              voucher.valueRemaining > 0 ? 'text-green-600' : 'text-stone-400 dark:text-stone-400'
                             }`}
                           >
                             {formatCurrency(voucher.valueRemaining, voucher.currency)}
                           </div>
                           {voucher.valueUsed > 0 && (
-                            <div className="text-xs text-slate-500">
+                            <div className="text-xs text-stone-500 dark:text-stone-400">
                               Used: {formatCurrency(voucher.valueUsed, voucher.currency)}
                             </div>
                           )}
                         </td>
                         <td className="px-6 py-4">
-                          <div className={isExpired(voucher) ? 'text-red-600' : 'text-slate-800'}>
+                          <div className={isExpired(voucher) ? 'text-red-600' : 'text-stone-800 dark:text-stone-100'}>
                             {formatDate(voucher.validity)}
                           </div>
-                          <div className="text-xs text-slate-500">Created: {formatDate(voucher.createdAt)}</div>
+                          <div className="text-xs text-stone-500 dark:text-stone-400">Created: {formatDate(voucher.createdAt)}</div>
                         </td>
                         <td className="px-6 py-4">
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${status.color}`}>
@@ -1031,42 +863,42 @@ export default function VouchersPage() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => openDetailModal(voucher)}
-                              className="px-2 py-1 text-sm text-slate-600 hover:bg-slate-100 rounded"
+                              className="px-2 py-1 text-sm text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 rounded"
                               title="View details"
                             >
-                              View
+                              {t('common.view')}
                             </button>
                             <button
                               onClick={() => handleDownloadPdf(voucher)}
-                              className="px-2 py-1 text-sm text-purple-600 hover:bg-purple-50 rounded"
+                              className="px-2 py-1 text-sm text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded"
                               title="Download PDF"
                             >
-                              PDF
+                              {t('vouchers.pdf')}
                             </button>
                             {!voucher.canceledAt && (
                               <>
                                 <button
                                   onClick={() => openEditVoucher(voucher)}
-                                  className="px-2 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded"
+                                  className="px-2 py-1 text-sm text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded"
                                 >
-                                  Edit
+                                  {t('common.edit')}
                                 </button>
                                 <button
                                   onClick={() => handleToggleActive(voucher)}
                                   className={`px-2 py-1 text-sm rounded ${
                                     voucher.active
-                                      ? 'text-orange-600 hover:bg-orange-50'
-                                      : 'text-green-600 hover:bg-green-50'
+                                      ? 'text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/30'
+                                      : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30'
                                   }`}
                                 >
-                                  {voucher.active ? 'Disable' : 'Enable'}
+                                  {voucher.active ? t('vouchers.disable') : t('vouchers.enable')}
                                 </button>
                                 {voucher.active && (
                                   <button
                                     onClick={() => handleCancelVoucher(voucher)}
-                                    className="px-2 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
+                                    className="px-2 py-1 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
                                   >
-                                    Cancel
+                                    {t('common.cancel')}
                                   </button>
                                 )}
                               </>
@@ -1086,31 +918,31 @@ export default function VouchersPage() {
       {/* Create/Edit Voucher Modal */}
       {showVoucherModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-200 sticky top-0 bg-white z-10">
-              <h2 className="text-xl font-semibold">{editingVoucher ? 'Edit Voucher' : 'Create New Voucher'}</h2>
+          <div className="bg-white dark:bg-stone-800 rounded-xl shadow-2xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-stone-200 dark:border-stone-700 sticky top-0 bg-white dark:bg-stone-800 z-10">
+              <h2 className="text-xl font-semibold dark:text-stone-100">{editingVoucher ? t('vouchers.editVoucher') : t('vouchers.createNew')}</h2>
             </div>
             <div className="p-6 space-y-6">
               {/* Basic Info */}
               <div>
-                <h3 className="text-sm font-semibold text-slate-800 mb-3 uppercase tracking-wider">Basic Information</h3>
+                <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-100 mb-3 uppercase tracking-wider">{t('vouchers.basicInfo')}</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Promo Code (optional)</label>
+                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.promoCode')}</label>
                     <input
                       type="text"
                       value={voucherForm.code}
                       onChange={(e) => setVoucherForm({ ...voucherForm, code: e.target.value.toUpperCase() })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                       placeholder="e.g., WELLNESS2024"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Format</label>
+                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.format')}</label>
                     <select
                       value={voucherForm.format}
                       onChange={(e) => setVoucherForm({ ...voucherForm, format: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                     >
                       <option value="DL">DL (99x210mm)</option>
                       <option value="A5">A5 (148x210mm)</option>
@@ -1118,22 +950,22 @@ export default function VouchersPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Value *</label>
+                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.valueStar')}</label>
                     <input
                       type="number"
                       value={voucherForm.price}
                       onChange={(e) => setVoucherForm({ ...voucherForm, price: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                       min="0"
                       step="100"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Currency</label>
+                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('bookings.currency')}</label>
                     <select
                       value={voucherForm.currency}
                       onChange={(e) => setVoucherForm({ ...voucherForm, currency: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                     >
                       <option value="CZK">CZK</option>
                       <option value="EUR">EUR</option>
@@ -1141,20 +973,20 @@ export default function VouchersPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Valid Until *</label>
+                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.validUntilStar')}</label>
                     <input
                       type="date"
                       value={voucherForm.validity}
                       onChange={(e) => setVoucherForm({ ...voucherForm, validity: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Payment Type</label>
+                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.paymentType')}</label>
                     <select
                       value={voucherForm.paymentType}
                       onChange={(e) => setVoucherForm({ ...voucherForm, paymentType: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                     >
                       <option value="payment-online-card">Online Card</option>
                       <option value="payment-bank-transfer">Bank Transfer</option>
@@ -1163,11 +995,11 @@ export default function VouchersPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Delivery Type</label>
+                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.deliveryType')}</label>
                     <select
                       value={voucherForm.deliveryType}
                       onChange={(e) => setVoucherForm({ ...voucherForm, deliveryType: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                     >
                       <option value="email">Email</option>
                       <option value="post">Post</option>
@@ -1175,112 +1007,112 @@ export default function VouchersPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Delivery Price</label>
+                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.deliveryPrice')}</label>
                     <input
                       type="number"
                       value={voucherForm.deliveryPrice}
                       onChange={(e) => setVoucherForm({ ...voucherForm, deliveryPrice: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                       min="0"
                     />
                   </div>
                 </div>
                 <div className="mt-4">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Note</label>
+                  <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.note')}</label>
                   <textarea
                     value={voucherForm.note}
                     onChange={(e) => setVoucherForm({ ...voucherForm, note: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                    className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                     rows={2}
-                    placeholder="Internal note..."
+                    placeholder={t('vouchers.internalNote')}
                   />
                 </div>
               </div>
 
               {/* Customer Data */}
               <div>
-                <h3 className="text-sm font-semibold text-slate-800 mb-3 uppercase tracking-wider">Customer Information</h3>
+                <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-100 mb-3 uppercase tracking-wider">{t('vouchers.customerInfo')}</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Name *</label>
+                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.nameStar')}</label>
                     <input
                       type="text"
                       value={voucherForm.customerName}
                       onChange={(e) => setVoucherForm({ ...voucherForm, customerName: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
+                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.emailStar')}</label>
                     <input
                       type="email"
                       value={voucherForm.customerEmail}
                       onChange={(e) => setVoucherForm({ ...voucherForm, customerEmail: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('common.phone')}</label>
                     <input
                       type="tel"
                       value={voucherForm.customerTel}
                       onChange={(e) => setVoucherForm({ ...voucherForm, customerTel: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Company</label>
+                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.company')}</label>
                     <input
                       type="text"
                       value={voucherForm.customerCompany}
                       onChange={(e) => setVoucherForm({ ...voucherForm, customerCompany: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                     />
                   </div>
                   <div className="col-span-2 grid grid-cols-4 gap-4">
                     <div className="col-span-2">
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Street</label>
+                      <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.street')}</label>
                       <input
                         type="text"
                         value={voucherForm.customerStreet}
                         onChange={(e) => setVoucherForm({ ...voucherForm, customerStreet: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                        className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">House No.</label>
+                      <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.houseNo')}</label>
                       <input
                         type="text"
                         value={voucherForm.customerHouseNumber}
                         onChange={(e) => setVoucherForm({ ...voucherForm, customerHouseNumber: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                        className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Postal Code</label>
+                      <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.postalCode')}</label>
                       <input
                         type="text"
                         value={voucherForm.customerPostalCode}
                         onChange={(e) => setVoucherForm({ ...voucherForm, customerPostalCode: e.target.value })}
-                        className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                        className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">City</label>
+                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.city')}</label>
                     <input
                       type="text"
                       value={voucherForm.customerCity}
                       onChange={(e) => setVoucherForm({ ...voucherForm, customerCity: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Country</label>
+                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.country')}</label>
                     <select
                       value={voucherForm.customerCountry}
                       onChange={(e) => setVoucherForm({ ...voucherForm, customerCountry: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                     >
                       <option value="CZ">Czech Republic</option>
                       <option value="SK">Slovakia</option>
@@ -1292,21 +1124,21 @@ export default function VouchersPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">CIN (ICO)</label>
+                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.cin')}</label>
                     <input
                       type="text"
                       value={voucherForm.customerCin}
                       onChange={(e) => setVoucherForm({ ...voucherForm, customerCin: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">TIN (DIC)</label>
+                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.tin')}</label>
                     <input
                       type="text"
                       value={voucherForm.customerTin}
                       onChange={(e) => setVoucherForm({ ...voucherForm, customerTin: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                     />
                   </div>
                 </div>
@@ -1314,59 +1146,59 @@ export default function VouchersPage() {
 
               {/* Gift Data */}
               <div>
-                <h3 className="text-sm font-semibold text-slate-800 mb-3 uppercase tracking-wider">
-                  Gift Recipient (optional)
+                <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-100 mb-3 uppercase tracking-wider">
+                  {t('vouchers.giftRecipient')}
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Recipient Name</label>
+                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.recipientName')}</label>
                     <input
                       type="text"
                       value={voucherForm.giftName}
                       onChange={(e) => setVoucherForm({ ...voucherForm, giftName: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Recipient Email</label>
+                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.recipientEmail')}</label>
                     <input
                       type="email"
                       value={voucherForm.giftEmail}
                       onChange={(e) => setVoucherForm({ ...voucherForm, giftEmail: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                     />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Gift Message</label>
+                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.giftMessage')}</label>
                     <textarea
                       value={voucherForm.giftMessage}
                       onChange={(e) => setVoucherForm({ ...voucherForm, giftMessage: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
                       rows={2}
-                      placeholder="Personal message on the voucher..."
+                      placeholder={t('vouchers.giftMessagePlaceholder')}
                     />
                   </div>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3 pt-4 border-t border-slate-200">
+              <div className="flex gap-3 pt-4 border-t border-stone-200 dark:border-stone-700">
                 <button
                   onClick={() => {
                     setShowVoucherModal(false);
                     setEditingVoucher(null);
                     resetForm();
                   }}
-                  className="flex-1 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50"
+                  className="flex-1 px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-700 dark:text-stone-100"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={editingVoucher ? handleUpdateVoucher : handleCreateVoucher}
                   disabled={loading || !voucherForm.price || !voucherForm.validity || !voucherForm.customerName || !voucherForm.customerEmail}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 hover:bg-blue-700"
                 >
-                  {loading ? 'Saving...' : editingVoucher ? 'Update Voucher' : 'Create Voucher'}
+                  {loading ? t('common.saving') : editingVoucher ? t('vouchers.updateVoucher') : t('vouchers.createVoucher')}
                 </button>
               </div>
             </div>
@@ -1377,10 +1209,10 @@ export default function VouchersPage() {
       {/* Detail Modal */}
       {showDetailModal && selectedVoucher && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-200">
+          <div className="bg-white dark:bg-stone-800 rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-stone-200 dark:border-stone-700">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Voucher Details</h2>
+                <h2 className="text-xl font-semibold dark:text-stone-100">{t('vouchers.voucherDetails')}</h2>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${getVoucherStatus(selectedVoucher).color}`}>
                   {getVoucherStatus(selectedVoucher).label}
                 </span>
@@ -1390,32 +1222,32 @@ export default function VouchersPage() {
               {/* Voucher Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-slate-500">Voucher Number</div>
-                  <div className="font-mono font-semibold text-lg">{selectedVoucher.number}</div>
+                  <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.voucherNumber')}</div>
+                  <div className="font-mono font-semibold text-lg dark:text-stone-100">{selectedVoucher.number}</div>
                 </div>
                 {selectedVoucher.code && (
                   <div>
-                    <div className="text-sm text-slate-500">Promo Code</div>
-                    <div className="font-semibold">{selectedVoucher.code}</div>
+                    <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.promoCode')}</div>
+                    <div className="font-semibold dark:text-stone-100">{selectedVoucher.code}</div>
                   </div>
                 )}
                 <div>
-                  <div className="text-sm text-slate-500">Total Value</div>
-                  <div className="font-semibold text-lg">{formatCurrency(selectedVoucher.valueTotal, selectedVoucher.currency)}</div>
+                  <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.totalValue')}</div>
+                  <div className="font-semibold text-lg dark:text-stone-100">{formatCurrency(selectedVoucher.valueTotal, selectedVoucher.currency)}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-slate-500">Remaining Value</div>
-                  <div className={`font-semibold text-lg ${selectedVoucher.valueRemaining > 0 ? 'text-green-600' : 'text-slate-400'}`}>
+                  <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.remainingValue')}</div>
+                  <div className={`font-semibold text-lg ${selectedVoucher.valueRemaining > 0 ? 'text-green-600' : 'text-stone-400 dark:text-stone-400'}`}>
                     {formatCurrency(selectedVoucher.valueRemaining, selectedVoucher.currency)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-slate-500">Used Value</div>
-                  <div className="font-semibold">{formatCurrency(selectedVoucher.valueUsed, selectedVoucher.currency)}</div>
+                  <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.used')}</div>
+                  <div className="font-semibold dark:text-stone-100">{formatCurrency(selectedVoucher.valueUsed, selectedVoucher.currency)}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-slate-500">Valid Until</div>
-                  <div className={`font-semibold ${isExpired(selectedVoucher) ? 'text-red-600' : ''}`}>
+                  <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.validUntil')}</div>
+                  <div className={`font-semibold ${isExpired(selectedVoucher) ? 'text-red-600' : 'dark:text-stone-100'}`}>
                     {formatDate(selectedVoucher.validity)}
                   </div>
                 </div>
@@ -1423,37 +1255,37 @@ export default function VouchersPage() {
 
               {/* Usage Progress */}
               <div>
-                <div className="text-sm text-slate-500 mb-2">Usage Progress</div>
-                <div className="w-full bg-slate-100 rounded-full h-3">
+                <div className="text-sm text-stone-500 dark:text-stone-400 mb-2">{t('vouchers.usageProgress')}</div>
+                <div className="w-full bg-stone-100 dark:bg-stone-700 rounded-full h-3">
                   <div
                     className="bg-blue-600 h-3 rounded-full transition-all"
                     style={{ width: `${(selectedVoucher.valueUsed / selectedVoucher.valueTotal) * 100}%` }}
                   />
                 </div>
-                <div className="text-xs text-slate-500 mt-1">
+                <div className="text-xs text-stone-500 dark:text-stone-400 mt-1">
                   {((selectedVoucher.valueUsed / selectedVoucher.valueTotal) * 100).toFixed(1)}% used
                 </div>
               </div>
 
               {/* Dates */}
-              <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg">
+              <div className="grid grid-cols-2 gap-4 p-4 bg-stone-50 dark:bg-stone-900 rounded-lg">
                 <div>
-                  <div className="text-sm text-slate-500">Created</div>
-                  <div>{formatDateTime(selectedVoucher.createdAt)}</div>
+                  <div className="text-sm text-stone-500 dark:text-stone-400">{t('common.created')}</div>
+                  <div className="dark:text-stone-100">{formatDateTime(selectedVoucher.createdAt)}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-slate-500">Paid</div>
-                  <div>{formatDateTime(selectedVoucher.paidAt)}</div>
+                  <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.paid')}</div>
+                  <div className="dark:text-stone-100">{formatDateTime(selectedVoucher.paidAt)}</div>
                 </div>
                 {selectedVoucher.usedAt && (
                   <div>
-                    <div className="text-sm text-slate-500">First Used</div>
-                    <div>{formatDateTime(selectedVoucher.usedAt)}</div>
+                    <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.firstUsed')}</div>
+                    <div className="dark:text-stone-100">{formatDateTime(selectedVoucher.usedAt)}</div>
                   </div>
                 )}
                 {selectedVoucher.canceledAt && (
                   <div>
-                    <div className="text-sm text-slate-500">Canceled</div>
+                    <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.canceled')}</div>
                     <div className="text-red-600">{formatDateTime(selectedVoucher.canceledAt)}</div>
                   </div>
                 )}
@@ -1461,21 +1293,21 @@ export default function VouchersPage() {
 
               {/* Customer */}
               <div>
-                <div className="text-sm font-semibold text-slate-800 mb-2 uppercase tracking-wider">Customer</div>
-                <div className="p-4 bg-slate-50 rounded-lg">
-                  <div className="font-semibold">{selectedVoucher.customerData.name}</div>
-                  <div className="text-sm text-slate-600">{selectedVoucher.customerData.email}</div>
+                <div className="text-sm font-semibold text-stone-800 dark:text-stone-100 mb-2 uppercase tracking-wider">{t('vouchers.customer')}</div>
+                <div className="p-4 bg-stone-50 dark:bg-stone-900 rounded-lg">
+                  <div className="font-semibold dark:text-stone-100">{selectedVoucher.customerData.name}</div>
+                  <div className="text-sm text-stone-600 dark:text-stone-300">{selectedVoucher.customerData.email}</div>
                   {selectedVoucher.customerData.tel && (
-                    <div className="text-sm text-slate-600">{selectedVoucher.customerData.tel}</div>
+                    <div className="text-sm text-stone-600 dark:text-stone-300">{selectedVoucher.customerData.tel}</div>
                   )}
                   {selectedVoucher.customerData.company && (
-                    <div className="text-sm text-slate-600 mt-2">
+                    <div className="text-sm text-stone-600 dark:text-stone-300 mt-2">
                       {selectedVoucher.customerData.company}
                       {selectedVoucher.customerData.cin && ` (ICO: ${selectedVoucher.customerData.cin})`}
                     </div>
                   )}
                   {selectedVoucher.customerData.street && (
-                    <div className="text-sm text-slate-500 mt-2">
+                    <div className="text-sm text-stone-500 dark:text-stone-400 mt-2">
                       {selectedVoucher.customerData.street} {selectedVoucher.customerData.houseNumber},{' '}
                       {selectedVoucher.customerData.postalCode} {selectedVoucher.customerData.city},{' '}
                       {selectedVoucher.customerData.country}
@@ -1487,14 +1319,14 @@ export default function VouchersPage() {
               {/* Gift Recipient */}
               {selectedVoucher.giftData.name && (
                 <div>
-                  <div className="text-sm font-semibold text-slate-800 mb-2 uppercase tracking-wider">Gift Recipient</div>
-                  <div className="p-4 bg-purple-50 rounded-lg">
-                    <div className="font-semibold">{selectedVoucher.giftData.name}</div>
+                  <div className="text-sm font-semibold text-stone-800 dark:text-stone-100 mb-2 uppercase tracking-wider">{t('vouchers.giftRecipient')}</div>
+                  <div className="p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                    <div className="font-semibold dark:text-stone-100">{selectedVoucher.giftData.name}</div>
                     {selectedVoucher.giftData.email && (
-                      <div className="text-sm text-slate-600">{selectedVoucher.giftData.email}</div>
+                      <div className="text-sm text-stone-600 dark:text-stone-300">{selectedVoucher.giftData.email}</div>
                     )}
                     {selectedVoucher.giftMessage && (
-                      <div className="mt-2 italic text-slate-600">&ldquo;{selectedVoucher.giftMessage}&rdquo;</div>
+                      <div className="mt-2 italic text-stone-600 dark:text-stone-300">&ldquo;{selectedVoucher.giftMessage}&rdquo;</div>
                     )}
                   </div>
                 </div>
@@ -1503,26 +1335,26 @@ export default function VouchersPage() {
               {/* Note */}
               {selectedVoucher.note && (
                 <div>
-                  <div className="text-sm font-semibold text-slate-800 mb-2 uppercase tracking-wider">Note</div>
-                  <div className="p-4 bg-amber-50 rounded-lg text-slate-700">{selectedVoucher.note}</div>
+                  <div className="text-sm font-semibold text-stone-800 dark:text-stone-100 mb-2 uppercase tracking-wider">{t('vouchers.note')}</div>
+                  <div className="p-4 bg-amber-50 dark:bg-amber-900/30 rounded-lg text-stone-700 dark:text-stone-300">{selectedVoucher.note}</div>
                 </div>
               )}
 
               {/* Reservation */}
               {selectedVoucher.reservationNumber && (
-                <div className="p-4 bg-green-50 rounded-lg">
-                  <div className="text-sm text-slate-500">Used in Reservation</div>
+                <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                  <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.usedInReservation')}</div>
                   <div className="font-semibold text-green-700">{selectedVoucher.reservationNumber}</div>
                 </div>
               )}
 
               {/* Actions */}
-              <div className="flex gap-3 pt-4 border-t border-slate-200">
+              <div className="flex gap-3 pt-4 border-t border-stone-200 dark:border-stone-700">
                 <button
                   onClick={() => setShowDetailModal(false)}
-                  className="flex-1 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50"
+                  className="flex-1 px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-700 dark:text-stone-100"
                 >
-                  Close
+                  {t('common.close')}
                 </button>
                 <button
                   onClick={() => {
@@ -1531,7 +1363,7 @@ export default function VouchersPage() {
                   }}
                   className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
                 >
-                  Download PDF
+                  {t('vouchers.downloadPdf')}
                 </button>
               </div>
             </div>
@@ -1543,7 +1375,7 @@ export default function VouchersPage() {
       {showPdfPreview && selectedVoucher && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+            <div className="p-6 border-b border-stone-200 flex items-center justify-between">
               <h2 className="text-xl font-semibold">Voucher Preview</h2>
               <div className="flex gap-2">
                 <button
@@ -1554,13 +1386,13 @@ export default function VouchersPage() {
                 </button>
                 <button
                   onClick={() => setShowPdfPreview(false)}
-                  className="px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50"
+                  className="px-4 py-2 border border-stone-200 rounded-lg hover:bg-stone-50"
                 >
                   Close
                 </button>
               </div>
             </div>
-            <div className="p-8 bg-slate-100">
+            <div className="p-8 bg-stone-100">
               {/* PDF Content */}
               <div ref={pdfRef}>
                 <div

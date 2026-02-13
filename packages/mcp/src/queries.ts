@@ -129,3 +129,102 @@ export const CANCEL_RESERVATION = `
     }
   }
 `;
+
+export const GET_GUESTS = `
+  query GetGuests($filter: GuestFilterInput, $limit: Int, $offset: Int) {
+    guests(filter: $filter, limit: $limit, offset: $offset) {
+      id
+      email
+      firstName
+      lastName
+      phone
+      nationality
+      passportNumber
+      isActive
+      createdAt
+    }
+  }
+`;
+
+export const GET_GUEST_BY_ID = `
+  query GetGuest($id: ID!) {
+    guest(id: $id) {
+      id
+      email
+      firstName
+      lastName
+      phone
+      dateOfBirth
+      birthPlace
+      nationality
+      citizenship
+      passportNumber
+      visaNumber
+      purposeOfStay
+      homeAddress { street city postalCode country }
+      notes
+      isActive
+      version
+      createdAt
+      updatedAt
+      reservations {
+        id
+        status
+        checkInDate
+        checkOutDate
+        totalAmount
+        currency
+      }
+    }
+  }
+`;
+
+export const GET_GUEST_BY_EMAIL = `
+  query GetGuestByEmail($email: String!) {
+    guestByEmail(email: $email) {
+      id
+      email
+      firstName
+      lastName
+      phone
+      dateOfBirth
+      birthPlace
+      nationality
+      citizenship
+      passportNumber
+      visaNumber
+      purposeOfStay
+      homeAddress { street city postalCode country }
+      notes
+      isActive
+      version
+      createdAt
+      updatedAt
+      reservations {
+        id
+        status
+        checkInDate
+        checkOutDate
+        totalAmount
+        currency
+      }
+    }
+  }
+`;
+
+export const CREATE_GUEST = `
+  mutation CreateGuest($input: CreateGuestInput!) {
+    createGuest(input: $input) {
+      guest {
+        id
+        email
+        firstName
+        lastName
+        phone
+        nationality
+        isActive
+        createdAt
+      }
+    }
+  }
+`;

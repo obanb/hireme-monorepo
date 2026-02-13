@@ -21,14 +21,17 @@ import {
   wellnessServiceRepository,
   wellnessBookingRepository,
   voucherRepository,
+  guestRepository,
   statisticsRepository,
   eventRelayer,
   closePool,
+  getPool,
   StoredEvent,
   RoomType,
   RoomStatus,
   seedDefaultRoomTypes,
 } from "./event-sourcing";
+import PDFDocument from "pdfkit";
 import {
   authConfig,
   initializeAuthTables,
@@ -116,6 +119,7 @@ function formatReservation(reservation: {
   originId: string | null;
   guestName: string | null;
   guestEmail?: string | null;
+  guestId?: string | null;
   status: string;
   checkInDate: Date | null;
   checkOutDate: Date | null;
@@ -131,6 +135,7 @@ function formatReservation(reservation: {
     originId: reservation.originId,
     guestName: reservation.guestName,
     guestEmail: reservation.guestEmail || null,
+    guestId: reservation.guestId || null,
     status: reservation.status,
     checkInDate: reservation.checkInDate?.toISOString().split('T')[0] || null,
     checkOutDate: reservation.checkOutDate?.toISOString().split('T')[0] || null,
@@ -417,6 +422,57 @@ function formatVoucher(voucher: {
   };
 }
 
+// Helper to format guest for GraphQL response
+function formatGuest(guest: {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
+  dateOfBirth: string | null;
+  birthPlace: string | null;
+  nationality: string | null;
+  citizenship: string | null;
+  passportNumber: string | null;
+  visaNumber: string | null;
+  purposeOfStay: string | null;
+  homeStreet: string | null;
+  homeCity: string | null;
+  homePostalCode: string | null;
+  homeCountry: string | null;
+  notes: string | null;
+  isActive: boolean;
+  version: number;
+  createdAt: Date;
+  updatedAt: Date;
+}) {
+  return {
+    id: guest.id,
+    email: guest.email,
+    firstName: guest.firstName,
+    lastName: guest.lastName,
+    phone: guest.phone,
+    dateOfBirth: guest.dateOfBirth,
+    birthPlace: guest.birthPlace,
+    nationality: guest.nationality,
+    citizenship: guest.citizenship,
+    passportNumber: guest.passportNumber,
+    visaNumber: guest.visaNumber,
+    purposeOfStay: guest.purposeOfStay,
+    homeAddress: {
+      street: guest.homeStreet,
+      city: guest.homeCity,
+      postalCode: guest.homePostalCode,
+      country: guest.homeCountry,
+    },
+    notes: guest.notes,
+    isActive: guest.isActive,
+    version: guest.version,
+    createdAt: guest.createdAt.toISOString(),
+    updatedAt: guest.updatedAt.toISOString(),
+  };
+}
+
 // Helper to format user for GraphQL response
 function formatUser(user: { id: string; email: string; name: string; role: string; is_active: boolean; email_verified: boolean; created_at: Date; updated_at: Date }) {
   return {
@@ -650,6 +706,35 @@ const resolvers: any = {
       return vouchers.map(formatVoucher);
     },
 
+    // Guest queries
+    guest: async (_: unknown, args: { id: string }) => {
+      const guest = await guestRepository.getReadModel(args.id);
+      if (!guest) return null;
+      return formatGuest(guest);
+    },
+
+    guestByEmail: async (_: unknown, args: { email: string }) => {
+      const guest = await guestRepository.getReadModelByEmail(args.email);
+      if (!guest) return null;
+      return formatGuest(guest);
+    },
+
+    guests: async (
+      _: unknown,
+      args: {
+        filter?: { email?: string; name?: string; nationality?: string; passportNumber?: string };
+        limit?: number;
+        offset?: number;
+      }
+    ) => {
+      const guests = await guestRepository.listReadModels({
+        filter: args.filter,
+        limit: args.limit,
+        offset: args.offset,
+      });
+      return guests.map(formatGuest);
+    },
+
     // Statistics queries
     reservationStats: async (
       _: unknown,
@@ -787,6 +872,36 @@ const resolvers: any = {
       });
 
       const reservation = await reservationRepository.getReadModel(reservationId);
+
+      // Auto-link guest: if guestEmail provided, find or create guest and link
+      if (args.input.guestEmail) {
+        try {
+          let existingGuest = await guestRepository.getReadModelByEmail(args.input.guestEmail);
+          if (!existingGuest) {
+            const guestId = uuidv4();
+            await guestRepository.create(guestId, {
+              email: args.input.guestEmail,
+              firstName: args.input.guestFirstName,
+              lastName: args.input.guestLastName,
+            });
+            existingGuest = await guestRepository.getReadModel(guestId);
+          }
+          if (existingGuest) {
+            const pool = getPool();
+            const client = await pool.connect();
+            try {
+              await client.query(
+                `UPDATE reservations SET guest_id = $1, guest_email = $2 WHERE id = $3`,
+                [existingGuest.id, args.input.guestEmail, reservationId]
+              );
+            } finally {
+              client.release();
+            }
+          }
+        } catch (err) {
+          console.error('[guest-auto-link] Failed to auto-link guest:', err);
+        }
+      }
 
       return {
         reservation: reservation ? formatReservation(reservation) : {
@@ -1467,6 +1582,83 @@ const resolvers: any = {
       return { success: true, events: events.map(formatStoredEvent) };
     },
 
+    // Guest mutations
+    createGuest: async (
+      _: unknown,
+      args: {
+        input: {
+          email: string;
+          firstName?: string;
+          lastName?: string;
+          phone?: string;
+          dateOfBirth?: string;
+          birthPlace?: string;
+          nationality?: string;
+          citizenship?: string;
+          passportNumber?: string;
+          visaNumber?: string;
+          purposeOfStay?: string;
+          homeAddress?: { street?: string; city?: string; postalCode?: string; country?: string };
+          notes?: string;
+        };
+      },
+      context: AuthContext
+    ) => {
+      requireAuth(context);
+      const id = uuidv4();
+      const { events } = await guestRepository.create(id, {
+        email: args.input.email,
+        firstName: args.input.firstName,
+        lastName: args.input.lastName,
+        phone: args.input.phone,
+        dateOfBirth: args.input.dateOfBirth,
+        birthPlace: args.input.birthPlace,
+        nationality: args.input.nationality,
+        citizenship: args.input.citizenship,
+        passportNumber: args.input.passportNumber,
+        visaNumber: args.input.visaNumber,
+        purposeOfStay: args.input.purposeOfStay,
+        homeAddress: args.input.homeAddress,
+        notes: args.input.notes,
+      });
+      const guest = await guestRepository.getReadModel(id);
+      return { guest: guest ? formatGuest(guest) : null, events: events.map(formatStoredEvent) };
+    },
+
+    updateGuest: async (
+      _: unknown,
+      args: {
+        id: string;
+        input: {
+          email?: string;
+          firstName?: string;
+          lastName?: string;
+          phone?: string;
+          dateOfBirth?: string;
+          birthPlace?: string;
+          nationality?: string;
+          citizenship?: string;
+          passportNumber?: string;
+          visaNumber?: string;
+          purposeOfStay?: string;
+          homeAddress?: { street?: string; city?: string; postalCode?: string; country?: string };
+          notes?: string;
+        };
+      },
+      context: AuthContext
+    ) => {
+      requireAuth(context);
+      const { events } = await guestRepository.update(args.id, args.input);
+      const guest = await guestRepository.getReadModel(args.id);
+      return { guest: guest ? formatGuest(guest) : null, events: events.map(formatStoredEvent) };
+    },
+
+    deleteGuest: async (_: unknown, args: { id: string }, context: AuthContext) => {
+      requireAuth(context);
+      const { events } = await guestRepository.delete(args.id);
+      return { success: true, events: events.map(formatStoredEvent) };
+    },
+
     // Campaign mutations
     createEmailTemplate: async (_: unknown, args: { input: { name: string; subject: string; htmlBody: string; previewText?: string } }, context: AuthContext) => {
       requireAuth(context);
@@ -1707,6 +1899,98 @@ const resolvers: any = {
       if (!room) return null;
       return formatRoom(room);
     },
+    guest: async (parent: { guestId?: string | null; guestEmail?: string | null }) => {
+      if (parent.guestId) {
+        const guest = await guestRepository.getReadModel(parent.guestId);
+        if (guest) return formatGuest(guest);
+      }
+      if (parent.guestEmail) {
+        const guest = await guestRepository.getReadModelByEmail(parent.guestEmail);
+        if (guest) return formatGuest(guest);
+      }
+      return null;
+    },
+  },
+
+  Guest: {
+    reservations: async (parent: { email: string }) => {
+      const pool = getPool();
+      const client = await pool.connect();
+      try {
+        const result = await client.query(
+          `SELECT * FROM reservations WHERE guest_email = $1 ORDER BY created_at DESC`,
+          [parent.email]
+        );
+        return result.rows.map((row: Record<string, unknown>) => formatReservation({
+          id: row.id as string,
+          originId: row.origin_id as string | null,
+          guestName: row.guest_name as string | null,
+          guestEmail: row.guest_email as string | null,
+          status: row.status as string,
+          checkInDate: row.check_in_date as Date | null,
+          checkOutDate: row.check_out_date as Date | null,
+          totalAmount: row.total_amount ? parseFloat(row.total_amount as string) : null,
+          currency: row.currency as string | null,
+          roomId: row.room_id as string | null,
+          version: row.version as number,
+          createdAt: row.created_at as Date,
+          updatedAt: row.updated_at as Date,
+        }));
+      } finally {
+        client.release();
+      }
+    },
+    vouchers: async (parent: { email: string }) => {
+      const pool = getPool();
+      const client = await pool.connect();
+      try {
+        const result = await client.query(
+          `SELECT * FROM vouchers WHERE customer_data->>'email' = $1 ORDER BY created_at DESC`,
+          [parent.email]
+        );
+        return result.rows.map((row: Record<string, unknown>) => {
+          const mapRow = (r: Record<string, unknown>) => ({
+            id: r.id as string,
+            code: r.code as string | null,
+            number: r.number as string,
+            hotel: r.hotel as number,
+            lang: r.lang as string,
+            createdAt: r.created_at ? (r.created_at as Date).toISOString() : null,
+            usedAt: r.used_at ? (r.used_at as Date).toISOString() : null,
+            canceledAt: r.canceled_at ? (r.canceled_at as Date).toISOString() : null,
+            paidAt: r.paid_at ? (r.paid_at as Date).toISOString() : null,
+            variableSymbol: r.variable_symbol as number,
+            active: r.active as boolean,
+            price: parseFloat(r.price as string),
+            purchasePrice: parseFloat(r.purchase_price as string),
+            currency: r.currency as string,
+            validity: r.validity as string,
+            paymentType: r.payment_type as string,
+            deliveryType: r.delivery_type as string,
+            deliveryPrice: parseFloat(r.delivery_price as string),
+            note: r.note as string | null,
+            format: r.format as string,
+            gift: r.gift as string | null,
+            giftMessage: r.gift_message as string | null,
+            usedIn: r.used_in as string | null,
+            reservationNumber: r.reservation_number as string | null,
+            valueTotal: parseFloat(r.value_total as string),
+            valueRemaining: parseFloat(r.value_remaining as string),
+            valueUsed: parseFloat(r.value_used as string),
+            applicableInBookolo: r.applicable_in_bookolo as boolean,
+            isPrivateType: r.is_private_type as boolean,
+            isFreeType: r.is_free_type as boolean,
+            customerData: typeof r.customer_data === 'string' ? JSON.parse(r.customer_data) : (r.customer_data || {}),
+            giftData: typeof r.gift_data === 'string' ? JSON.parse(r.gift_data) : (r.gift_data || {}),
+            version: r.version as number,
+            updatedAt: r.updated_at ? (r.updated_at as Date).toISOString() : null,
+          });
+          return formatVoucher(mapRow(row));
+        });
+      } finally {
+        client.release();
+      }
+    },
   },
 
   Room: {
@@ -1783,6 +2067,108 @@ async function startServer() {
 
   // Mount campaign tracking routes (before GraphQL middleware)
   mountTrackingRoutes(app);
+
+  // PDF endpoint for police report
+  const corsOriginForPdf = process.env.CORS_ORIGIN || 'http://localhost:3000';
+  app.get('/api/guests/:id/police-report', cors<cors.CorsRequest>({ origin: corsOriginForPdf, credentials: true }), async (req, res) => {
+    try {
+      const guest = await guestRepository.getReadModel(req.params.id);
+      if (!guest) {
+        res.status(404).json({ error: 'Guest not found' });
+        return;
+      }
+
+      // Fetch guest's reservations
+      const pool = getPool();
+      const client = await pool.connect();
+      let reservations: Array<{ checkInDate: string | null; checkOutDate: string | null; roomNumber: string | null }> = [];
+      try {
+        const result = await client.query(
+          `SELECT r.check_in_date, r.check_out_date, rm.room_number
+           FROM reservations r
+           LEFT JOIN rooms rm ON r.room_id = rm.id
+           WHERE r.guest_email = $1
+           ORDER BY r.check_in_date DESC
+           LIMIT 5`,
+          [guest.email]
+        );
+        reservations = result.rows.map((r: Record<string, unknown>) => ({
+          checkInDate: r.check_in_date ? (r.check_in_date as Date).toISOString().split('T')[0] : null,
+          checkOutDate: r.check_out_date ? (r.check_out_date as Date).toISOString().split('T')[0] : null,
+          roomNumber: r.room_number as string | null,
+        }));
+      } finally {
+        client.release();
+      }
+
+      const doc = new PDFDocument({ size: 'A4', margin: 50 });
+      res.setHeader('Content-Type', 'application/pdf');
+      const safeName = (guest.lastName || 'guest').replace(/[^\x20-\x7E]/g, '_');
+      res.setHeader('Content-Disposition', `attachment; filename="police-report-${safeName}-${guest.id.slice(0, 8)}.pdf"`);
+      doc.pipe(res);
+
+      // Header
+      doc.fontSize(18).font('Helvetica-Bold').text('Hlaseni ubytovani cizincu', { align: 'center' });
+      doc.fontSize(10).font('Helvetica').text('(Report on accommodation of foreigners)', { align: 'center' });
+      doc.moveDown(2);
+
+      // Accommodation facility
+      doc.fontSize(12).font('Helvetica-Bold').text('Ubytovaci zarizeni / Accommodation facility');
+      doc.fontSize(10).font('Helvetica');
+      doc.text('Hotel Wellness Resort');
+      doc.moveDown(1.5);
+
+      // Guest data
+      doc.fontSize(12).font('Helvetica-Bold').text('Udaje o hostu / Guest information');
+      doc.fontSize(10).font('Helvetica');
+      doc.moveDown(0.5);
+
+      const addField = (label: string, value: string | null) => {
+        doc.font('Helvetica-Bold').text(label + ': ', { continued: true });
+        doc.font('Helvetica').text(value || '-');
+      };
+
+      addField('Jmeno / First name', guest.firstName);
+      addField('Prijmeni / Last name', guest.lastName);
+      addField('Datum narozeni / Date of birth', guest.dateOfBirth);
+      addField('Misto narozeni / Place of birth', guest.birthPlace);
+      addField('Statni prislusnost / Citizenship', guest.citizenship);
+      addField('Narodnost / Nationality', guest.nationality);
+      addField('Cislo cestovniho dokladu / Passport number', guest.passportNumber);
+      addField('Cislo viza / Visa number', guest.visaNumber);
+      addField('Ucel pobytu / Purpose of stay', guest.purposeOfStay);
+      doc.moveDown(0.5);
+      addField('Adresa / Home address',
+        [guest.homeStreet, guest.homeCity, guest.homePostalCode, guest.homeCountry].filter(Boolean).join(', ') || null
+      );
+      doc.moveDown(1.5);
+
+      // Stay information
+      doc.fontSize(12).font('Helvetica-Bold').text('Udaje o pobytu / Stay information');
+      doc.fontSize(10).font('Helvetica');
+      doc.moveDown(0.5);
+
+      if (reservations.length > 0) {
+        for (const r of reservations) {
+          doc.text(`Prihlaseni / Check-in: ${r.checkInDate || '-'}    Odhlaseni / Check-out: ${r.checkOutDate || '-'}    Pokoj / Room: ${r.roomNumber || '-'}`);
+        }
+      } else {
+        doc.text('Zadne rezervace / No reservations found');
+      }
+
+      doc.moveDown(3);
+
+      // Signature lines
+      doc.text('Datum / Date: ___________________          Podpis / Signature: ___________________');
+
+      doc.end();
+    } catch (err) {
+      console.error('[police-report] Error generating PDF:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to generate report' });
+      }
+    }
+  });
 
   const server = new ApolloServer({ schema });
   await server.start();

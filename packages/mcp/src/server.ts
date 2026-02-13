@@ -10,6 +10,10 @@ import {
   CREATE_RESERVATION,
   CONFIRM_RESERVATION,
   CANCEL_RESERVATION,
+  GET_GUESTS,
+  GET_GUEST_BY_ID,
+  GET_GUEST_BY_EMAIL,
+  CREATE_GUEST,
 } from './queries';
 
 export function createMcpServer(): McpServer {
@@ -198,13 +202,92 @@ export function createMcpServer(): McpServer {
   );
 
   server.tool(
+    'get_guests',
+    'List/search guest profiles with optional filters for email, name, nationality, passport number',
+    {
+      email: z.string().optional().describe('Filter by email (partial match)'),
+      name: z.string().optional().describe('Filter by first or last name (partial match)'),
+      nationality: z.string().optional().describe('Filter by nationality'),
+      passportNumber: z.string().optional().describe('Filter by passport number'),
+      limit: z.number().optional().describe('Maximum number of results'),
+      offset: z.number().optional().describe('Offset for pagination'),
+    },
+    async ({ email, name, nationality, passportNumber, limit, offset }) => {
+      try {
+        const filter: Record<string, any> = {};
+        if (email) filter.email = email;
+        if (name) filter.name = name;
+        if (nationality) filter.nationality = nationality;
+        if (passportNumber) filter.passportNumber = passportNumber;
+
+        const data = await graphqlQuery<any>(GET_GUESTS, {
+          filter: Object.keys(filter).length > 0 ? filter : undefined,
+          limit,
+          offset,
+        });
+
+        return { content: [{ type: 'text' as const, text: JSON.stringify(data.guests, null, 2) }] };
+      } catch (error) {
+        return { content: [{ type: 'text' as const, text: `Error fetching guests: ${error}` }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    'get_guest_by_email',
+    'Look up a guest profile by their email address, including their reservation history',
+    {
+      email: z.string().describe('The guest email address'),
+    },
+    async ({ email }) => {
+      try {
+        const data = await graphqlQuery<any>(GET_GUEST_BY_EMAIL, { email });
+        if (!data.guestByEmail) {
+          return { content: [{ type: 'text' as const, text: `No guest found with email: ${email}` }], isError: true };
+        }
+        return { content: [{ type: 'text' as const, text: JSON.stringify(data.guestByEmail, null, 2) }] };
+      } catch (error) {
+        return { content: [{ type: 'text' as const, text: `Error fetching guest: ${error}` }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    'create_guest',
+    'Create a new guest profile',
+    {
+      email: z.string().describe('Guest email address (unique identifier)'),
+      firstName: z.string().optional().describe('Guest first name'),
+      lastName: z.string().optional().describe('Guest last name'),
+      phone: z.string().optional().describe('Phone number'),
+      nationality: z.string().optional().describe('Nationality'),
+      passportNumber: z.string().optional().describe('Passport number'),
+    },
+    async ({ email, firstName, lastName, phone, nationality, passportNumber }) => {
+      try {
+        const input: Record<string, any> = { email };
+        if (firstName) input.firstName = firstName;
+        if (lastName) input.lastName = lastName;
+        if (phone) input.phone = phone;
+        if (nationality) input.nationality = nationality;
+        if (passportNumber) input.passportNumber = passportNumber;
+
+        const data = await graphqlQuery<any>(CREATE_GUEST, { input });
+        return { content: [{ type: 'text' as const, text: JSON.stringify(data.createGuest.guest, null, 2) }] };
+      } catch (error) {
+        return { content: [{ type: 'text' as const, text: `Error creating guest: ${error}` }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
     'navigate_to',
     'Navigate the frontend application to a specific page. Use this after fetching data when the user wants to see/view/show a specific entity.',
     {
       page: z.enum([
         'dashboard', 'bookings', 'booking_detail', 'calendar',
         'rooms', 'room_types', 'rate_codes', 'reception',
-        'wellness', 'vouchers', 'statistics',
+        'wellness', 'vouchers', 'guests', 'guest_detail', 'statistics',
       ]).describe('The page to navigate to'),
       entityId: z.string().optional().describe('Entity ID for detail pages (e.g. reservation ID for booking_detail)'),
     },
@@ -221,6 +304,8 @@ export function createMcpServer(): McpServer {
         reception: '/hotel-cms/reception',
         wellness: '/hotel-cms/wellness',
         vouchers: '/hotel-cms/vouchers',
+        guests: '/hotel-cms/guests',
+        guest_detail: `/hotel-cms/guests/${entityId}`,
         statistics: '/hotel-cms/statistics',
       };
 

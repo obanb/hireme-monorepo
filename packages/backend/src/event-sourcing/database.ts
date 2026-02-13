@@ -311,6 +311,65 @@ export async function initializeDatabase(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_vouchers_validity ON vouchers(validity);
     `);
 
+    // Create guests read model table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS guests (
+        id UUID PRIMARY KEY,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        first_name VARCHAR(100),
+        last_name VARCHAR(100),
+        phone VARCHAR(50),
+        date_of_birth DATE,
+        birth_place VARCHAR(200),
+        nationality VARCHAR(100),
+        citizenship VARCHAR(100),
+        passport_number VARCHAR(50),
+        visa_number VARCHAR(50),
+        purpose_of_stay VARCHAR(200),
+        home_street VARCHAR(200),
+        home_city VARCHAR(200),
+        home_postal_code VARCHAR(20),
+        home_country VARCHAR(100),
+        notes TEXT,
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        version INT NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Create indexes for guests
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_guests_email ON guests(email);
+      CREATE INDEX IF NOT EXISTS idx_guests_name ON guests(first_name, last_name);
+    `);
+
+    // Add guest_id column to reservations if it doesn't exist
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'reservations' AND column_name = 'guest_id'
+        ) THEN
+          ALTER TABLE reservations ADD COLUMN guest_id UUID REFERENCES guests(id);
+        END IF;
+      END $$;
+    `);
+
+    // Add guest_email column to reservations if it doesn't exist
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'reservations' AND column_name = 'guest_email'
+        ) THEN
+          ALTER TABLE reservations ADD COLUMN guest_email VARCHAR(255);
+        END IF;
+      END $$;
+    `);
+
     console.log('Database schema initialized successfully');
   } finally {
     client.release();

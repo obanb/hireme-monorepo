@@ -58,8 +58,16 @@ export function getCampaignSchema(): string {
   return readFileSync(join(getSchemaDir(), "campaign.graphql"), "utf-8");
 }
 
+export function getVoucherSchema(): string {
+  return readFileSync(join(getSchemaDir(), "voucher.graphql"), "utf-8");
+}
+
+export function getGuestSchema(): string {
+  return readFileSync(join(getSchemaDir(), "guest.graphql"), "utf-8");
+}
+
 export function getCombinedSchema(): string {
-  return getCommonSchema() + "\n" + getHotelSchema() + "\n" + getRoomTypeSchema() + "\n" + getRateCodeSchema() + "\n" + getRoomSchema() + "\n" + getReservationSchema() + "\n" + getWellnessSchema() + "\n" + getStatisticsSchema() + "\n" + getAuthSchema() + "\n" + getCampaignSchema();
+  return getCommonSchema() + "\n" + getHotelSchema() + "\n" + getRoomTypeSchema() + "\n" + getRateCodeSchema() + "\n" + getRoomSchema() + "\n" + getReservationSchema() + "\n" + getWellnessSchema() + "\n" + getStatisticsSchema() + "\n" + getAuthSchema() + "\n" + getCampaignSchema() + "\n" + getVoucherSchema() + "\n" + getGuestSchema();
 }
 
 // Re-export generated types (will be available after codegen runs)

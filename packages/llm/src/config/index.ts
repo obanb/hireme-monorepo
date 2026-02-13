@@ -21,6 +21,11 @@ export const config = {
     user: process.env.POSTGRES_USER || 'postgres',
     password: process.env.POSTGRES_PASSWORD || 'postgres',
   },
+  embeddings: {
+    baseUrl: process.env.EMBEDDINGS_BASE_URL || 'https://api.openai.com/v1',
+    apiKey: process.env.EMBEDDINGS_API_KEY || 'REMOVED_SECRET',
+    model: process.env.EMBEDDINGS_MODEL || 'text-embedding-3-small',
+  },
   rag: {
     enabled: process.env.RAG_ENABLED !== 'false',
     indexIntervalMs: parseInt(process.env.RAG_INDEX_INTERVAL_MS || '300000', 10),

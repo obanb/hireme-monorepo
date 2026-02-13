@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import HotelSidebar from '@/components/HotelSidebar';
+import { useLocale } from '@/context/LocaleContext';
 import {
   BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -46,6 +47,7 @@ function formatCurrency(amount: number): string {
 }
 
 export default function StatisticsPage() {
+  const { t } = useLocale();
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [loading, setLoading] = useState(true);
@@ -130,47 +132,47 @@ export default function StatisticsPage() {
   const hasData = resStats && resStats.totalCount > 0;
 
   return (
-    <div className="flex min-h-screen bg-stone-50">
+    <div className="flex min-h-screen bg-stone-50 dark:bg-stone-900">
       <HotelSidebar />
       <main className="flex-1 ml-72 p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-black text-stone-900 tracking-tight">Statistics</h1>
-            <p className="text-stone-500 mt-1">Overview of reservations, revenue and occupancy</p>
+            <h1 className="text-3xl font-black text-stone-900 dark:text-stone-100 tracking-tight">{t('statistics.title')}</h1>
+            <p className="text-stone-500 dark:text-stone-400 mt-1">{t('statistics.subtitle')}</p>
           </div>
 
           {/* Filter Bar */}
-          <div className="bg-white rounded-2xl border border-stone-200 p-4 mb-8 flex flex-wrap items-center gap-4 shadow-sm">
+          <div className="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-4 mb-8 flex flex-wrap items-center gap-4 shadow-sm">
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-stone-600">From</label>
+              <label className="text-sm font-medium text-stone-600 dark:text-stone-300">{t('statistics.dateRange')}</label>
               <input
                 type="date"
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
-                className="px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-lime-500"
+                className="px-3 py-2 border border-stone-200 dark:border-stone-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-lime-500 dark:bg-stone-800 dark:text-stone-100"
               />
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-stone-600">To</label>
+              <label className="text-sm font-medium text-stone-600 dark:text-stone-300">{t('vouchers.to')}</label>
               <input
                 type="date"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
-                className="px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-lime-500"
+                className="px-3 py-2 border border-stone-200 dark:border-stone-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-lime-500 dark:bg-stone-800 dark:text-stone-100"
               />
             </div>
             <button
               onClick={handleApplyFilter}
               className="px-5 py-2 bg-stone-900 text-white rounded-xl text-sm font-medium hover:bg-stone-800 transition-colors"
             >
-              Apply
+              {t('statistics.apply')}
             </button>
             <button
               onClick={handleClearFilter}
-              className="px-5 py-2 border border-stone-200 rounded-xl text-sm font-medium text-stone-600 hover:bg-stone-100 transition-colors"
+              className="px-5 py-2 border border-stone-200 dark:border-stone-700 rounded-xl text-sm font-medium text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors"
             >
-              Clear
+              {t('statistics.clear')}
             </button>
           </div>
 
@@ -179,38 +181,38 @@ export default function StatisticsPage() {
               <div className="animate-spin w-8 h-8 border-4 border-lime-500 border-t-transparent rounded-full" />
             </div>
           ) : !hasData ? (
-            <div className="bg-white rounded-2xl border border-stone-200 p-16 text-center shadow-sm">
-              <div className="text-5xl mb-4 text-stone-300">&#9776;</div>
-              <h3 className="text-xl font-semibold text-stone-700 mb-2">No data available</h3>
-              <p className="text-stone-500">Create some reservations and rooms to see statistics here.</p>
+            <div className="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-16 text-center shadow-sm">
+              <div className="text-5xl mb-4 text-stone-300 dark:text-stone-600">&#9776;</div>
+              <h3 className="text-xl font-semibold text-stone-700 dark:text-stone-300 mb-2">{t('statistics.noData')}</h3>
+              <p className="text-stone-500 dark:text-stone-400">{t('statistics.noDataHint')}</p>
             </div>
           ) : (
             <>
               {/* Summary Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <div className="bg-white rounded-2xl border border-stone-200 p-5 shadow-sm">
-                  <p className="text-xs font-medium text-stone-400 uppercase tracking-wider">Total Reservations</p>
-                  <p className="text-3xl font-black text-stone-900 mt-1">{resStats!.totalCount}</p>
+                <div className="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 shadow-sm">
+                  <p className="text-xs font-medium text-stone-400 uppercase tracking-wider">{t('statistics.totalReservations')}</p>
+                  <p className="text-3xl font-black text-stone-900 dark:text-stone-100 mt-1">{resStats!.totalCount}</p>
                 </div>
-                <div className="bg-white rounded-2xl border border-stone-200 p-5 shadow-sm">
-                  <p className="text-xs font-medium text-stone-400 uppercase tracking-wider">Total Revenue</p>
-                  <p className="text-3xl font-black text-stone-900 mt-1">{formatCurrency(resStats!.totalRevenue)}</p>
+                <div className="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 shadow-sm">
+                  <p className="text-xs font-medium text-stone-400 uppercase tracking-wider">{t('statistics.revenue')}</p>
+                  <p className="text-3xl font-black text-stone-900 dark:text-stone-100 mt-1">{formatCurrency(resStats!.totalRevenue)}</p>
                 </div>
-                <div className="bg-white rounded-2xl border border-stone-200 p-5 shadow-sm">
-                  <p className="text-xs font-medium text-stone-400 uppercase tracking-wider">Avg Stay</p>
-                  <p className="text-3xl font-black text-stone-900 mt-1">{resStats!.averageStayDays.toFixed(1)} <span className="text-lg font-medium text-stone-400">days</span></p>
+                <div className="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 shadow-sm">
+                  <p className="text-xs font-medium text-stone-400 uppercase tracking-wider">{t('statistics.avgStay')}</p>
+                  <p className="text-3xl font-black text-stone-900 dark:text-stone-100 mt-1">{resStats!.averageStayDays.toFixed(1)} <span className="text-lg font-medium text-stone-400">{t('statistics.days')}</span></p>
                 </div>
-                <div className="bg-white rounded-2xl border border-stone-200 p-5 shadow-sm">
-                  <p className="text-xs font-medium text-stone-400 uppercase tracking-wider">Occupancy Rate</p>
-                  <p className="text-3xl font-black text-stone-900 mt-1">{occupancy?.occupancyRate.toFixed(1) ?? 0}<span className="text-lg font-medium text-stone-400">%</span></p>
+                <div className="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 shadow-sm">
+                  <p className="text-xs font-medium text-stone-400 uppercase tracking-wider">{t('statistics.occupancy')}</p>
+                  <p className="text-3xl font-black text-stone-900 dark:text-stone-100 mt-1">{occupancy?.occupancyRate.toFixed(1) ?? 0}<span className="text-lg font-medium text-stone-400">%</span></p>
                 </div>
               </div>
 
               {/* Charts 2x2 Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Reservations by Status */}
-                <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
-                  <h3 className="text-sm font-semibold text-stone-700 uppercase tracking-wider mb-4">Reservations by Status</h3>
+                <div className="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-6 shadow-sm">
+                  <h3 className="text-sm font-semibold text-stone-700 dark:text-stone-300 uppercase tracking-wider mb-4">{t('statistics.reservationsByStatus')}</h3>
                   <ResponsiveContainer width="100%" height={280}>
                     <BarChart data={statusBarData} barSize={48}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e7e5e4" />
@@ -229,8 +231,8 @@ export default function StatisticsPage() {
                 </div>
 
                 {/* Reservation Timeline */}
-                <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
-                  <h3 className="text-sm font-semibold text-stone-700 uppercase tracking-wider mb-4">Reservation Timeline</h3>
+                <div className="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-6 shadow-sm">
+                  <h3 className="text-sm font-semibold text-stone-700 dark:text-stone-300 uppercase tracking-wider mb-4">{t('statistics.reservationTimeline')}</h3>
                   {timeline.length > 0 ? (
                     <ResponsiveContainer width="100%" height={280}>
                       <AreaChart data={timeline}>
@@ -255,13 +257,13 @@ export default function StatisticsPage() {
                       </AreaChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="h-[280px] flex items-center justify-center text-stone-400">No timeline data</div>
+                    <div className="h-[280px] flex items-center justify-center text-stone-400">{t('statistics.noTimeline')}</div>
                   )}
                 </div>
 
                 {/* Room Status Distribution */}
-                <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
-                  <h3 className="text-sm font-semibold text-stone-700 uppercase tracking-wider mb-4">Room Status Distribution</h3>
+                <div className="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-6 shadow-sm">
+                  <h3 className="text-sm font-semibold text-stone-700 dark:text-stone-300 uppercase tracking-wider mb-4">{t('statistics.roomDistribution')}</h3>
                   {pieData.length > 0 ? (
                     <ResponsiveContainer width="100%" height={280}>
                       <PieChart>
@@ -284,13 +286,13 @@ export default function StatisticsPage() {
                       </PieChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="h-[280px] flex items-center justify-center text-stone-400">No rooms found</div>
+                    <div className="h-[280px] flex items-center justify-center text-stone-400">{t('statistics.noRooms')}</div>
                   )}
                 </div>
 
                 {/* Revenue by Month */}
-                <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
-                  <h3 className="text-sm font-semibold text-stone-700 uppercase tracking-wider mb-4">Revenue by Month</h3>
+                <div className="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-6 shadow-sm">
+                  <h3 className="text-sm font-semibold text-stone-700 dark:text-stone-300 uppercase tracking-wider mb-4">{t('statistics.revenueByMonth')}</h3>
                   {revTimeline.length > 0 ? (
                     <ResponsiveContainer width="100%" height={280}>
                       <BarChart data={revTimeline} barSize={32}>
@@ -305,7 +307,7 @@ export default function StatisticsPage() {
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="h-[280px] flex items-center justify-center text-stone-400">No revenue data</div>
+                    <div className="h-[280px] flex items-center justify-center text-stone-400">{t('statistics.noRevenue')}</div>
                   )}
                 </div>
               </div>

@@ -1,79 +1,70 @@
 'use client';
 
-interface StatCard {
-  title: string;
-  value: string;
-  change: string;
-  trend: 'up' | 'down';
-  icon: string;
-  color: string;
+import { useState, useEffect } from 'react';
+import { useLocale } from '../context/LocaleContext';
+
+const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:4001/graphql';
+
+interface Stats {
+  totalBookings: number;
+  occupancyRate: number;
+  totalRevenue: number;
+  pendingCount: number;
 }
 
-const stats: StatCard[] = [
-  {
-    title: 'Total Bookings',
-    value: '1,234',
-    change: '+12.5%',
-    trend: 'up',
-    icon: '📋',
-    color: 'from-blue-500 to-blue-600',
-  },
-  {
-    title: 'Occupancy Rate',
-    value: '87%',
-    change: '+5.2%',
-    trend: 'up',
-    icon: '🏨',
-    color: 'from-green-500 to-green-600',
-  },
-  {
-    title: 'Revenue',
-    value: '$45,678',
-    change: '+18.3%',
-    trend: 'up',
-    icon: '💰',
-    color: 'from-purple-500 to-purple-600',
-  },
-  {
-    title: 'Pending Check-ins',
-    value: '23',
-    change: '-3',
-    trend: 'down',
-    icon: '🔑',
-    color: 'from-orange-500 to-orange-600',
-  },
-];
-
 export default function DashboardStats() {
+  const [stats, setStats] = useState<Stats | null>(null);
+  const { t } = useLocale();
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(GRAPHQL_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            query: `{
+              reservationStats { totalCount pendingCount totalRevenue }
+              roomOccupancyStats { occupancyRate }
+            }`,
+          }),
+        });
+        const json = await res.json();
+        if (json.data) {
+          setStats({
+            totalBookings: json.data.reservationStats.totalCount,
+            pendingCount: json.data.reservationStats.pendingCount,
+            totalRevenue: json.data.reservationStats.totalRevenue,
+            occupancyRate: json.data.roomOccupancyStats.occupancyRate,
+          });
+        }
+      } catch {
+        // keep null
+      }
+    })();
+  }, []);
+
+  const cards = [
+    { title: t('stats.pendingBookings'), value: stats ? stats.totalBookings.toLocaleString() : '-', icon: '▣', color: 'bg-stone-900 text-lime-400' },
+    { title: t('stats.occupancyRate'), value: stats ? `${stats.occupancyRate.toFixed(1)}%` : '-', icon: '▤', color: 'bg-stone-900 text-lime-400' },
+    { title: t('stats.revenue'), value: stats ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(stats.totalRevenue) : '-', icon: '◉', color: 'bg-stone-900 text-lime-400' },
+    { title: t('stats.pendingBookings'), value: stats ? String(stats.pendingCount) : '-', icon: '◎', color: 'bg-stone-900 text-lime-400' },
+  ];
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {stats.map((stat, index) => (
-        <div
-          key={index}
-          className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div
-              className={`w-12 h-12 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center text-2xl`}
-            >
-              {stat.icon}
-            </div>
-            <div
-              className={`flex items-center gap-1 text-sm font-medium ${
-                stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-              }`}
-            >
-              <span>{stat.trend === 'up' ? '↑' : '↓'}</span>
-              <span>{stat.change}</span>
+      {cards.map((card, i) => (
+        <div key={i} className="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <div className={`w-10 h-10 rounded-xl ${card.color} flex items-center justify-center text-lg`}>
+              {card.icon}
             </div>
           </div>
-          <h3 className="text-2xl font-bold text-slate-800 mb-1">
-            {stat.value}
-          </h3>
-          <p className="text-sm text-slate-600">{stat.title}</p>
+          <p className="text-3xl font-black text-stone-900 dark:text-stone-100">{card.value}</p>
+          <p className="text-xs font-medium text-stone-400 uppercase tracking-wider mt-1">{card.title}</p>
         </div>
       ))}
     </div>
   );
 }
-

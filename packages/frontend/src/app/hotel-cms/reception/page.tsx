@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import HotelSidebar from '@/components/HotelSidebar';
+import { useLocale } from '@/context/LocaleContext';
 
 interface Reservation {
   id: string;
@@ -67,6 +68,7 @@ function getDaysDiff(date1: string, date2: string): number {
 }
 
 export default function ReceptionPage() {
+  const { t } = useLocale();
   const router = useRouter();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -304,7 +306,7 @@ export default function ReceptionPage() {
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-semibold rounded-full">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 text-xs font-semibold rounded-full">
             {status}
           </span>
         );
@@ -320,22 +322,22 @@ export default function ReceptionPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-stone-50 dark:bg-stone-900">
       <HotelSidebar />
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 ml-72 p-8">
         <div className="max-w-7xl mx-auto">
           {/* Page Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-4xl font-bold text-slate-800 mb-2">Reception</h1>
-                <p className="text-slate-600">
-                  Manage guest arrivals and check-ins
+                <h1 className="text-4xl font-bold text-stone-800 dark:text-stone-100 mb-2">{t('reception.title')}</h1>
+                <p className="text-stone-600 dark:text-stone-300">
+                  {t('reception.subtitle')}
                 </p>
               </div>
               <div className="text-right">
-                <div className="text-sm text-slate-500">Current Date</div>
-                <div className="text-2xl font-bold text-slate-800">
+                <div className="text-sm text-stone-500 dark:text-stone-400">Current Date</div>
+                <div className="text-2xl font-bold text-stone-800 dark:text-stone-100">
                   {formatDisplayDate(getToday())}
                 </div>
               </div>
@@ -366,21 +368,21 @@ export default function ReceptionPage() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-4 gap-4 mb-8">
-            <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+            <div className="bg-white dark:bg-stone-800 rounded-xl p-5 shadow-sm border border-stone-200 dark:border-stone-700">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm text-slate-500 font-medium">Expected Arrivals</div>
-                  <div className="text-3xl font-bold text-slate-800 mt-1">{stats.total}</div>
+                  <div className="text-sm text-stone-500 dark:text-stone-400 font-medium">{t('reception.todayArrivals')}</div>
+                  <div className="text-3xl font-bold text-stone-800 dark:text-stone-100 mt-1">{stats.total}</div>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-2xl">
                   &#128100;
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+            <div className="bg-white dark:bg-stone-800 rounded-xl p-5 shadow-sm border border-stone-200 dark:border-stone-700">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm text-slate-500 font-medium">Awaiting Check-in</div>
+                  <div className="text-sm text-stone-500 dark:text-stone-400 font-medium">{t('filters.pending')}</div>
                   <div className="text-3xl font-bold text-amber-600 mt-1">{stats.pending}</div>
                 </div>
                 <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center text-2xl">
@@ -388,10 +390,10 @@ export default function ReceptionPage() {
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+            <div className="bg-white dark:bg-stone-800 rounded-xl p-5 shadow-sm border border-stone-200 dark:border-stone-700">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm text-slate-500 font-medium">Checked In</div>
+                  <div className="text-sm text-stone-500 dark:text-stone-400 font-medium">{t('reception.inHouse')}</div>
                   <div className="text-3xl font-bold text-green-600 mt-1">{stats.confirmed}</div>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-2xl">
@@ -399,10 +401,10 @@ export default function ReceptionPage() {
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+            <div className="bg-white dark:bg-stone-800 rounded-xl p-5 shadow-sm border border-stone-200 dark:border-stone-700">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm text-slate-500 font-medium">No Room Assigned</div>
+                  <div className="text-sm text-stone-500 dark:text-stone-400 font-medium">No Room Assigned</div>
                   <div className="text-3xl font-bold text-red-600 mt-1">{stats.noRoom}</div>
                 </div>
                 <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-2xl">
@@ -413,18 +415,18 @@ export default function ReceptionPage() {
           </div>
 
           {/* Filters */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
+          <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 p-4 mb-6">
             <div className="flex flex-wrap items-center gap-4">
               {/* Date Filter Tabs */}
-              <div className="flex bg-slate-100 rounded-lg p-1">
+              <div className="flex bg-stone-100 dark:bg-stone-700 rounded-lg p-1">
                 {(['today', 'tomorrow', 'week', 'custom'] as DateFilter[]).map((filter) => (
                   <button
                     key={filter}
                     onClick={() => setDateFilter(filter)}
                     className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
                       dateFilter === filter
-                        ? 'bg-white text-blue-600 shadow-sm'
-                        : 'text-slate-600 hover:text-slate-800'
+                        ? 'bg-white dark:bg-stone-800 text-blue-600 shadow-sm'
+                        : 'text-stone-600 dark:text-stone-300 hover:text-stone-800 dark:hover:text-stone-100'
                     }`}
                   >
                     {filter === 'today' && 'Today'}
@@ -442,46 +444,46 @@ export default function ReceptionPage() {
                     type="date"
                     value={customDateFrom}
                     onChange={(e) => setCustomDateFrom(e.target.value)}
-                    className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-3 py-2 border border-stone-200 dark:border-stone-700 rounded-lg text-sm dark:bg-stone-800 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <span className="text-slate-400">to</span>
+                  <span className="text-stone-400">to</span>
                   <input
                     type="date"
                     value={customDateTo}
                     onChange={(e) => setCustomDateTo(e.target.value)}
-                    className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-3 py-2 border border-stone-200 dark:border-stone-700 rounded-lg text-sm dark:bg-stone-800 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               )}
 
               {/* Divider */}
-              <div className="h-8 w-px bg-slate-200" />
+              <div className="h-8 w-px bg-stone-200 dark:bg-stone-700" />
 
               {/* Status Filter */}
               <div className="flex items-center gap-2">
-                <span className="text-sm text-slate-500">Status:</span>
+                <span className="text-sm text-stone-500 dark:text-stone-400">Status:</span>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-                  className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 border border-stone-200 dark:border-stone-700 rounded-lg text-sm dark:bg-stone-800 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All</option>
-                  <option value="PENDING">Awaiting Check-in</option>
-                  <option value="CONFIRMED">Checked In</option>
+                  <option value="PENDING">{t('filters.pending')}</option>
+                  <option value="CONFIRMED">{t('filters.confirmed')}</option>
                 </select>
               </div>
 
               {/* Divider */}
-              <div className="h-8 w-px bg-slate-200" />
+              <div className="h-8 w-px bg-stone-200 dark:bg-stone-700" />
 
               {/* Search */}
               <div className="flex-1 min-w-[200px]">
                 <input
                   type="text"
-                  placeholder="Search guest name or booking ID..."
+                  placeholder={t('reception.searchGuest')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg text-sm dark:bg-stone-800 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
@@ -489,29 +491,29 @@ export default function ReceptionPage() {
               <button
                 onClick={() => fetchReservations()}
                 disabled={loading}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-2"
+                className="px-4 py-2 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg transition-colors flex items-center gap-2"
               >
                 <span className={loading ? 'animate-spin' : ''}>&#x21bb;</span>
-                Refresh
+                {t('common.refresh')}
               </button>
             </div>
           </div>
 
           {/* Arrivals List */}
           {loading ? (
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-              <div className="animate-pulse text-slate-500">Loading arrivals...</div>
+            <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 p-12 text-center">
+              <div className="animate-pulse text-stone-500 dark:text-stone-400">{t('common.loading')}</div>
             </div>
           ) : filteredReservations.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
+            <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 p-12 text-center">
               <div className="text-5xl mb-4">&#128716;</div>
-              <p className="text-xl font-medium text-slate-700">No arrivals found</p>
-              <p className="text-slate-500 mt-2">
+              <p className="text-xl font-medium text-stone-700 dark:text-stone-300">{t('reception.noArrivals')}</p>
+              <p className="text-stone-500 dark:text-stone-400 mt-2">
                 {dateFilter === 'today'
-                  ? 'No guests expected to arrive today'
+                  ? t('reception.noArrivals')
                   : dateFilter === 'tomorrow'
-                  ? 'No guests expected to arrive tomorrow'
-                  : 'No arrivals match your current filters'}
+                  ? t('reception.noDepartures')
+                  : t('reception.noArrivals')}
               </p>
             </div>
           ) : (
@@ -520,14 +522,14 @@ export default function ReceptionPage() {
                 <div key={date}>
                   {/* Date Header */}
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-stone-800 dark:bg-stone-700 text-white rounded-lg">
                       <span className="text-lg">&#128197;</span>
                       <span className="font-semibold">{getDateLabel(date)}</span>
                     </div>
-                    <div className="text-sm text-slate-500">
+                    <div className="text-sm text-stone-500 dark:text-stone-400">
                       {dayReservations.length} arrival{dayReservations.length !== 1 ? 's' : ''}
                     </div>
-                    <div className="flex-1 h-px bg-slate-200" />
+                    <div className="flex-1 h-px bg-stone-200 dark:bg-stone-700" />
                   </div>
 
                   {/* Reservation Cards */}
@@ -539,10 +541,10 @@ export default function ReceptionPage() {
                       return (
                         <div
                           key={reservation.id}
-                          className={`bg-white rounded-xl shadow-sm border-2 transition-all hover:shadow-md ${
+                          className={`bg-white dark:bg-stone-800 rounded-xl shadow-sm border-2 transition-all hover:shadow-md ${
                             reservation.status === 'PENDING'
                               ? 'border-amber-200 hover:border-amber-300'
-                              : 'border-slate-200 hover:border-slate-300'
+                              : 'border-stone-200 dark:border-stone-700 hover:border-stone-300'
                           }`}
                         >
                           <div className="p-5">
@@ -555,18 +557,18 @@ export default function ReceptionPage() {
                               {/* Guest Info */}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-3 mb-1">
-                                  <h3 className="text-lg font-bold text-slate-800 truncate">
+                                  <h3 className="text-lg font-bold text-stone-800 dark:text-stone-100 truncate">
                                     {reservation.guestName || 'Unknown Guest'}
                                   </h3>
                                   {getStatusBadge(reservation.status)}
                                 </div>
-                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-stone-500 dark:text-stone-400">
                                   <span className="font-mono">#{reservation.originId || reservation.id.slice(0, 8)}</span>
                                   <span>&#8226;</span>
                                   <span>{nights} night{nights !== 1 ? 's' : ''}</span>
                                   <span>&#8226;</span>
                                   <span>
-                                    Check-out: {formatDisplayDate(reservation.checkOutDate)}
+                                    {t('reception.checkOut')}: {formatDisplayDate(reservation.checkOutDate)}
                                   </span>
                                 </div>
                               </div>
@@ -580,8 +582,8 @@ export default function ReceptionPage() {
                                       style={{ backgroundColor: room.color }}
                                     />
                                     <div>
-                                      <div className="font-bold text-slate-800">Room #{room.roomNumber}</div>
-                                      <div className="text-sm text-slate-500">{room.type}</div>
+                                      <div className="font-bold text-stone-800 dark:text-stone-100">Room #{room.roomNumber}</div>
+                                      <div className="text-sm text-stone-500 dark:text-stone-400">{room.type}</div>
                                     </div>
                                   </div>
                                 ) : (
@@ -592,9 +594,9 @@ export default function ReceptionPage() {
                               </div>
 
                               {/* Amount */}
-                              <div className="flex-shrink-0 text-right px-4 border-l border-slate-100">
-                                <div className="text-xs text-slate-400 uppercase">Total</div>
-                                <div className="text-lg font-bold text-slate-800">
+                              <div className="flex-shrink-0 text-right px-4 border-l border-stone-100 dark:border-stone-700">
+                                <div className="text-xs text-stone-400 uppercase">Total</div>
+                                <div className="text-lg font-bold text-stone-800 dark:text-stone-100">
                                   {reservation.totalAmount?.toLocaleString('en-US', {
                                     style: 'currency',
                                     currency: reservation.currency || 'USD',
@@ -603,7 +605,7 @@ export default function ReceptionPage() {
                               </div>
 
                               {/* Actions */}
-                              <div className="flex-shrink-0 flex items-center gap-2 pl-4 border-l border-slate-100">
+                              <div className="flex-shrink-0 flex items-center gap-2 pl-4 border-l border-stone-100 dark:border-stone-700">
                                 {reservation.status === 'PENDING' ? (
                                   <button
                                     onClick={(e) => {
@@ -621,7 +623,7 @@ export default function ReceptionPage() {
                                     ) : (
                                       <span className="flex items-center gap-2">
                                         <span>&#10003;</span>
-                                        Check In
+                                        {t('reception.checkIn')}
                                       </span>
                                     )}
                                   </button>
@@ -632,9 +634,9 @@ export default function ReceptionPage() {
                                 )}
                                 <button
                                   onClick={() => router.push(`/hotel-cms/bookings/${reservation.id}`)}
-                                  className="px-4 py-2.5 border border-slate-200 text-slate-600 font-medium rounded-lg hover:bg-slate-50 transition-colors"
+                                  className="px-4 py-2.5 border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 font-medium rounded-lg hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors"
                                 >
-                                  View Details
+                                  {t('common.view')}
                                 </button>
                               </div>
                             </div>
