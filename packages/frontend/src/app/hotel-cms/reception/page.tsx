@@ -335,10 +335,19 @@ export default function ReceptionPage() {
                   {t('reception.subtitle')}
                 </p>
               </div>
-              <div className="text-right">
-                <div className="text-sm text-stone-500 dark:text-stone-400">Current Date</div>
-                <div className="text-2xl font-bold text-stone-800 dark:text-stone-100">
-                  {formatDisplayDate(getToday())}
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent('chat:open-voice'))}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-stone-900 dark:bg-stone-700 text-white rounded-xl hover:bg-stone-800 dark:hover:bg-stone-600 transition-colors shadow-sm"
+                >
+                  <span>🎤</span>
+                  <span className="font-medium text-sm">{t('reception.voiceAssistant')}</span>
+                </button>
+                <div className="text-right">
+                  <div className="text-sm text-stone-500 dark:text-stone-400">Current Date</div>
+                  <div className="text-2xl font-bold text-stone-800 dark:text-stone-100">
+                    {formatDisplayDate(getToday())}
+                  </div>
                 </div>
               </div>
             </div>

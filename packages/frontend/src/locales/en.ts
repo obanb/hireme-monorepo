@@ -513,6 +513,7 @@ const en = {
   'reception.quickActions': 'Quick Actions',
   'reception.searchGuest': 'Search guest...',
   'reception.roomStatus': 'Room Status',
+  'reception.voiceAssistant': 'Voice Assistant',
 
   // Auth
   'auth.login': 'Login',

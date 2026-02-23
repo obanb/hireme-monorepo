@@ -91,7 +91,10 @@ export default function ChatWidget() {
     router.push(path);
   }, [router]);
 
-  const { messages, isConnected, isLoading, sendMessage, clearMessages } = useChat({
+  const {
+    messages, isConnected, isLoading, sendMessage, clearMessages,
+    isRecording, isTranscribing, startVoiceRecording, stopVoiceRecording,
+  } = useChat({
     onNavigate: handleNavigate,
   });
 
@@ -116,6 +119,15 @@ export default function ChatWidget() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
+
+  useEffect(() => {
+    const handleOpenVoice = () => {
+      setIsOpen(true);
+      setTimeout(() => startVoiceRecording(), 300);
+    };
+    window.addEventListener('chat:open-voice', handleOpenVoice);
+    return () => window.removeEventListener('chat:open-voice', handleOpenVoice);
+  }, [startVoiceRecording]);
 
   const handleSend = () => {
     if (!input.trim() || isLoading) return;
@@ -218,19 +230,33 @@ export default function ChatWidget() {
             {/* Input */}
             <div className="px-4 py-3 bg-white border-t border-stone-200">
               <div className="flex gap-2">
+                <button
+                  onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
+                  disabled={!isConnected || isTranscribing || isLoading}
+                  className={`px-3 py-2.5 rounded-xl text-sm font-medium transition-all flex-shrink-0 ${
+                    isRecording
+                      ? 'bg-red-500 text-white animate-pulse hover:bg-red-600'
+                      : isTranscribing
+                      ? 'bg-amber-100 text-amber-600 cursor-wait'
+                      : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                  } disabled:opacity-40 disabled:cursor-not-allowed`}
+                  title={isRecording ? 'Stop recording' : isTranscribing ? 'Transcribing...' : 'Voice input'}
+                >
+                  {isRecording ? '■' : isTranscribing ? '⏳' : '🎤'}
+                </button>
                 <input
                   ref={inputRef}
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-                  placeholder={isConnected ? 'Ask something...' : 'Connecting...'}
-                  disabled={!isConnected}
+                  placeholder={isRecording ? 'Listening...' : isTranscribing ? 'Transcribing...' : isConnected ? 'Ask something...' : 'Connecting...'}
+                  disabled={!isConnected || isRecording || isTranscribing}
                   className="flex-1 px-4 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <button
                   onClick={handleSend}
-                  disabled={!input.trim() || isLoading || !isConnected}
+                  disabled={!input.trim() || isLoading || !isConnected || isRecording || isTranscribing}
                   className="px-4 py-2.5 rounded-xl bg-stone-900 text-white text-sm font-medium hover:bg-stone-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
                 >
                   {isLoading ? '...' : '→'}

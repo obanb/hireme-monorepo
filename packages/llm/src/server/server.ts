@@ -3,6 +3,7 @@ import express from 'express';
 import { Server as SocketIOServer } from 'socket.io';
 import { config } from '../config';
 import { getOrCreateSession, getSession, handleChatMessage } from '../chat/service';
+import { transcribeAudio } from '../chat/transcription';
 import { getMcpClient, closeMcpClient } from '../mcp/mcp-client';
 import { initializeRagDatabase, startIndexer, stopIndexer, closeRagPool } from '../rag';
 
@@ -60,6 +61,53 @@ io.on('connection', (socket) => {
         socket.emit('chat:error', { error });
       },
     });
+  });
+
+  socket.on('voice:audio', async (data: { audioBlob: ArrayBuffer; sessionId?: string }) => {
+    const chatSession = data.sessionId
+      ? getOrCreateSession(data.sessionId)
+      : session;
+
+    try {
+      socket.emit('voice:transcribing');
+      const text = await transcribeAudio(Buffer.from(data.audioBlob));
+
+      if (!text.trim()) {
+        socket.emit('voice:error', { error: 'No speech detected' });
+        return;
+      }
+
+      socket.emit('voice:transcribed', { text });
+
+      await handleChatMessage(chatSession, text, {
+        onStart: () => {
+          socket.emit('chat:start');
+        },
+        onChunk: (chunk: string) => {
+          socket.emit('chat:chunk', { chunk });
+        },
+        onEnd: (fullMessage: string) => {
+          socket.emit('chat:end', { message: fullMessage });
+        },
+        onToolStart: (toolName: string, args: Record<string, any>) => {
+          socket.emit('chat:tool:start', { tool: toolName, args });
+        },
+        onToolResult: (toolName: string, result: any) => {
+          socket.emit('chat:tool:result', { tool: toolName, result });
+        },
+        onNavigate: (path: string) => {
+          socket.emit('chat:navigate', { path });
+        },
+        onError: (error: string) => {
+          socket.emit('chat:error', { error });
+        },
+      });
+    } catch (err) {
+      console.error('[server] Voice transcription error:', err);
+      socket.emit('voice:error', {
+        error: err instanceof Error ? err.message : 'Transcription failed',
+      });
+    }
   });
 
   socket.on('chat:history', (data: { sessionId: string }) => {

@@ -513,6 +513,7 @@ const cs = {
   'reception.quickActions': 'Rychle akce',
   'reception.searchGuest': 'Hledat hosta...',
   'reception.roomStatus': 'Stav pokoju',
+  'reception.voiceAssistant': 'Hlasovy asistent',
 
   // Auth
   'auth.login': 'Prihlasení',

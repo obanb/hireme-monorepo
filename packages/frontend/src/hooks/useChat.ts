@@ -29,9 +29,13 @@ export function useChat(options?: UseChatOptions) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const streamingRef = useRef<string>('');
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const optionsRef = useRef(options);
   optionsRef.current = options;
 
@@ -154,6 +158,35 @@ export function useChat(options?: UseChatOptions) {
       optionsRef.current?.onNavigate?.(data.path);
     });
 
+    socket.on('voice:transcribing', () => {
+      setIsTranscribing(true);
+    });
+
+    socket.on('voice:transcribed', (data: { text: string }) => {
+      setIsTranscribing(false);
+      const userMsg: ChatMessage = {
+        id: `user-${Date.now()}`,
+        role: 'user',
+        content: data.text,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, userMsg]);
+      setIsLoading(true);
+    });
+
+    socket.on('voice:error', (data: { error: string }) => {
+      setIsTranscribing(false);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `error-${Date.now()}`,
+          role: 'system',
+          content: `Voice error: ${data.error}`,
+          timestamp: new Date(),
+        },
+      ]);
+    });
+
     return () => {
       socket.disconnect();
     };
@@ -184,12 +217,62 @@ export function useChat(options?: UseChatOptions) {
     setMessages([]);
   }, []);
 
+  const startVoiceRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+          ? 'audio/webm;codecs=opus'
+          : 'audio/webm',
+      });
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach((track) => track.stop());
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const arrayBuffer = await audioBlob.arrayBuffer();
+        socketRef.current?.emit('voice:audio', { audioBlob: arrayBuffer, sessionId });
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `error-${Date.now()}`,
+          role: 'system',
+          content: 'Microphone access denied',
+          timestamp: new Date(),
+        },
+      ]);
+    }
+  }, [sessionId]);
+
+  const stopVoiceRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  }, []);
+
   return {
     messages,
     isConnected,
     isLoading,
+    isRecording,
+    isTranscribing,
     sessionId,
     sendMessage,
     clearMessages,
+    startVoiceRecording,
+    stopVoiceRecording,
   };
 }
