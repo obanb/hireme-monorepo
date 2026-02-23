@@ -1,0 +1,227 @@
+openapi: 3.0.3
+info:
+  title: Webhooks API
+  description: Webhook registration and delivery management for reservation events
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:4002/api
+    description: Local development
+
+security:
+  - bearerAuth: []
+
+paths:
+  /webhooks:
+    post:
+      summary: Register a webhook
+      tags: [Webhooks]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url, eventFilters]
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  example: https://example.com/hooks/reservations
+                eventFilters:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - reservation.created
+                      - reservation.confirmed
+                      - reservation.cancelled
+                      - reservation.room_assigned
+                  example: [reservation.created, reservation.cancelled]
+                description:
+                  type: string
+                  example: Notify channel manager
+      responses:
+        '201':
+          description: Webhook created (secret shown only once)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookWithSecret'
+        '400':
+          description: Validation error
+        '401':
+          description: Authentication required
+        '403':
+          description: Admin access required
+
+    get:
+      summary: List all webhooks
+      tags: [Webhooks]
+      responses:
+        '200':
+          description: List of webhooks (secret redacted)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Webhook'
+
+  /webhooks/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Get webhook details with delivery stats
+      tags: [Webhooks]
+      responses:
+        '200':
+          description: Webhook details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookDetail'
+        '404':
+          description: Not found
+
+    patch:
+      summary: Update a webhook
+      tags: [Webhooks]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+                eventFilters:
+                  type: array
+                  items:
+                    type: string
+                description:
+                  type: string
+                isActive:
+                  type: boolean
+      responses:
+        '200':
+          description: Updated webhook
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+        '404':
+          description: Not found
+
+    delete:
+      summary: Soft-delete a webhook
+      tags: [Webhooks]
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Not found
+
+  /webhooks/{id}/test:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    post:
+      summary: Send a test payload to the webhook
+      tags: [Webhooks]
+      responses:
+        '200':
+          description: Test delivery result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deliveryId:
+                    type: string
+                  status:
+                    type: string
+                  responseCode:
+                    type: integer
+                    nullable: true
+        '404':
+          description: Not found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Webhook:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        url:
+          type: string
+        eventFilters:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        disabledReason:
+          type: string
+          nullable: true
+        consecutiveFailures:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    WebhookWithSecret:
+      allOf:
+        - $ref: '#/components/schemas/Webhook'
+        - type: object
+          properties:
+            secret:
+              type: string
+              description: HMAC signing secret (shown only at creation)
+
+    WebhookDetail:
+      allOf:
+        - $ref: '#/components/schemas/Webhook'
+        - type: object
+          properties:
+            stats:
+              type: object
+              properties:
+                totalSent:
+                  type: integer
+                successful:
+                  type: integer
+                failed:
+                  type: integer
+                successRate:
+                  type: integer
+                  nullable: true
+                lastDeliveryStatus:
+                  type: string
+                  nullable: true
