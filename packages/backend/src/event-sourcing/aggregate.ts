@@ -15,9 +15,10 @@ export interface ReservationState {
   originId: string | null;
   checkInDate: string | null;
   checkOutDate: string | null;
-  totalAmount: number | null;
+  totalPrice: number | null;
+  payedPrice: number | null;
   currency: string | null;
-  roomId: string | null;
+  roomIds: string[];
   cancellationReason: string | null;
 }
 
@@ -30,9 +31,10 @@ export class ReservationAggregate {
   private _originId: string | null = null;
   private _checkInDate: string | null = null;
   private _checkOutDate: string | null = null;
-  private _totalAmount: number | null = null;
+  private _totalPrice: number | null = null;
+  private _payedPrice: number | null = null;
   private _currency: string | null = null;
-  private _roomId: string | null = null;
+  private _roomIds: string[] = [];
   private _cancellationReason: string | null = null;
 
   constructor(id: string) {
@@ -50,9 +52,10 @@ export class ReservationAggregate {
       originId: this._originId,
       checkInDate: this._checkInDate,
       checkOutDate: this._checkOutDate,
-      totalAmount: this._totalAmount,
+      totalPrice: this._totalPrice,
+      payedPrice: this._payedPrice,
       currency: this._currency,
-      roomId: this._roomId,
+      roomIds: this._roomIds,
       cancellationReason: this._cancellationReason,
     };
   }
@@ -81,8 +84,8 @@ export class ReservationAggregate {
       case 'ReservationCancelled':
         this.applyReservationCancelled(event.data as unknown as ReservationCancelledData);
         break;
-      case 'RoomAssigned':
-        this.applyRoomAssigned(event.data as unknown as RoomAssignedData);
+      case 'RoomsAssigned':
+        this.applyRoomsAssigned(event.data as unknown as RoomsAssignedData);
         break;
       default:
         console.warn(`Unknown event type: ${event.type}`);
@@ -94,11 +97,12 @@ export class ReservationAggregate {
     const booking = data.bookingDetails;
     if (booking) {
       this._originId = booking.originId || null;
-      this._totalAmount = booking.totalAmount || null;
+      this._totalPrice = booking.totalPrice ?? null;
+      this._payedPrice = booking.payedPrice ?? null;
       this._currency = booking.currency || null;
       this._checkInDate = booking.arrivalTime || null;
       this._checkOutDate = booking.departureTime || null;
-      this._roomId = booking.roomId || null;
+      this._roomIds = booking.roomIds || [];
       if (booking.customer) {
         this._guestName = `${booking.customer.firstName || ''} ${booking.customer.lastName || ''}`.trim() || null;
       }
@@ -114,15 +118,14 @@ export class ReservationAggregate {
     this._cancellationReason = data.reason;
   }
 
-  private applyRoomAssigned(data: RoomAssignedData): void {
-    this._roomId = data.roomId;
+  private applyRoomsAssigned(data: RoomsAssignedData): void {
+    this._roomIds = data.roomIds;
   }
 
   // ============ COMMANDS ============
 
   /**
    * Create a new reservation
-   * @throws Error if reservation already exists
    */
   static create(
     id: string,
@@ -141,7 +144,6 @@ export class ReservationAggregate {
       },
     };
 
-    // Apply immediately so aggregate reflects new state
     aggregate.apply(event);
 
     return { aggregate, event };
@@ -149,7 +151,6 @@ export class ReservationAggregate {
 
   /**
    * Confirm the reservation
-   * @throws Error if reservation is not pending or already confirmed/cancelled
    */
   confirm(confirmedBy?: string): DomainEvent {
     if (this._status === 'CONFIRMED') {
@@ -172,7 +173,6 @@ export class ReservationAggregate {
       },
     };
 
-    // Apply immediately so aggregate reflects new state
     this.apply(event);
 
     return event;
@@ -180,7 +180,6 @@ export class ReservationAggregate {
 
   /**
    * Cancel the reservation
-   * @throws Error if reservation is already cancelled
    */
   cancel(reason: string): DomainEvent {
     if (this._status === 'CANCELLED') {
@@ -199,27 +198,25 @@ export class ReservationAggregate {
       },
     };
 
-    // Apply immediately so aggregate reflects new state
     this.apply(event);
 
     return event;
   }
 
   /**
-   * Assign a room to the reservation
-   * @throws Error if reservation is cancelled
+   * Assign rooms to the reservation
    */
-  assignRoom(roomId: string): DomainEvent {
+  assignRooms(roomIds: string[]): DomainEvent {
     if (this._status === 'CANCELLED') {
-      throw new Error('Cannot assign room to a cancelled reservation');
+      throw new Error('Cannot assign rooms to a cancelled reservation');
     }
 
     const event: DomainEvent = {
-      type: 'RoomAssigned',
+      type: 'RoomsAssigned',
       data: {
         reservationId: this.id,
-        roomId,
-        previousRoomId: this._roomId,
+        roomIds,
+        previousRoomIds: this._roomIds,
         assignedAt: new Date().toISOString(),
       },
       metadata: {
@@ -227,7 +224,6 @@ export class ReservationAggregate {
       },
     };
 
-    // Apply immediately so aggregate reflects new state
     this.apply(event);
 
     return event;
@@ -253,20 +249,21 @@ interface ReservationCancelledData {
   cancelledAt: string;
 }
 
-interface RoomAssignedData {
+interface RoomsAssignedData {
   reservationId: string;
-  roomId: string;
-  previousRoomId: string | null;
+  roomIds: string[];
+  previousRoomIds: string[];
   assignedAt: string;
 }
 
 export interface BookingDetails {
   originId?: string;
-  totalAmount?: number;
+  totalPrice?: number;
+  payedPrice?: number;
   currency?: string;
   arrivalTime?: string;
   departureTime?: string;
-  roomId?: string;
+  roomIds?: string[];
   guestEmail?: string;
   customer?: {
     firstName?: string;

@@ -37,7 +37,6 @@ export class ReservationRepository {
     }
 
     return withTransaction(async (client) => {
-      // Append events to the event store
       const savedEvents = await appendEvents(
         client,
         aggregate.id,
@@ -45,7 +44,6 @@ export class ReservationRepository {
         aggregate.version
       );
 
-      // Apply projections for each saved event
       for (const event of savedEvents) {
         await applyReservationProjection(client, aggregate.id, event);
       }
@@ -56,17 +54,17 @@ export class ReservationRepository {
 
   /**
    * Create a new reservation
-   * Returns the created aggregate and saved events
    */
   async create(
     id: string,
     bookingDetails: {
       originId?: string;
-      totalAmount?: number;
+      totalPrice?: number;
+      payedPrice?: number;
       currency?: string;
       arrivalTime?: string;
       departureTime?: string;
-      roomId?: string;
+      roomIds?: string[];
       guestEmail?: string;
       customer?: {
         firstName?: string;
@@ -74,19 +72,13 @@ export class ReservationRepository {
       };
     }
   ): Promise<{ aggregate: ReservationAggregate; events: StoredEvent[] }> {
-    // Check if aggregate already exists
     const existing = await this.load(id);
     if (existing) {
       throw new Error(`Reservation with ID ${id} already exists`);
     }
 
-    // Create the aggregate and event
     const { aggregate, event } = ReservationAggregate.create(id, bookingDetails);
-
-    // Save the event
     const savedEvents = await this.save(aggregate, [event]);
-
-    // Update aggregate version
     aggregate.version = savedEvents[savedEvents.length - 1].version;
 
     return { aggregate, events: savedEvents };
@@ -105,13 +97,8 @@ export class ReservationRepository {
       throw new Error(`Reservation with ID ${id} not found`);
     }
 
-    // Execute the confirm command
     const event = aggregate.confirm(confirmedBy);
-
-    // Save the event
     const savedEvents = await this.save(aggregate, [event]);
-
-    // Update aggregate version
     aggregate.version = savedEvents[savedEvents.length - 1].version;
 
     return { aggregate, events: savedEvents };
@@ -130,24 +117,19 @@ export class ReservationRepository {
       throw new Error(`Reservation with ID ${id} not found`);
     }
 
-    // Execute the cancel command
     const event = aggregate.cancel(reason);
-
-    // Save the event
     const savedEvents = await this.save(aggregate, [event]);
-
-    // Update aggregate version
     aggregate.version = savedEvents[savedEvents.length - 1].version;
 
     return { aggregate, events: savedEvents };
   }
 
   /**
-   * Assign a room to an existing reservation
+   * Assign rooms to an existing reservation
    */
-  async assignRoom(
+  async assignRooms(
     id: string,
-    roomId: string
+    roomIds: string[]
   ): Promise<{ aggregate: ReservationAggregate; events: StoredEvent[] }> {
     const aggregate = await this.load(id);
 
@@ -155,13 +137,8 @@ export class ReservationRepository {
       throw new Error(`Reservation with ID ${id} not found`);
     }
 
-    // Execute the assign room command
-    const event = aggregate.assignRoom(roomId);
-
-    // Save the event
+    const event = aggregate.assignRooms(roomIds);
     const savedEvents = await this.save(aggregate, [event]);
-
-    // Update aggregate version
     aggregate.version = savedEvents[savedEvents.length - 1].version;
 
     return { aggregate, events: savedEvents };
@@ -193,7 +170,6 @@ export class ReservationRepository {
       createdFrom?: string;
       createdTo?: string;
       currency?: string;
-      roomId?: string;
     };
     limit?: number;
     offset?: number;
@@ -249,11 +225,6 @@ export class ReservationRepository {
       conditions.push(`currency = $${params.length}`);
     }
 
-    if (filter?.roomId) {
-      params.push(filter.roomId);
-      conditions.push(`room_id = $${params.length}`);
-    }
-
     if (conditions.length > 0) {
       query += ` WHERE ${conditions.join(' AND ')}`;
     }
@@ -281,9 +252,11 @@ export class ReservationRepository {
       status: row.status,
       checkInDate: row.check_in_date,
       checkOutDate: row.check_out_date,
-      totalAmount: row.total_amount,
+      totalPrice: row.total_price,
+      payedPrice: row.payed_price,
       currency: row.currency,
-      roomId: row.room_id,
+      roomIds: row.room_ids || [],
+      accountId: row.account_id ?? null,
       version: row.version,
       createdAt: row.created_at,
       updatedAt: row.updated_at,

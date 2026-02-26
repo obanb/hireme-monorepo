@@ -22,10 +22,12 @@ interface Reservation {
   status: string;
   checkInDate: string;
   checkOutDate: string;
-  totalAmount: number;
+  totalPrice: number | null;
+  payedPrice: number | null;
   currency: string;
-  roomId: string | null;
-  room: Room | null;
+  roomIds: string[];
+  rooms: Room[];
+  accountId: number | null;
   version: number;
   createdAt: string;
   updatedAt: string;
@@ -50,20 +52,19 @@ export default function ReservationDetailPage() {
 
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const [events, setEvents] = useState<StoredEvent[]>([]);
-  const [rooms, setRooms] = useState<Room[]>([]);
+  const [allRooms, setAllRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [showRoomDialog, setShowRoomDialog] = useState(false);
-  const [selectedRoomId, setSelectedRoomId] = useState<string>('');
+  const [selectedRoomIds, setSelectedRoomIds] = useState<string[]>([]);
 
   const fetchReservation = useCallback(async () => {
     try {
       setLoading(true);
 
-      // Fetch reservation and event history in parallel
       const [reservationResponse, eventsResponse] = await Promise.all([
         fetch(GRAPHQL_ENDPOINT, {
           method: 'POST',
@@ -79,16 +80,18 @@ export default function ReservationDetailPage() {
                   status
                   checkInDate
                   checkOutDate
-                  totalAmount
+                  totalPrice
+                  payedPrice
                   currency
-                  roomId
-                  room {
+                  roomIds
+                  rooms {
                     id
                     name
                     roomNumber
                     type
                     color
                   }
+                  accountId
                   version
                   createdAt
                   updatedAt
@@ -166,7 +169,7 @@ export default function ReservationDetailPage() {
 
       const result = await response.json();
       if (!result.errors) {
-        setRooms(result.data?.rooms ?? []);
+        setAllRooms(result.data?.rooms ?? []);
       }
     } catch {
       // Silently fail rooms fetch
@@ -263,12 +266,7 @@ export default function ReservationDetailPage() {
     }
   };
 
-  const handleAssignRoom = async () => {
-    if (!selectedRoomId) {
-      setError('Please select a room');
-      return;
-    }
-
+  const handleAssignRooms = async () => {
     try {
       setActionLoading(true);
       const response = await fetch(GRAPHQL_ENDPOINT, {
@@ -276,11 +274,11 @@ export default function ReservationDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           query: `
-            mutation AssignRoom($input: AssignRoomInput!) {
-              assignRoom(input: $input) {
+            mutation AssignRooms($input: AssignRoomsInput!) {
+              assignRooms(input: $input) {
                 reservation {
                   id
-                  roomId
+                  roomIds
                 }
               }
             }
@@ -288,7 +286,7 @@ export default function ReservationDetailPage() {
           variables: {
             input: {
               reservationId,
-              roomId: selectedRoomId,
+              roomIds: selectedRoomIds,
             },
           },
         }),
@@ -296,17 +294,23 @@ export default function ReservationDetailPage() {
 
       const result = await response.json();
       if (result.errors) {
-        throw new Error(result.errors[0]?.message ?? 'Failed to assign room');
+        throw new Error(result.errors[0]?.message ?? 'Failed to assign rooms');
       }
 
       setShowRoomDialog(false);
-      setSelectedRoomId('');
+      setSelectedRoomIds([]);
       await fetchReservation();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to assign room');
+      setError(err instanceof Error ? err.message : 'Failed to assign rooms');
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const toggleRoomInDialog = (roomId: string) => {
+    setSelectedRoomIds(prev =>
+      prev.includes(roomId) ? prev.filter(id => id !== roomId) : [...prev, roomId]
+    );
   };
 
   const getStatusColor = (status: string) => {
@@ -330,6 +334,8 @@ export default function ReservationDetailPage() {
         return { icon: '\u2713', color: 'bg-lime-500' };
       case 'ReservationCancelled':
         return { icon: '\u2717', color: 'bg-red-500' };
+      case 'RoomsAssigned':
+        return { icon: '◫', color: 'bg-blue-500' };
       default:
         return { icon: '?', color: 'bg-stone-500' };
     }
@@ -389,13 +395,13 @@ export default function ReservationDetailPage() {
           {/* Back Link */}
           <div className="mb-6">
             <Link
-              href="/hotel-cms/calendar"
+              href="/hotel-cms/bookings"
               className="text-lime-600 hover:text-lime-700 dark:text-lime-500 dark:hover:text-lime-400 flex items-center gap-2 text-sm font-medium"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              {t('bookingDetail.backToCalendar')}
+              {t('bookingDetail.backToBookings')}
             </Link>
           </div>
 
@@ -426,6 +432,14 @@ export default function ReservationDetailPage() {
                 {reservation.originId && (
                   <p className="text-stone-500 dark:text-stone-400 text-sm mt-1">{t('bookingDetail.origin')}: {reservation.originId}</p>
                 )}
+                {reservation.accountId && (
+                  <Link
+                    href={`/hotel-cms/accounts/${reservation.accountId}`}
+                    className="mt-2 inline-flex items-center gap-1 px-3 py-1 bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 text-sm font-bold rounded-xl hover:bg-violet-200 dark:hover:bg-violet-800/30 transition-colors"
+                  >
+                    ◈ {t('accounts.account')} #{reservation.accountId}
+                  </Link>
+                )}
               </div>
               <div className="flex gap-3">
                 {reservation.status === 'PENDING' && (
@@ -450,7 +464,7 @@ export default function ReservationDetailPage() {
             </div>
           </div>
 
-          {/* Reservation Details */}
+          {/* Details Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Stay Details */}
             <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 p-6">
@@ -465,12 +479,25 @@ export default function ReservationDetailPage() {
                   <p className="text-stone-900 dark:text-stone-100 font-bold">{reservation.checkOutDate}</p>
                 </div>
                 <div>
-                  <label className="text-sm text-stone-500 dark:text-stone-400">{t('bookings.totalAmount')}</label>
+                  <label className="text-sm text-stone-500 dark:text-stone-400">{t('bookings.totalPrice')}</label>
                   <p className="text-stone-900 dark:text-stone-100 font-black text-lg">
-                    {reservation.totalAmount?.toLocaleString('en-US', {
-                      style: 'currency',
-                      currency: reservation.currency || 'USD',
-                    })}
+                    {reservation.totalPrice != null
+                      ? reservation.totalPrice.toLocaleString('en-US', {
+                          style: 'currency',
+                          currency: reservation.currency || 'EUR',
+                        })
+                      : '-'}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm text-stone-500 dark:text-stone-400">{t('bookings.payedPrice')}</label>
+                  <p className="text-stone-900 dark:text-stone-100 font-bold">
+                    {reservation.payedPrice != null
+                      ? reservation.payedPrice.toLocaleString('en-US', {
+                          style: 'currency',
+                          currency: reservation.currency || 'EUR',
+                        })
+                      : '-'}
                   </p>
                 </div>
               </div>
@@ -483,31 +510,26 @@ export default function ReservationDetailPage() {
                 {reservation.status !== 'CANCELLED' && (
                   <button
                     onClick={() => {
-                      setSelectedRoomId(reservation.roomId || '');
+                      setSelectedRoomIds(reservation.roomIds || []);
                       setShowRoomDialog(true);
                     }}
                     className="px-3 py-1 text-sm text-lime-600 hover:bg-lime-50 dark:hover:bg-lime-900/30 rounded-lg transition-colors font-bold"
                   >
-                    {reservation.room ? t('bookingDetail.change') : t('bookingDetail.assign')}
+                    {reservation.rooms && reservation.rooms.length > 0 ? t('bookingDetail.change') : t('bookingDetail.assign')}
                   </button>
                 )}
               </div>
-              {reservation.room ? (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-4 h-4 rounded-lg"
-                      style={{ backgroundColor: reservation.room.color }}
-                    />
-                    <div>
-                      <p className="text-stone-900 dark:text-stone-100 font-bold">{reservation.room.name}</p>
-                      <p className="text-sm text-stone-500 dark:text-stone-400">#{reservation.room.roomNumber}</p>
+              {reservation.rooms && reservation.rooms.length > 0 ? (
+                <div className="space-y-3">
+                  {reservation.rooms.map(room => (
+                    <div key={room.id} className="flex items-center gap-3 p-3 bg-stone-50 dark:bg-stone-700 rounded-xl">
+                      <div className="w-4 h-4 rounded-lg flex-shrink-0" style={{ backgroundColor: room.color }} />
+                      <div>
+                        <p className="text-stone-900 dark:text-stone-100 font-bold">{room.name}</p>
+                        <p className="text-sm text-stone-500 dark:text-stone-400">#{room.roomNumber} — {room.type}</p>
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <label className="text-sm text-stone-500 dark:text-stone-400">{t('bookingDetail.roomType')}</label>
-                    <p className="text-stone-900 dark:text-stone-100">{reservation.room.type}</p>
-                  </div>
+                  ))}
                 </div>
               ) : (
                 <div className="text-center py-4">
@@ -544,7 +566,7 @@ export default function ReservationDetailPage() {
             </div>
           </div>
 
-          {/* Event History (Audit Trail) */}
+          {/* Event History */}
           <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 p-6">
             <h2 className="text-lg font-black text-stone-900 dark:text-stone-100 mb-4">
               {t('bookingDetail.eventHistory')}
@@ -556,27 +578,19 @@ export default function ReservationDetailPage() {
               <p className="text-stone-500 dark:text-stone-400">{t('bookingDetail.noEvents')}</p>
             ) : (
               <div className="relative">
-                {/* Timeline line */}
                 <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-stone-200 dark:bg-stone-700" />
-
-                {/* Events */}
                 <div className="space-y-6">
                   {events.map((event) => {
                     const { icon, color } = getEventIcon(event.type);
                     return (
                       <div key={event.id} className="relative pl-12">
-                        {/* Timeline dot */}
                         <div className={`absolute left-2 w-5 h-5 rounded-lg ${color} flex items-center justify-center text-white text-xs font-bold`}>
                           {icon}
                         </div>
-
-                        {/* Event content */}
                         <div className="bg-stone-50 dark:bg-stone-700 rounded-2xl p-4">
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-bold text-stone-900 dark:text-stone-100">{event.type}</span>
-                            <span className="text-sm text-stone-500 dark:text-stone-400">
-                              v{event.version}
-                            </span>
+                            <span className="text-sm text-stone-500 dark:text-stone-400">v{event.version}</span>
                           </div>
                           <p className="text-sm text-stone-600 dark:text-stone-300 mb-2">
                             {new Date(event.occurredAt).toLocaleString()}
@@ -605,9 +619,7 @@ export default function ReservationDetailPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 shadow-2xl p-6 max-w-md w-full mx-4">
             <h3 className="text-xl font-black text-stone-900 dark:text-stone-100 mb-4">{t('bookingDetail.cancelReservation')}</h3>
-            <p className="text-stone-600 dark:text-stone-300 mb-4">
-              {t('bookingDetail.cancelReason')}
-            </p>
+            <p className="text-stone-600 dark:text-stone-300 mb-4">{t('bookingDetail.cancelReason')}</p>
             <textarea
               value={cancelReason}
               onChange={(e) => setCancelReason(e.target.value)}
@@ -617,10 +629,7 @@ export default function ReservationDetailPage() {
             />
             <div className="flex justify-end gap-3 mt-4">
               <button
-                onClick={() => {
-                  setShowCancelDialog(false);
-                  setCancelReason('');
-                }}
+                onClick={() => { setShowCancelDialog(false); setCancelReason(''); }}
                 className="px-4 py-2 text-stone-600 dark:text-stone-300 hover:text-stone-800 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-xl transition-colors font-bold"
               >
                 {t('common.back')}
@@ -642,47 +651,36 @@ export default function ReservationDetailPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 shadow-2xl p-6 max-w-md w-full mx-4">
             <h3 className="text-xl font-black text-stone-900 dark:text-stone-100 mb-4">
-              {reservation?.room ? t('bookingDetail.changeRoom') : t('bookingDetail.assignRoom')}
+              {t('bookingDetail.assignRoom')}
             </h3>
-            <p className="text-stone-600 dark:text-stone-300 mb-4">
-              {t('bookingDetail.selectRoom')}
-            </p>
+            <p className="text-stone-600 dark:text-stone-300 mb-4">{t('bookingDetail.selectRooms')}</p>
             <div className="space-y-2 max-h-64 overflow-y-auto">
-              {rooms.length === 0 ? (
+              {allRooms.length === 0 ? (
                 <p className="text-stone-500 dark:text-stone-400 text-center py-4">{t('bookingDetail.noRoomsAvailable')}</p>
               ) : (
-                rooms.map((room) => (
+                allRooms.map((room) => (
                   <label
                     key={room.id}
                     className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-colors ${
-                      selectedRoomId === room.id
+                      selectedRoomIds.includes(room.id)
                         ? 'border-lime-400 bg-lime-50 dark:bg-lime-900/30'
                         : 'border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-700'
                     }`}
                   >
                     <input
-                      type="radio"
-                      name="room"
-                      value={room.id}
-                      checked={selectedRoomId === room.id}
-                      onChange={() => setSelectedRoomId(room.id)}
-                      className="text-lime-600 focus:ring-lime-400"
+                      type="checkbox"
+                      checked={selectedRoomIds.includes(room.id)}
+                      onChange={() => toggleRoomInDialog(room.id)}
+                      className="text-lime-600 focus:ring-lime-400 rounded"
                     />
-                    <div
-                      className="w-4 h-4 rounded-lg flex-shrink-0"
-                      style={{ backgroundColor: room.color }}
-                    />
+                    <div className="w-4 h-4 rounded-lg flex-shrink-0" style={{ backgroundColor: room.color }} />
                     <div className="flex-1">
                       <p className="font-bold text-stone-900 dark:text-stone-100">{room.name}</p>
-                      <p className="text-sm text-stone-500 dark:text-stone-400">
-                        #{room.roomNumber} - {room.type}
-                      </p>
+                      <p className="text-sm text-stone-500 dark:text-stone-400">#{room.roomNumber} - {room.type}</p>
                     </div>
                     {room.status !== 'AVAILABLE' && (
                       <span className={`px-2 py-0.5 text-xs font-bold rounded-lg ${
-                        room.status === 'OCCUPIED'
-                          ? 'bg-violet-100 text-violet-700'
-                          : 'bg-amber-100 text-amber-700'
+                        room.status === 'OCCUPIED' ? 'bg-violet-100 text-violet-700' : 'bg-amber-100 text-amber-700'
                       }`}>
                         {room.status}
                       </span>
@@ -693,17 +691,14 @@ export default function ReservationDetailPage() {
             </div>
             <div className="flex justify-end gap-3 mt-4">
               <button
-                onClick={() => {
-                  setShowRoomDialog(false);
-                  setSelectedRoomId('');
-                }}
+                onClick={() => { setShowRoomDialog(false); setSelectedRoomIds([]); }}
                 className="px-4 py-2 text-stone-600 dark:text-stone-300 hover:text-stone-800 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-xl transition-colors font-bold"
               >
                 {t('common.cancel')}
               </button>
               <button
-                onClick={handleAssignRoom}
-                disabled={actionLoading || !selectedRoomId}
+                onClick={handleAssignRooms}
+                disabled={actionLoading}
                 className="px-4 py-2 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 font-bold rounded-xl hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors disabled:opacity-50"
               >
                 {actionLoading ? t('bookingDetail.assigning') : t('bookingDetail.assignRoom')}

@@ -3,6 +3,7 @@ import {
   reservationRepository,
   roomRepository,
   guestRepository,
+  accountRepository,
   getPool,
 } from "../event-sourcing";
 import { requireAuth, AuthContext } from "../auth";
@@ -10,6 +11,7 @@ import { formatReservation } from "../formatters/reservation.formatter";
 import { formatStoredEvent } from "../formatters/event.formatter";
 import { formatRoom } from "../formatters/room.formatter";
 import { formatGuest } from "../formatters/guest.formatter";
+import { formatAccount } from "../formatters/account.formatter";
 
 export const reservationResolvers = {
   Query: {
@@ -62,9 +64,10 @@ export const reservationResolvers = {
           guestEmail?: string;
           checkInDate?: string;
           checkOutDate?: string;
-          totalAmount?: number;
+          totalPrice?: number;
+          payedPrice?: number;
           currency?: string;
-          roomId?: string;
+          roomIds?: string[];
         };
       },
       context: AuthContext
@@ -73,11 +76,12 @@ export const reservationResolvers = {
       const reservationId = uuidv4();
       const { aggregate, events } = await reservationRepository.create(reservationId, {
         originId: args.input.originId,
-        totalAmount: args.input.totalAmount,
+        totalPrice: args.input.totalPrice,
+        payedPrice: args.input.payedPrice,
         currency: args.input.currency,
         arrivalTime: args.input.checkInDate,
         departureTime: args.input.checkOutDate,
-        roomId: args.input.roomId,
+        roomIds: args.input.roomIds || [],
         guestEmail: args.input.guestEmail,
         customer: {
           firstName: args.input.guestFirstName,
@@ -117,12 +121,34 @@ export const reservationResolvers = {
         }
       }
 
+      // Auto-create account if totalPrice is provided
+      let accountFormatted = null;
+      if (args.input.totalPrice !== undefined && args.input.totalPrice !== null) {
+        try {
+          const accountStreamId = uuidv4();
+          const { accountId } = await accountRepository.create(accountStreamId, {
+            reservationId,
+            totalPrice: args.input.totalPrice,
+            payedPrice: args.input.payedPrice ?? 0,
+            currency: args.input.currency,
+          });
+          const accountRow = await accountRepository.getById(accountId);
+          if (accountRow) {
+            accountFormatted = formatAccount(accountRow);
+          }
+        } catch (err) {
+          console.error('[account-auto-create] Failed to auto-create account:', err);
+        }
+      }
+
       return {
         reservation: reservation ? formatReservation(reservation) : {
           id: reservationId,
           status: aggregate.state.status,
+          roomIds: aggregate.state.roomIds,
           version: aggregate.version,
         },
+        account: accountFormatted,
         events: events.map(formatStoredEvent),
       };
     },
@@ -144,6 +170,7 @@ export const reservationResolvers = {
         reservation: reservation ? formatReservation(reservation) : {
           id: args.input.reservationId,
           status: aggregate.state.status,
+          roomIds: aggregate.state.roomIds,
           version: aggregate.version,
         },
         events: events.map(formatStoredEvent),
@@ -167,21 +194,22 @@ export const reservationResolvers = {
         reservation: reservation ? formatReservation(reservation) : {
           id: args.input.reservationId,
           status: aggregate.state.status,
+          roomIds: aggregate.state.roomIds,
           version: aggregate.version,
         },
         events: events.map(formatStoredEvent),
       };
     },
 
-    assignRoom: async (
+    assignRooms: async (
       _: unknown,
-      args: { input: { reservationId: string; roomId: string } },
+      args: { input: { reservationId: string; roomIds: string[] } },
       context: AuthContext
     ) => {
       requireAuth(context);
-      const { aggregate, events } = await reservationRepository.assignRoom(
+      const { aggregate, events } = await reservationRepository.assignRooms(
         args.input.reservationId,
-        args.input.roomId
+        args.input.roomIds
       );
 
       const reservation = await reservationRepository.getReadModel(args.input.reservationId);
@@ -190,7 +218,7 @@ export const reservationResolvers = {
         reservation: reservation ? formatReservation(reservation) : {
           id: args.input.reservationId,
           status: aggregate.state.status,
-          roomId: args.input.roomId,
+          roomIds: args.input.roomIds,
           version: aggregate.version,
         },
         events: events.map(formatStoredEvent),
@@ -199,11 +227,15 @@ export const reservationResolvers = {
   },
 
   Reservation: {
-    room: async (parent: { roomId?: string | null }) => {
-      if (!parent.roomId) return null;
-      const room = await roomRepository.getReadModel(parent.roomId);
-      if (!room) return null;
-      return formatRoom(room);
+    rooms: async (parent: { roomIds?: string[] | null }) => {
+      if (!parent.roomIds || parent.roomIds.length === 0) return [];
+      const rooms = await Promise.all(
+        parent.roomIds.map(async (roomId) => {
+          const room = await roomRepository.getReadModel(roomId);
+          return room ? formatRoom(room) : null;
+        })
+      );
+      return rooms.filter(Boolean);
     },
     guest: async (parent: { guestId?: string | null; guestEmail?: string | null }) => {
       if (parent.guestId) {
@@ -215,6 +247,11 @@ export const reservationResolvers = {
         if (guest) return formatGuest(guest);
       }
       return null;
+    },
+    account: async (parent: { accountId?: number | null }) => {
+      if (!parent.accountId) return null;
+      const account = await accountRepository.getById(parent.accountId);
+      return account ? formatAccount(account) : null;
     },
   },
 };

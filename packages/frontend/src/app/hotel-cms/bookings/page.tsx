@@ -13,9 +13,11 @@ interface Reservation {
   status: string;
   checkInDate: string;
   checkOutDate: string;
-  totalAmount: number;
+  totalPrice: number | null;
+  payedPrice: number | null;
   currency: string;
-  roomId: string | null;
+  roomIds: string[];
+  accountId: number | null;
   version: number;
   createdAt: string;
 }
@@ -37,9 +39,10 @@ interface CreateReservationInput {
   guestEmail: string;
   checkInDate: string;
   checkOutDate: string;
-  totalAmount: number;
+  totalPrice: number | '';
+  payedPrice: number | '';
   currency: string;
-  roomId: string;
+  roomIds: string[];
 }
 
 interface ReservationFilter {
@@ -88,9 +91,10 @@ function BookingsPageContent() {
     guestEmail: '',
     checkInDate: '',
     checkOutDate: '',
-    totalAmount: 0,
-    currency: 'USD',
-    roomId: '',
+    totalPrice: '',
+    payedPrice: '',
+    currency: 'EUR',
+    roomIds: [],
   });
 
   // Handle URL params for pre-filling form
@@ -102,10 +106,9 @@ function BookingsPageContent() {
       setShowForm(true);
       setFormData(prev => ({
         ...prev,
-        roomId: roomId || prev.roomId,
+        roomIds: roomId ? [roomId] : prev.roomIds,
         checkInDate: checkInDate || prev.checkInDate,
       }));
-      // Clear URL params after reading them
       router.replace('/hotel-cms/bookings', { scroll: false });
     }
   }, [searchParams, router]);
@@ -176,9 +179,11 @@ function BookingsPageContent() {
                 status
                 checkInDate
                 checkOutDate
-                totalAmount
+                totalPrice
+                payedPrice
                 currency
-                roomId
+                roomIds
+                accountId
                 version
                 createdAt
               }
@@ -223,6 +228,15 @@ function BookingsPageContent() {
 
   const activeFilterCount = Object.values(appliedFilters).filter(v => v !== '').length;
 
+  const toggleRoomSelection = (roomId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      roomIds: prev.roomIds.includes(roomId)
+        ? prev.roomIds.filter(id => id !== roomId)
+        : [...prev.roomIds, roomId],
+    }));
+  };
+
   const handleCreateReservation = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
@@ -241,6 +255,9 @@ function BookingsPageContent() {
                   guestName
                   status
                 }
+                account {
+                  id
+                }
                 events {
                   id
                   type
@@ -256,9 +273,10 @@ function BookingsPageContent() {
               guestEmail: formData.guestEmail,
               checkInDate: formData.checkInDate,
               checkOutDate: formData.checkOutDate,
-              totalAmount: parseFloat(formData.totalAmount.toString()),
+              totalPrice: formData.totalPrice !== '' ? parseFloat(String(formData.totalPrice)) : null,
+              payedPrice: formData.payedPrice !== '' ? parseFloat(String(formData.payedPrice)) : 0,
               currency: formData.currency,
-              roomId: formData.roomId || null,
+              roomIds: formData.roomIds,
             },
           },
         }),
@@ -277,9 +295,10 @@ function BookingsPageContent() {
         guestEmail: '',
         checkInDate: '',
         checkOutDate: '',
-        totalAmount: 0,
-        currency: 'USD',
-        roomId: '',
+        totalPrice: '',
+        payedPrice: '',
+        currency: 'EUR',
+        roomIds: [],
       });
       setShowForm(false);
       fetchReservations();
@@ -354,9 +373,7 @@ function BookingsPageContent() {
                       type="text"
                       required
                       value={formData.guestFirstName}
-                      onChange={(e) =>
-                        setFormData({ ...formData, guestFirstName: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, guestFirstName: e.target.value })}
                       className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none transition-all bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100"
                       placeholder="John"
                     />
@@ -369,9 +386,7 @@ function BookingsPageContent() {
                       type="text"
                       required
                       value={formData.guestLastName}
-                      onChange={(e) =>
-                        setFormData({ ...formData, guestLastName: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, guestLastName: e.target.value })}
                       className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none transition-all bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100"
                       placeholder="Doe"
                     />
@@ -384,9 +399,7 @@ function BookingsPageContent() {
                       type="email"
                       required
                       value={formData.guestEmail}
-                      onChange={(e) =>
-                        setFormData({ ...formData, guestEmail: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, guestEmail: e.target.value })}
                       className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none transition-all bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100"
                       placeholder="john@example.com"
                     />
@@ -399,9 +412,7 @@ function BookingsPageContent() {
                       type="date"
                       required
                       value={formData.checkInDate}
-                      onChange={(e) =>
-                        setFormData({ ...formData, checkInDate: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, checkInDate: e.target.value })}
                       className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none transition-all bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100"
                     />
                   </div>
@@ -413,30 +424,36 @@ function BookingsPageContent() {
                       type="date"
                       required
                       value={formData.checkOutDate}
-                      onChange={(e) =>
-                        setFormData({ ...formData, checkOutDate: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, checkOutDate: e.target.value })}
                       className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none transition-all bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
-                      {t('bookings.totalAmount')} *
+                      {t('bookings.totalPrice')}
                     </label>
                     <input
                       type="number"
-                      required
                       min="0"
                       step="0.01"
-                      value={formData.totalAmount || ''}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          totalAmount: parseFloat(e.target.value) || 0,
-                        })
-                      }
+                      value={formData.totalPrice}
+                      onChange={(e) => setFormData({ ...formData, totalPrice: e.target.value === '' ? '' : parseFloat(e.target.value) })}
                       className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none transition-all bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100"
                       placeholder="299.99"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
+                      {t('bookings.payedPrice')}
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.payedPrice}
+                      onChange={(e) => setFormData({ ...formData, payedPrice: e.target.value === '' ? '' : parseFloat(e.target.value) })}
+                      className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none transition-all bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100"
+                      placeholder="0.00"
                     />
                   </div>
                   <div>
@@ -445,34 +462,13 @@ function BookingsPageContent() {
                     </label>
                     <select
                       value={formData.currency}
-                      onChange={(e) =>
-                        setFormData({ ...formData, currency: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
                       className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none transition-all bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100"
                     >
-                      <option value="USD">USD</option>
                       <option value="EUR">EUR</option>
+                      <option value="USD">USD</option>
                       <option value="GBP">GBP</option>
                       <option value="CZK">CZK</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
-                      {t('bookings.room')}
-                    </label>
-                    <select
-                      value={formData.roomId}
-                      onChange={(e) =>
-                        setFormData({ ...formData, roomId: e.target.value })
-                      }
-                      className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none transition-all bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100"
-                    >
-                      <option value="">{t('bookings.noRoomAssigned')}</option>
-                      {rooms.map((room) => (
-                        <option key={room.id} value={room.id}>
-                          #{room.roomNumber} - {room.name} ({room.type})
-                        </option>
-                      ))}
                     </select>
                   </div>
                   <div>
@@ -482,14 +478,58 @@ function BookingsPageContent() {
                     <input
                       type="text"
                       value={formData.originId}
-                      onChange={(e) =>
-                        setFormData({ ...formData, originId: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, originId: e.target.value })}
                       className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none transition-all bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100"
                       placeholder="BOOKING-123 (auto-generated if empty)"
                     />
                   </div>
                 </div>
+
+                {/* Room multi-select */}
+                <div>
+                  <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-2">
+                    {t('bookings.rooms')}
+                    {formData.roomIds.length > 0 && (
+                      <span className="ml-2 px-2 py-0.5 bg-lime-100 text-lime-700 text-xs font-bold rounded-full">
+                        {formData.roomIds.length} {t('bookings.selected')}
+                      </span>
+                    )}
+                  </label>
+                  {rooms.length === 0 ? (
+                    <p className="text-sm text-stone-500 dark:text-stone-400">{t('bookings.noRoomAssigned')}</p>
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-1">
+                      {rooms.map((room) => {
+                        const isSelected = formData.roomIds.includes(room.id);
+                        return (
+                          <label
+                            key={room.id}
+                            className={`flex items-center gap-2 p-2 rounded-xl border-2 cursor-pointer transition-colors text-sm ${
+                              isSelected
+                                ? 'border-lime-400 bg-lime-50 dark:bg-lime-900/30'
+                                : 'border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-700'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleRoomSelection(room.id)}
+                              className="text-lime-600 focus:ring-lime-400 rounded"
+                            />
+                            <div
+                              className="w-3 h-3 rounded-md flex-shrink-0"
+                              style={{ backgroundColor: room.color }}
+                            />
+                            <span className="text-stone-700 dark:text-stone-300 truncate">
+                              #{room.roomNumber}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex justify-end gap-3 pt-4">
                   <button
                     type="button"
@@ -531,7 +571,6 @@ function BookingsPageContent() {
             {showFilters && (
               <div className="p-6 border-t border-stone-200 dark:border-stone-700">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {/* Status Filter */}
                   <div>
                     <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
                       {t('filters.status')}
@@ -547,8 +586,6 @@ function BookingsPageContent() {
                       <option value="CANCELLED">{t('filters.cancelled')}</option>
                     </select>
                   </div>
-
-                  {/* Guest Name Filter */}
                   <div>
                     <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
                       {t('filters.guestName')}
@@ -561,8 +598,6 @@ function BookingsPageContent() {
                       className="w-full px-3 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none text-sm bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100"
                     />
                   </div>
-
-                  {/* Currency Filter */}
                   <div>
                     <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
                       {t('bookings.currency')}
@@ -573,14 +608,12 @@ function BookingsPageContent() {
                       className="w-full px-3 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none text-sm bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100"
                     >
                       <option value="">{t('filters.allCurrencies')}</option>
-                      <option value="USD">USD</option>
                       <option value="EUR">EUR</option>
+                      <option value="USD">USD</option>
                       <option value="GBP">GBP</option>
                       <option value="CZK">CZK</option>
                     </select>
                   </div>
-
-                  {/* Check-in Date Range */}
                   <div>
                     <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
                       {t('filters.checkInFrom')}
@@ -603,8 +636,6 @@ function BookingsPageContent() {
                       className="w-full px-3 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none text-sm bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100"
                     />
                   </div>
-
-                  {/* Check-out Date Range */}
                   <div>
                     <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
                       {t('filters.checkOutFrom')}
@@ -627,12 +658,9 @@ function BookingsPageContent() {
                       className="w-full px-3 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:ring-2 focus:ring-lime-400 focus:border-lime-400 outline-none text-sm bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100"
                     />
                   </div>
-
-                  {/* Created Date Range (Event Sourcing Audit) */}
                   <div>
                     <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
                       {t('filters.createdFrom')}
-                      <span className="ml-1 text-xs text-stone-400 dark:text-stone-500">{t('filters.audit')}</span>
                     </label>
                     <input
                       type="date"
@@ -644,7 +672,6 @@ function BookingsPageContent() {
                   <div>
                     <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
                       {t('filters.createdTo')}
-                      <span className="ml-1 text-xs text-stone-400 dark:text-stone-500">{t('filters.audit')}</span>
                     </label>
                     <input
                       type="date"
@@ -654,8 +681,6 @@ function BookingsPageContent() {
                     />
                   </div>
                 </div>
-
-                {/* Filter Actions */}
                 <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-stone-100 dark:border-stone-700">
                   <button
                     onClick={handleClearFilters}
@@ -725,7 +750,7 @@ function BookingsPageContent() {
                         {t('filters.status')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
-                        {t('bookings.room')}
+                        {t('bookings.rooms')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
                         {t('bookings.checkIn')}
@@ -734,7 +759,10 @@ function BookingsPageContent() {
                         {t('bookings.checkOut')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
-                        {t('bookings.amount')}
+                        {t('bookings.totalPrice')}
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                        {t('accounts.account')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
                         {t('common.created')}
@@ -743,7 +771,7 @@ function BookingsPageContent() {
                   </thead>
                   <tbody className="divide-y divide-stone-200 dark:divide-stone-700">
                     {reservations.map((reservation) => {
-                      const room = rooms.find((r) => r.id === reservation.roomId);
+                      const reservationRooms = rooms.filter(r => reservation.roomIds.includes(r.id));
                       return (
                         <tr
                           key={reservation.id}
@@ -761,22 +789,19 @@ function BookingsPageContent() {
                             )}
                           </td>
                           <td className="px-6 py-4">
-                            <span
-                              className={`inline-flex px-2 py-1 text-xs font-bold rounded-lg ${getStatusColor(
-                                reservation.status
-                              )}`}
-                            >
+                            <span className={`inline-flex px-2 py-1 text-xs font-bold rounded-lg ${getStatusColor(reservation.status)}`}>
                               {reservation.status}
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            {room ? (
-                              <div className="flex items-center gap-2">
-                                <div
-                                  className="w-3 h-3 rounded-lg flex-shrink-0"
-                                  style={{ backgroundColor: room.color }}
-                                />
-                                <span className="text-stone-600 dark:text-stone-300">#{room.roomNumber}</span>
+                            {reservationRooms.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {reservationRooms.map(room => (
+                                  <div key={room.id} className="flex items-center gap-1">
+                                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: room.color }} />
+                                    <span className="text-xs text-stone-600 dark:text-stone-300">#{room.roomNumber}</span>
+                                  </div>
+                                ))}
                               </div>
                             ) : (
                               <span className="text-stone-400 dark:text-stone-500">-</span>
@@ -789,10 +814,27 @@ function BookingsPageContent() {
                             {reservation.checkOutDate}
                           </td>
                           <td className="px-6 py-4 text-stone-900 dark:text-stone-100 font-bold">
-                            {reservation.totalAmount?.toLocaleString('en-US', {
-                              style: 'currency',
-                              currency: reservation.currency || 'USD',
-                            })}
+                            {reservation.totalPrice != null
+                              ? reservation.totalPrice.toLocaleString('en-US', {
+                                  style: 'currency',
+                                  currency: reservation.currency || 'EUR',
+                                })
+                              : '-'}
+                          </td>
+                          <td className="px-6 py-4">
+                            {reservation.accountId ? (
+                              <span
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  router.push(`/hotel-cms/accounts/${reservation.accountId}`);
+                                }}
+                                className="inline-flex items-center px-2 py-1 text-xs font-bold rounded-lg bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300 cursor-pointer hover:bg-violet-200 dark:hover:bg-violet-800/30 transition-colors"
+                              >
+                                #{reservation.accountId}
+                              </span>
+                            ) : (
+                              <span className="text-stone-400 dark:text-stone-500">-</span>
+                            )}
                           </td>
                           <td className="px-6 py-4 text-stone-500 dark:text-stone-400 text-sm">
                             {reservation.createdAt

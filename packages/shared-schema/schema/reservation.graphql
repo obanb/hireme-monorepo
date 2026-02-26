@@ -14,10 +14,13 @@ type Reservation {
   status: ReservationStatus!
   checkInDate: String
   checkOutDate: String
-  totalAmount: Float
+  totalPrice: Float
+  payedPrice: Float
   currency: String
-  roomId: ID
-  room: Room
+  roomIds: [ID!]!
+  rooms: [Room!]!
+  accountId: Int
+  account: Account
   version: Int!
   createdAt: String
   updatedAt: String
@@ -40,9 +43,10 @@ input CreateReservationInput {
   guestEmail: String
   checkInDate: String
   checkOutDate: String
-  totalAmount: Float
+  totalPrice: Float
+  payedPrice: Float
   currency: String
-  roomId: ID
+  roomIds: [ID!]
 }
 
 input ConfirmReservationInput {
@@ -55,9 +59,9 @@ input CancelReservationInput {
   reason: String!
 }
 
-input AssignRoomInput {
+input AssignRoomsInput {
   reservationId: ID!
-  roomId: ID!
+  roomIds: [ID!]!
 }
 
 input ReservationFilterInput {
@@ -70,11 +74,11 @@ input ReservationFilterInput {
   createdFrom: String
   createdTo: String
   currency: String
-  roomId: ID
 }
 
 type CreateReservationResult {
   reservation: Reservation!
+  account: Account
   events: [StoredEvent!]!
 }
 
@@ -88,7 +92,7 @@ type CancelReservationResult {
   events: [StoredEvent!]!
 }
 
-type AssignRoomResult {
+type AssignRoomsResult {
   reservation: Reservation!
   events: [StoredEvent!]!
 }
@@ -103,7 +107,7 @@ extend type Mutation {
   createReservation(input: CreateReservationInput!): CreateReservationResult!
   confirmReservation(input: ConfirmReservationInput!): ConfirmReservationResult!
   cancelReservation(input: CancelReservationInput!): CancelReservationResult!
-  assignRoom(input: AssignRoomInput!): AssignRoomResult!
+  assignRooms(input: AssignRoomsInput!): AssignRoomsResult!
   initializeEventSourcingDatabase: Boolean!
   startEventRelayer: Boolean!
   stopEventRelayer: Boolean!

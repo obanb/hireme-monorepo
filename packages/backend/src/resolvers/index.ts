@@ -10,6 +10,8 @@ import { statisticsResolvers } from "./statistics.resolvers";
 import { authResolvers } from "./auth.resolvers";
 import { campaignResolvers } from "./campaign.resolvers";
 import { systemResolvers } from "./system.resolvers";
+import { rentalResolvers } from "./rental.resolvers";
+import { accountResolvers } from "./account.resolvers";
 
 const allResolverModules = [
   hotelResolvers,
@@ -24,6 +26,8 @@ const allResolverModules = [
   authResolvers,
   campaignResolvers,
   systemResolvers,
+  rentalResolvers,
+  accountResolvers,
 ];
 
 function mergeResolvers(modules: Record<string, any>[]): any {

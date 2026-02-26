@@ -1,0 +1,24 @@
+type Account {
+  id: Int!
+  streamId: String!
+  reservationId: ID!
+  reservation: Reservation
+  totalPrice: Float!
+  payedPrice: Float!
+  currency: String
+  createdAt: String!
+  updatedAt: String!
+}
+
+input AccountFilterInput {
+  reservationId: ID
+  minTotal: Float
+  maxTotal: Float
+  createdFrom: String
+  createdTo: String
+}
+
+extend type Query {
+  account(id: Int!): Account
+  accounts(filter: AccountFilterInput, limit: Int, offset: Int): [Account!]!
+}

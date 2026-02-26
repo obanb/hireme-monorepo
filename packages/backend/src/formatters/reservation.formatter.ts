@@ -7,9 +7,11 @@ export function formatReservation(reservation: {
   status: string;
   checkInDate: Date | null;
   checkOutDate: Date | null;
-  totalAmount: number | null;
+  totalPrice: number | null;
+  payedPrice: number | null;
   currency: string | null;
-  roomId: string | null;
+  roomIds: string[];
+  accountId?: number | null;
   version: number;
   createdAt: Date;
   updatedAt: Date;
@@ -23,9 +25,11 @@ export function formatReservation(reservation: {
     status: reservation.status,
     checkInDate: reservation.checkInDate?.toISOString().split('T')[0] || null,
     checkOutDate: reservation.checkOutDate?.toISOString().split('T')[0] || null,
-    totalAmount: reservation.totalAmount,
+    totalPrice: reservation.totalPrice,
+    payedPrice: reservation.payedPrice,
     currency: reservation.currency,
-    roomId: reservation.roomId,
+    roomIds: reservation.roomIds || [],
+    accountId: reservation.accountId ?? null,
     version: reservation.version,
     createdAt: reservation.createdAt.toISOString(),
     updatedAt: reservation.updatedAt.toISOString(),

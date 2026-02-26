@@ -241,3 +241,24 @@ export {
 export {
   statisticsRepository,
 } from './statistics-repository';
+
+// Account
+export {
+  AccountAggregate,
+  type AccountState,
+  type AccountDetails,
+} from './account-aggregate';
+
+export {
+  applyAccountProjection,
+  getAccount,
+  getAccountByStreamId,
+  getAccountByReservationId,
+  listAccounts,
+  type AccountRow,
+} from './account-projections';
+
+export {
+  AccountRepository,
+  accountRepository,
+} from './account-repository';

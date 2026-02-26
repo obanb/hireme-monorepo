@@ -20,6 +20,7 @@ const menuItems: MenuItem[] = [
   { nameKey: 'nav.reception', href: '/hotel-cms/reception', icon: '◎', roles: ['ADMIN', 'USER'] },
   { nameKey: 'nav.calendar', href: '/hotel-cms/calendar', icon: '◫' },
   { nameKey: 'nav.bookings', href: '/hotel-cms/bookings', icon: '▣' },
+  { nameKey: 'nav.accounts', href: '/hotel-cms/accounts', icon: '◈', roles: ['ADMIN', 'USER'] },
   { nameKey: 'nav.wellness', href: '/hotel-cms/wellness', icon: '✦', roles: ['ADMIN', 'USER'] },
   { nameKey: 'nav.vouchers', href: '/hotel-cms/vouchers', icon: '◆', roles: ['ADMIN', 'USER'] },
   { nameKey: 'nav.rooms', href: '/hotel-cms/rooms', icon: '▤', roles: ['ADMIN', 'USER'] },
@@ -29,6 +30,7 @@ const menuItems: MenuItem[] = [
   { nameKey: 'nav.statistics', href: '/hotel-cms/statistics', icon: '◑' },
   { nameKey: 'nav.reports', href: '/hotel-cms/reports', icon: '▦', roles: ['ADMIN', 'USER'] },
   { nameKey: 'nav.guests', href: '/hotel-cms/guests', icon: '◐', roles: ['ADMIN', 'USER'] },
+  { nameKey: 'nav.rentals', href: '/hotel-cms/rentals', icon: '◳', roles: ['ADMIN', 'USER'] },
   { nameKey: 'nav.users', href: '/hotel-cms/users', icon: '◑', roles: ['ADMIN'] },
   { nameKey: 'nav.settings', href: '/hotel-cms/settings', icon: '⚙' },
 ];

@@ -26,8 +26,8 @@ export async function applyReservationProjection(
     case 'ReservationCancelled':
       await handleReservationCancelled(client, streamId, event);
       break;
-    case 'RoomAssigned':
-      await handleRoomAssigned(client, streamId, event);
+    case 'RoomsAssigned':
+      await handleRoomsAssigned(client, streamId, event);
       break;
     default:
       console.warn(`Unknown event type for projection: ${event.type}`);
@@ -46,11 +46,12 @@ async function handleReservationCreated(
     reservationId: string;
     bookingDetails?: {
       originId?: string;
-      totalAmount?: number;
+      totalPrice?: number;
+      payedPrice?: number;
       currency?: string;
       arrivalTime?: string;
       departureTime?: string;
-      roomId?: string;
+      roomIds?: string[];
       guestEmail?: string;
       customer?: {
         firstName?: string;
@@ -64,11 +65,13 @@ async function handleReservationCreated(
     ? `${booking.customer.firstName || ''} ${booking.customer.lastName || ''}`.trim()
     : 'Guest';
 
+  const roomIds = booking.roomIds || [];
+
   await client.query(
     `INSERT INTO reservations (
       id, origin_id, guest_name, guest_email, status, check_in_date, check_out_date,
-      total_amount, currency, room_id, version, created_at, updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+      total_price, payed_price, currency, room_ids, version, created_at, updated_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
     ON CONFLICT (id) DO UPDATE SET
       origin_id = EXCLUDED.origin_id,
       guest_name = EXCLUDED.guest_name,
@@ -76,9 +79,10 @@ async function handleReservationCreated(
       status = EXCLUDED.status,
       check_in_date = EXCLUDED.check_in_date,
       check_out_date = EXCLUDED.check_out_date,
-      total_amount = EXCLUDED.total_amount,
+      total_price = EXCLUDED.total_price,
+      payed_price = EXCLUDED.payed_price,
       currency = EXCLUDED.currency,
-      room_id = EXCLUDED.room_id,
+      room_ids = EXCLUDED.room_ids,
       version = EXCLUDED.version,
       updated_at = NOW()`,
     [
@@ -89,16 +93,17 @@ async function handleReservationCreated(
       'PENDING',
       booking.arrivalTime ? new Date(booking.arrivalTime).toISOString().split('T')[0] : null,
       booking.departureTime ? new Date(booking.departureTime).toISOString().split('T')[0] : null,
-      booking.totalAmount || null,
-      booking.currency || 'USD',
-      booking.roomId || null,
+      booking.totalPrice ?? null,
+      booking.payedPrice ?? 0,
+      booking.currency || 'EUR',
+      roomIds,
       event.version,
     ]
   );
 }
 
 /**
- * Handle ReservationConfirmed event - update the reservation status to confirmed
+ * Handle ReservationConfirmed event
  */
 async function handleReservationConfirmed(
   client: PoolClient,
@@ -114,7 +119,7 @@ async function handleReservationConfirmed(
 }
 
 /**
- * Handle ReservationCancelled event - update the reservation status
+ * Handle ReservationCancelled event
  */
 async function handleReservationCancelled(
   client: PoolClient,
@@ -130,19 +135,19 @@ async function handleReservationCancelled(
 }
 
 /**
- * Handle RoomAssigned event - update the room assignment
+ * Handle RoomsAssigned event
  */
-async function handleRoomAssigned(
+async function handleRoomsAssigned(
   client: PoolClient,
   streamId: string,
   event: StoredEvent
 ): Promise<void> {
-  const data = event.data as { roomId: string };
+  const data = event.data as { roomIds: string[] };
   await client.query(
     `UPDATE reservations
-     SET room_id = $2, version = $3, updated_at = NOW()
+     SET room_ids = $2, version = $3, updated_at = NOW()
      WHERE id = $1`,
-    [streamId, data.roomId, event.version]
+    [streamId, data.roomIds, event.version]
   );
 }
 
@@ -161,9 +166,11 @@ export async function getReservation(
   status: string;
   checkInDate: Date | null;
   checkOutDate: Date | null;
-  totalAmount: number | null;
+  totalPrice: number | null;
+  payedPrice: number | null;
   currency: string | null;
-  roomId: string | null;
+  roomIds: string[];
+  accountId: number | null;
   version: number;
   createdAt: Date;
   updatedAt: Date;
@@ -177,9 +184,11 @@ export async function getReservation(
     status: string;
     check_in_date: Date | null;
     check_out_date: Date | null;
-    total_amount: number | null;
+    total_price: number | null;
+    payed_price: number | null;
     currency: string | null;
-    room_id: string | null;
+    room_ids: string[];
+    account_id: number | null;
     version: number;
     created_at: Date;
     updated_at: Date;
@@ -202,9 +211,11 @@ export async function getReservation(
     status: row.status,
     checkInDate: row.check_in_date,
     checkOutDate: row.check_out_date,
-    totalAmount: row.total_amount,
+    totalPrice: row.total_price,
+    payedPrice: row.payed_price,
     currency: row.currency,
-    roomId: row.room_id,
+    roomIds: row.room_ids || [],
+    accountId: row.account_id ?? null,
     version: row.version,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

@@ -81,35 +81,30 @@ export async function initializeDatabase(): Promise<void> {
       );
     `);
 
-    // Create reservations read model table
+    // Drop and recreate reservations table with updated schema
+    await client.query(`DROP TABLE IF EXISTS wellness_bookings CASCADE;`);
+    await client.query(`DROP TABLE IF EXISTS reservations CASCADE;`);
+
+    // Create reservations read model table (fresh schema)
     await client.query(`
-      CREATE TABLE IF NOT EXISTS reservations (
+      CREATE TABLE reservations (
         id UUID PRIMARY KEY,
         origin_id VARCHAR(100),
         guest_name TEXT,
+        guest_email VARCHAR(255),
+        guest_id UUID,
         status TEXT NOT NULL DEFAULT 'PENDING',
         check_in_date DATE,
         check_out_date DATE,
-        total_amount DECIMAL(10,2),
+        total_price DECIMAL(10,2),
+        payed_price DECIMAL(10,2) DEFAULT 0,
         currency VARCHAR(3),
-        room_id UUID REFERENCES rooms(id),
+        room_ids UUID[] NOT NULL DEFAULT '{}',
+        account_id INT,
         version INT NOT NULL DEFAULT 0,
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       );
-    `);
-
-    // Add room_id column to reservations if it doesn't exist (for existing installations)
-    await client.query(`
-      DO $$
-      BEGIN
-        IF NOT EXISTS (
-          SELECT 1 FROM information_schema.columns
-          WHERE table_name = 'reservations' AND column_name = 'room_id'
-        ) THEN
-          ALTER TABLE reservations ADD COLUMN room_id UUID REFERENCES rooms(id);
-        END IF;
-      END $$;
     `);
 
     // Create event checkpoints table for the event relayer
@@ -235,7 +230,7 @@ export async function initializeDatabase(): Promise<void> {
       END $$;
     `);
 
-    // Create wellness_bookings read model table
+    // Create wellness_bookings read model table (recreated after reservations drop)
     await client.query(`
       CREATE TABLE IF NOT EXISTS wellness_bookings (
         id UUID PRIMARY KEY,
@@ -344,30 +339,65 @@ export async function initializeDatabase(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_guests_name ON guests(first_name, last_name);
     `);
 
-    // Add guest_id column to reservations if it doesn't exist
+    // Create accounts table (SERIAL id for numeric account number)
     await client.query(`
-      DO $$
-      BEGIN
-        IF NOT EXISTS (
-          SELECT 1 FROM information_schema.columns
-          WHERE table_name = 'reservations' AND column_name = 'guest_id'
-        ) THEN
-          ALTER TABLE reservations ADD COLUMN guest_id UUID REFERENCES guests(id);
-        END IF;
-      END $$;
+      CREATE TABLE IF NOT EXISTS accounts (
+        id SERIAL PRIMARY KEY,
+        stream_id UUID NOT NULL UNIQUE,
+        reservation_id UUID NOT NULL REFERENCES reservations(id),
+        total_price DECIMAL(10,2) NOT NULL,
+        payed_price DECIMAL(10,2) NOT NULL DEFAULT 0,
+        currency VARCHAR(3),
+        version INT NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
     `);
 
-    // Add guest_email column to reservations if it doesn't exist
+    // Create indexes for accounts
     await client.query(`
-      DO $$
-      BEGIN
-        IF NOT EXISTS (
-          SELECT 1 FROM information_schema.columns
-          WHERE table_name = 'reservations' AND column_name = 'guest_email'
-        ) THEN
-          ALTER TABLE reservations ADD COLUMN guest_email VARCHAR(255);
-        END IF;
-      END $$;
+      CREATE INDEX IF NOT EXISTS idx_accounts_reservation ON accounts(reservation_id);
+    `);
+
+    // Create rental_items catalog table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS rental_items (
+        id UUID PRIMARY KEY,
+        name VARCHAR(200) NOT NULL,
+        description TEXT,
+        category VARCHAR(50) NOT NULL DEFAULT 'OTHER',
+        image_url TEXT,
+        total_quantity INT NOT NULL DEFAULT 1,
+        daily_rate DECIMAL(10,2),
+        currency VARCHAR(3) DEFAULT 'EUR',
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Create rental_bookings table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS rental_bookings (
+        id UUID PRIMARY KEY,
+        item_id UUID NOT NULL REFERENCES rental_items(id),
+        guest_name VARCHAR(200) NOT NULL,
+        guest_id UUID REFERENCES guests(id),
+        quantity INT NOT NULL DEFAULT 1,
+        status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+        borrowed_at TIMESTAMPTZ DEFAULT NOW(),
+        due_date DATE,
+        returned_at TIMESTAMPTZ,
+        notes TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Create indexes for rentals
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_rental_bookings_item ON rental_bookings(item_id);
+      CREATE INDEX IF NOT EXISTS idx_rental_bookings_status ON rental_bookings(status);
     `);
 
     console.log('Database schema initialized successfully');
