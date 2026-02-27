@@ -21,7 +21,7 @@ interface Reservation {
   status: string;
   checkInDate: string;
   checkOutDate: string;
-  roomId: string | null;
+  roomIds: string[];
 }
 
 type ViewMode = 'week' | 'month';
@@ -122,7 +122,7 @@ export default function CalendarPage() {
                   status
                   checkInDate
                   checkOutDate
-                  roomId
+                  roomIds
                 }
               }
             `,
@@ -200,7 +200,7 @@ export default function CalendarPage() {
 
   const handleDragStart = (e: React.DragEvent, reservation: Reservation) => {
     e.stopPropagation();
-    setDragData({ reservationId: reservation.id, sourceRoomId: reservation.roomId!, guestName: reservation.guestName });
+    setDragData({ reservationId: reservation.id, sourceRoomId: reservation.roomIds[0] ?? '', guestName: reservation.guestName });
     e.dataTransfer.effectAllowed = 'move';
   };
 
@@ -232,7 +232,7 @@ export default function CalendarPage() {
 
     // Optimistic update
     setReservations(prev => prev.map(r =>
-      r.id === reservationId ? { ...r, roomId: targetRoomId } : r
+      r.id === reservationId ? { ...r, roomIds: [targetRoomId] } : r
     ));
 
     try {
@@ -242,13 +242,13 @@ export default function CalendarPage() {
         credentials: 'include',
         body: JSON.stringify({
           query: `
-            mutation AssignRoom($input: AssignRoomInput!) {
-              assignRoom(input: $input) {
-                reservation { id roomId }
+            mutation AssignRooms($input: AssignRoomsInput!) {
+              assignRooms(input: $input) {
+                reservation { id roomIds }
               }
             }
           `,
-          variables: { input: { reservationId, roomId: targetRoomId } },
+          variables: { input: { reservationId, roomIds: [targetRoomId] } },
         }),
       });
       const result = await response.json();
@@ -258,20 +258,20 @@ export default function CalendarPage() {
     } catch {
       // Revert optimistic update
       setReservations(prev => prev.map(r =>
-        r.id === reservationId ? { ...r, roomId: sourceRoomId } : r
+        r.id === reservationId ? { ...r, roomIds: [sourceRoomId] } : r
       ));
       setError('Failed to move reservation');
     }
   };
 
-  // Group reservations by roomId
+  // Group reservations by roomId (a reservation may span multiple rooms)
   const reservationsByRoom = useMemo(() => {
     const map = new Map<string, Reservation[]>();
     for (const reservation of reservations) {
-      if (reservation.roomId) {
-        const list = map.get(reservation.roomId) || [];
+      for (const roomId of reservation.roomIds) {
+        const list = map.get(roomId) || [];
         list.push(reservation);
-        map.set(reservation.roomId, list);
+        map.set(roomId, list);
       }
     }
     return map;

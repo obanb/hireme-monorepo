@@ -3,20 +3,40 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import HotelSidebar from '@/components/HotelSidebar';
+import ComposeEmailModal from '@/components/ComposeEmailModal';
 import { useLocale } from '@/context/LocaleContext';
+
+interface GuestTier {
+  tier: { name: string; color: string } | null;
+  reservationCount: number;
+  totalSpend: number;
+}
 
 interface Reservation {
   id: string;
   originId: string | null;
   guestName: string;
+  guestEmail: string | null;
   status: string;
   checkInDate: string;
   checkOutDate: string;
-  totalAmount: number;
+  totalPrice: number | null;
   currency: string;
-  roomId: string | null;
+  roomIds: string[];
   version: number;
   createdAt: string;
+}
+
+function TierBadge({ tier }: { tier: GuestTier['tier'] }) {
+  if (!tier) return null;
+  return (
+    <span
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold text-white shadow-sm"
+      style={{ backgroundColor: tier.color }}
+    >
+      ★ {tier.name}
+    </span>
+  );
 }
 
 interface Room {
@@ -72,10 +92,12 @@ export default function ReceptionPage() {
   const router = useRouter();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [guestTierMap, setGuestTierMap] = useState<Map<string, GuestTier>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [emailTarget, setEmailTarget] = useState<{ to: string; toName: string } | null>(null);
 
   // Filters
   const [dateFilter, setDateFilter] = useState<DateFilter>('today');
@@ -147,9 +169,10 @@ export default function ReceptionPage() {
                 status
                 checkInDate
                 checkOutDate
-                totalAmount
+                guestEmail
+                totalPrice
                 currency
-                roomId
+                roomIds
                 version
                 createdAt
               }
@@ -183,6 +206,33 @@ export default function ReceptionPage() {
     fetchReservations();
     fetchRooms();
   }, [fetchReservations, fetchRooms]);
+
+  // Batch-fetch tier infos for all unique guest emails after reservations load
+  useEffect(() => {
+    const emails = [...new Set(reservations.map((r) => r.guestEmail).filter(Boolean) as string[])];
+    if (emails.length === 0) return;
+
+    Promise.all(
+      emails.map((email) =>
+        fetch(GRAPHQL_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            query: `query($email: String!) { guestTierInfo(email: $email) { tier { name color } reservationCount totalSpend } }`,
+            variables: { email },
+          }),
+        })
+          .then((r) => r.json())
+          .then((json) => ({ email, data: json.data?.guestTierInfo ?? null }))
+          .catch(() => ({ email, data: null }))
+      )
+    ).then((results) => {
+      const map = new Map<string, GuestTier>();
+      results.forEach(({ email, data }) => { if (data) map.set(email, data); });
+      setGuestTierMap(map);
+    });
+  }, [reservations]);
 
   // Clear success message after 3 seconds
   useEffect(() => {
@@ -237,7 +287,7 @@ export default function ReceptionPage() {
   const stats = useMemo(() => {
     const pending = filteredReservations.filter((r) => r.status === 'PENDING').length;
     const confirmed = filteredReservations.filter((r) => r.status === 'CONFIRMED').length;
-    const noRoom = filteredReservations.filter((r) => !r.roomId).length;
+    const noRoom = filteredReservations.filter((r) => r.roomIds.length === 0).length;
     return { total: filteredReservations.length, pending, confirmed, noRoom };
   }, [filteredReservations]);
 
@@ -283,9 +333,9 @@ export default function ReceptionPage() {
     }
   };
 
-  const getRoom = (roomId: string | null) => {
-    if (!roomId) return null;
-    return rooms.find((r) => r.id === roomId);
+  const getRoom = (roomIds: string[]) => {
+    if (!roomIds || roomIds.length === 0) return null;
+    return rooms.find((r) => r.id === roomIds[0]) ?? null;
   };
 
   const getStatusBadge = (status: string) => {
@@ -544,7 +594,7 @@ export default function ReceptionPage() {
                   {/* Reservation Cards */}
                   <div className="grid gap-4">
                     {dayReservations.map((reservation) => {
-                      const room = getRoom(reservation.roomId);
+                      const room = getRoom(reservation.roomIds);
                       const nights = getDaysDiff(reservation.checkInDate, reservation.checkOutDate);
 
                       return (
@@ -570,6 +620,9 @@ export default function ReceptionPage() {
                                     {reservation.guestName || 'Unknown Guest'}
                                   </h3>
                                   {getStatusBadge(reservation.status)}
+                                  {reservation.guestEmail && guestTierMap.has(reservation.guestEmail) && (
+                                    <TierBadge tier={guestTierMap.get(reservation.guestEmail)!.tier} />
+                                  )}
                                 </div>
                                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-stone-500 dark:text-stone-400">
                                   <span className="font-mono">#{reservation.originId || reservation.id.slice(0, 8)}</span>
@@ -606,7 +659,7 @@ export default function ReceptionPage() {
                               <div className="flex-shrink-0 text-right px-4 border-l border-stone-100 dark:border-stone-700">
                                 <div className="text-xs text-stone-400 uppercase">Total</div>
                                 <div className="text-lg font-bold text-stone-800 dark:text-stone-100">
-                                  {reservation.totalAmount?.toLocaleString('en-US', {
+                                  {reservation.totalPrice?.toLocaleString('en-US', {
                                     style: 'currency',
                                     currency: reservation.currency || 'USD',
                                   }) || '-'}
@@ -641,6 +694,18 @@ export default function ReceptionPage() {
                                     &#10003; Checked In
                                   </div>
                                 )}
+                                {reservation.guestEmail && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEmailTarget({ to: reservation.guestEmail!, toName: reservation.guestName });
+                                    }}
+                                    className="px-4 py-2.5 border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 font-medium rounded-lg hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors flex items-center gap-1.5"
+                                    title={t('email.sendEmail')}
+                                  >
+                                    <span>✉</span>
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => router.push(`/hotel-cms/bookings/${reservation.id}`)}
                                   className="px-4 py-2.5 border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 font-medium rounded-lg hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors"
@@ -660,6 +725,14 @@ export default function ReceptionPage() {
           )}
         </div>
       </main>
+
+      {emailTarget && (
+        <ComposeEmailModal
+          to={emailTarget.to}
+          toName={emailTarget.toName}
+          onClose={() => setEmailTarget(null)}
+        />
+      )}
     </div>
   );
 }

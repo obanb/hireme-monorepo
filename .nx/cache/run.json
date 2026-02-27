@@ -1,18 +1,51 @@
 {
   "run": {
-    "command": "nx run-many --target=build --all",
-    "startTime": "2025-01-28T16:10:59.325Z",
-    "endTime": "2025-01-28T16:11:18.795Z",
+    "command": "cli run build --stream",
+    "startTime": "2026-02-26T16:16:38.585Z",
+    "endTime": "2026-02-26T16:19:37.211Z",
     "inner": false
   },
   "tasks": [
     {
-      "taskId": "api:build",
+      "taskId": "webhooks:build",
       "target": "build",
-      "projectName": "api",
-      "hash": "14099827874084450626",
-      "startTime": "2025-01-28T16:10:59.347Z",
-      "endTime": "2025-01-28T16:11:01.673Z",
+      "projectName": "webhooks",
+      "hash": "2213789591238506211",
+      "startTime": "2026-02-26T16:16:38.620Z",
+      "endTime": "2026-02-26T16:16:43.456Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 0
+    },
+    {
+      "taskId": "gateway:build",
+      "target": "build",
+      "projectName": "gateway",
+      "hash": "8248683572044568522",
+      "startTime": "2026-02-26T16:16:38.620Z",
+      "endTime": "2026-02-26T16:16:44.152Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 1
+    },
+    {
+      "taskId": "telemetry:build",
+      "target": "build",
+      "projectName": "telemetry",
+      "hash": "11419279773297776148",
+      "startTime": "2026-02-26T16:16:38.620Z",
+      "endTime": "2026-02-26T16:16:44.567Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 0
+    },
+    {
+      "taskId": "shared-schema:build",
+      "target": "build",
+      "projectName": "shared-schema",
+      "hash": "6168513663952295462",
+      "startTime": "2026-02-26T16:16:38.620Z",
+      "endTime": "2026-02-26T16:16:50.191Z",
       "params": "",
       "cacheStatus": "cache-miss",
       "status": 0
@@ -21,20 +54,20 @@
       "taskId": "common:build",
       "target": "build",
       "projectName": "common",
-      "hash": "402248101152361910",
-      "startTime": "2025-01-28T16:10:59.347Z",
-      "endTime": "2025-01-28T16:11:03.840Z",
+      "hash": "529918936480822635",
+      "startTime": "2026-02-26T16:16:38.620Z",
+      "endTime": "2026-02-26T16:16:51.400Z",
       "params": "",
       "cacheStatus": "cache-miss",
       "status": 0
     },
     {
-      "taskId": "frontend:build",
+      "taskId": "mcp:build",
       "target": "build",
-      "projectName": "frontend",
-      "hash": "9355289341267942457",
-      "startTime": "2025-01-28T16:10:59.347Z",
-      "endTime": "2025-01-28T16:11:18.792Z",
+      "projectName": "mcp",
+      "hash": "2140326932587797896",
+      "startTime": "2026-02-26T16:16:38.620Z",
+      "endTime": "2026-02-26T16:19:37.209Z",
       "params": "",
       "cacheStatus": "cache-miss",
       "status": 0

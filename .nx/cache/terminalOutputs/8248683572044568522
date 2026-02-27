@@ -1,0 +1,13 @@
+[2K[1G[1myarn run v1.22.19[22m
+[2K[1G[2m$ tsc[22m
+src/domain/reservation/Reservation.ts(15,11): error TS2564: Property 'hotelId' has no initializer and is not definitely assigned in the constructor.
+src/domain/reservation/Reservation.ts(16,11): error TS2564: Property 'guestName' has no initializer and is not definitely assigned in the constructor.
+src/domain/reservation/Reservation.ts(17,11): error TS2564: Property 'checkIn' has no initializer and is not definitely assigned in the constructor.
+src/domain/reservation/Reservation.ts(18,11): error TS2564: Property 'checkOut' has no initializer and is not definitely assigned in the constructor.
+src/infrastructure/messaging/RabbitMQEventBus.ts(18,5): error TS2739: Type 'ChannelModel' is missing the following properties from type 'Connection': serverProperties, expectSocketClose, sentSinceLastCheck, recvSinceLastCheck, sendMessage
+src/infrastructure/messaging/RabbitMQEventBus.ts(19,26): error TS2531: Object is possibly 'null'.
+src/infrastructure/messaging/RabbitMQEventBus.ts(19,42): error TS2339: Property 'createChannel' does not exist on type 'Connection'.
+src/infrastructure/messaging/RabbitMQEventBus.ts(22,11): error TS2531: Object is possibly 'null'.
+src/infrastructure/messaging/RabbitMQEventBus.ts(101,29): error TS2339: Property 'close' does not exist on type 'Connection'.
+[2K[1G[31merror[39m Command failed with exit code 2.
+[2K[1G[34minfo[39m Visit [1mhttps://yarnpkg.com/en/docs/cli/run[22m for documentation about this command.

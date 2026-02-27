@@ -28,6 +28,7 @@ type Guest {
   updatedAt: String
   reservations: [Reservation!]
   vouchers: [Voucher!]
+  tierInfo: GuestTierInfo
 }
 
 input GuestAddressInput {
@@ -101,4 +102,5 @@ extend type Mutation {
   createGuest(input: CreateGuestInput!): CreateGuestResult!
   updateGuest(id: ID!, input: UpdateGuestInput!): UpdateGuestResult!
   deleteGuest(id: ID!): DeleteGuestResult!
+  sendGuestEmail(to: String!, toName: String, subject: String!, body: String!): Boolean!
 }

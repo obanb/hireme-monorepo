@@ -1,0 +1,33 @@
+enum RoomMaintenanceStatus {
+  DIRTY
+  CLEAN
+  MAINTENANCE
+  CHECKED
+}
+
+type RoomMaintenanceRecord {
+  id: ID!
+  roomId: ID!
+  roomNumber: String!
+  roomName: String!
+  status: RoomMaintenanceStatus!
+  notes: String
+  updatedBy: String
+  updatedAt: String!
+}
+
+input UpdateRoomMaintenanceInput {
+  status: RoomMaintenanceStatus!
+  notes: String
+  updatedBy: String
+}
+
+extend type Query {
+  roomMaintenanceRecords: [RoomMaintenanceRecord!]!
+  roomMaintenanceRecord(roomId: ID!): RoomMaintenanceRecord
+}
+
+extend type Mutation {
+  updateRoomMaintenance(roomId: ID!, input: UpdateRoomMaintenanceInput!): RoomMaintenanceRecord!
+  bulkUpdateRoomMaintenance(roomIds: [ID!]!, input: UpdateRoomMaintenanceInput!): [RoomMaintenanceRecord!]!
+}

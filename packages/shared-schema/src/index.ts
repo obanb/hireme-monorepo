@@ -66,8 +66,28 @@ export function getGuestSchema(): string {
   return readFileSync(join(getSchemaDir(), "guest.graphql"), "utf-8");
 }
 
+export function getAccountSchema(): string {
+  return readFileSync(join(getSchemaDir(), "account.graphql"), "utf-8");
+}
+
+export function getRentalSchema(): string {
+  return readFileSync(join(getSchemaDir(), "rental.graphql"), "utf-8");
+}
+
+export function getTierSchema(): string {
+  return readFileSync(join(getSchemaDir(), "tiers.graphql"), "utf-8");
+}
+
+export function getParkingSchema(): string {
+  return readFileSync(join(getSchemaDir(), "parking.graphql"), "utf-8");
+}
+
+export function getMaintenanceSchema(): string {
+  return readFileSync(join(getSchemaDir(), "maintenance.graphql"), "utf-8");
+}
+
 export function getCombinedSchema(): string {
-  return getCommonSchema() + "\n" + getHotelSchema() + "\n" + getRoomTypeSchema() + "\n" + getRateCodeSchema() + "\n" + getRoomSchema() + "\n" + getReservationSchema() + "\n" + getWellnessSchema() + "\n" + getStatisticsSchema() + "\n" + getAuthSchema() + "\n" + getCampaignSchema() + "\n" + getVoucherSchema() + "\n" + getGuestSchema();
+  return getCommonSchema() + "\n" + getHotelSchema() + "\n" + getRoomTypeSchema() + "\n" + getRateCodeSchema() + "\n" + getRoomSchema() + "\n" + getReservationSchema() + "\n" + getWellnessSchema() + "\n" + getStatisticsSchema() + "\n" + getAuthSchema() + "\n" + getCampaignSchema() + "\n" + getVoucherSchema() + "\n" + getGuestSchema() + "\n" + getAccountSchema() + "\n" + getRentalSchema() + "\n" + getTierSchema() + "\n" + getParkingSchema() + "\n" + getMaintenanceSchema();
 }
 
 // Re-export generated types (will be available after codegen runs)

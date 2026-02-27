@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { tavily } from '@tavily/core';
 import { graphqlQuery } from './graphql-client';
 import {
   GET_RESERVATIONS,
@@ -15,6 +16,10 @@ import {
   GET_GUEST_BY_EMAIL,
   CREATE_GUEST,
 } from './queries';
+
+const tavilyClient = process.env.TAVILY_API_KEY
+  ? tavily({ apiKey: process.env.TAVILY_API_KEY })
+  : null;
 
 export function createMcpServer(): McpServer {
   const server = new McpServer({
@@ -276,6 +281,39 @@ export function createMcpServer(): McpServer {
         return { content: [{ type: 'text' as const, text: JSON.stringify(data.createGuest.guest, null, 2) }] };
       } catch (error) {
         return { content: [{ type: 'text' as const, text: `Error creating guest: ${error}` }], isError: true };
+      }
+    }
+  );
+
+  server.tool(
+    'web_search',
+    'Search the internet for real-time information: local events, cultural programs, tourist attractions, restaurants, weather, news, or anything not stored in the hotel system. Use this when the question requires live external data.',
+    {
+      query: z.string().describe('Search query in natural language'),
+      maxResults: z.number().optional().describe('Number of results to return (default 5, max 10)'),
+    },
+    // @ts-expect-error TS2589 - MCP SDK zod type inference depth limit
+    async ({ query, maxResults = 5 }: { query: string; maxResults?: number }) => {
+      if (!tavilyClient) {
+        return {
+          content: [{ type: 'text' as const, text: JSON.stringify({ error: 'Web search is not configured. Set TAVILY_API_KEY in packages/mcp/.env to enable it.' }) }],
+          isError: true,
+        };
+      }
+      try {
+        const response = await tavilyClient.search(query, {
+          maxResults: Math.min(maxResults, 10),
+          searchDepth: 'basic',
+        });
+        const results = response.results.map((r: { title: string; url: string; content: string; score?: number }) => ({
+          title: r.title,
+          url: r.url,
+          snippet: r.content,
+          relevance: r.score,
+        }));
+        return { content: [{ type: 'text' as const, text: JSON.stringify(results, null, 2) }] };
+      } catch (error) {
+        return { content: [{ type: 'text' as const, text: `Web search error: ${error}` }], isError: true };
       }
     }
   );

@@ -1,6 +1,8 @@
 import { v4 as uuidv4 } from "uuid";
 import { guestRepository, getPool } from "../event-sourcing";
 import { requireAuth, AuthContext } from "../auth";
+import { tierRepository } from "../tiers/tier.repository";
+import { sendReceptionEmail } from "../auth/email-service";
 import { formatGuest } from "../formatters/guest.formatter";
 import { formatReservation } from "../formatters/reservation.formatter";
 import { formatVoucher } from "../formatters/voucher.formatter";
@@ -113,9 +115,23 @@ export const guestResolvers = {
       const { events } = await guestRepository.delete(args.id);
       return { success: true, events: events.map(formatStoredEvent) };
     },
+
+    sendGuestEmail: async (
+      _: unknown,
+      args: { to: string; toName?: string | null; subject: string; body: string },
+      context: AuthContext
+    ) => {
+      requireAuth(context);
+      await sendReceptionEmail(args.to, args.toName ?? null, args.subject, args.body);
+      return true;
+    },
   },
 
   Guest: {
+    tierInfo: async (parent: { email: string }) => {
+      return tierRepository.computeGuestTier(parent.email);
+    },
+
     reservations: async (parent: { email: string }) => {
       const pool = getPool();
       const client = await pool.connect();

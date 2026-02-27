@@ -1,0 +1,98 @@
+enum RentalCategory {
+  GAMING
+  SPORTS
+  OUTDOOR
+  FITNESS
+  KIDS
+  WELLNESS
+  OTHER
+}
+
+enum RentalBookingStatus {
+  ACTIVE
+  RETURNED
+  OVERDUE
+  LOST
+}
+
+type RentalItem {
+  id: ID!
+  name: String!
+  description: String
+  category: RentalCategory!
+  imageUrl: String
+  totalQuantity: Int!
+  availableQuantity: Int!
+  dailyRate: Float
+  currency: String
+  isActive: Boolean!
+  createdAt: String
+  updatedAt: String
+}
+
+type RentalBooking {
+  id: ID!
+  item: RentalItem
+  itemId: ID!
+  guestName: String!
+  guestId: ID
+  quantity: Int!
+  status: RentalBookingStatus!
+  borrowedAt: String!
+  dueDate: String
+  returnedAt: String
+  notes: String
+  createdAt: String
+  updatedAt: String
+}
+
+input CreateRentalItemInput {
+  name: String!
+  description: String
+  category: RentalCategory!
+  imageUrl: String
+  totalQuantity: Int!
+  dailyRate: Float
+  currency: String
+}
+
+input UpdateRentalItemInput {
+  name: String
+  description: String
+  category: RentalCategory
+  imageUrl: String
+  totalQuantity: Int
+  dailyRate: Float
+  currency: String
+  isActive: Boolean
+}
+
+input CreateRentalBookingInput {
+  itemId: ID!
+  guestName: String!
+  guestId: ID
+  quantity: Int!
+  dueDate: String
+  notes: String
+}
+
+input UpdateRentalBookingInput {
+  status: RentalBookingStatus
+  notes: String
+}
+
+extend type Query {
+  rentalItem(id: ID!): RentalItem
+  rentalItems(category: RentalCategory, isActive: Boolean): [RentalItem!]!
+  rentalBooking(id: ID!): RentalBooking
+  rentalBookings(status: RentalBookingStatus, itemId: ID): [RentalBooking!]!
+}
+
+extend type Mutation {
+  createRentalItem(input: CreateRentalItemInput!): RentalItem!
+  updateRentalItem(id: ID!, input: UpdateRentalItemInput!): RentalItem!
+  deleteRentalItem(id: ID!): Boolean!
+  createRentalBooking(input: CreateRentalBookingInput!): RentalBooking!
+  updateRentalBooking(id: ID!, input: UpdateRentalBookingInput!): RentalBooking!
+  returnRentalItem(bookingId: ID!): RentalBooking!
+}

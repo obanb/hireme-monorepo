@@ -1,0 +1,50 @@
+type Tier {
+  id: ID!
+  code: String!
+  name: String!
+  description: String
+  minReservations: Int
+  minSpend: Float
+  color: String!
+  sortOrder: Int!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type GuestTierInfo {
+  tier: Tier
+  reservationCount: Int!
+  totalSpend: Float!
+}
+
+input CreateTierInput {
+  code: String!
+  name: String!
+  description: String
+  minReservations: Int
+  minSpend: Float
+  color: String!
+  sortOrder: Int
+}
+
+input UpdateTierInput {
+  code: String
+  name: String
+  description: String
+  minReservations: Int
+  minSpend: Float
+  color: String
+  sortOrder: Int
+}
+
+extend type Query {
+  tier(id: ID!): Tier
+  tiers: [Tier!]!
+  guestTierInfo(email: String!): GuestTierInfo!
+}
+
+extend type Mutation {
+  createTier(input: CreateTierInput!): Tier!
+  updateTier(id: ID!, input: UpdateTierInput!): Tier!
+  deleteTier(id: ID!): Boolean!
+}

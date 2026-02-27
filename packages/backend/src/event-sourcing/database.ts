@@ -81,13 +81,9 @@ export async function initializeDatabase(): Promise<void> {
       );
     `);
 
-    // Drop and recreate reservations table with updated schema
-    await client.query(`DROP TABLE IF EXISTS wellness_bookings CASCADE;`);
-    await client.query(`DROP TABLE IF EXISTS reservations CASCADE;`);
-
-    // Create reservations read model table (fresh schema)
+    // Create reservations read model table
     await client.query(`
-      CREATE TABLE reservations (
+      CREATE TABLE IF NOT EXISTS reservations (
         id UUID PRIMARY KEY,
         origin_id VARCHAR(100),
         guest_name TEXT,
@@ -105,6 +101,28 @@ export async function initializeDatabase(): Promise<void> {
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       );
+    `);
+
+    // Migrate reservations: add columns that may be missing from older installs
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='reservations' AND column_name='guest_id') THEN
+          ALTER TABLE reservations ADD COLUMN guest_id UUID;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='reservations' AND column_name='payed_price') THEN
+          ALTER TABLE reservations ADD COLUMN payed_price DECIMAL(10,2) DEFAULT 0;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='reservations' AND column_name='total_price') THEN
+          ALTER TABLE reservations ADD COLUMN total_price DECIMAL(10,2);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='reservations' AND column_name='room_ids') THEN
+          ALTER TABLE reservations ADD COLUMN room_ids UUID[] NOT NULL DEFAULT '{}';
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='reservations' AND column_name='account_id') THEN
+          ALTER TABLE reservations ADD COLUMN account_id INT;
+        END IF;
+      END $$;
     `);
 
     // Create event checkpoints table for the event relayer
@@ -398,6 +416,97 @@ export async function initializeDatabase(): Promise<void> {
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_rental_bookings_item ON rental_bookings(item_id);
       CREATE INDEX IF NOT EXISTS idx_rental_bookings_status ON rental_bookings(status);
+    `);
+
+    // Create parking_spaces table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS parking_spaces (
+        id UUID PRIMARY KEY,
+        number INT NOT NULL UNIQUE,
+        label VARCHAR(20) NOT NULL,
+        type VARCHAR(20) NOT NULL DEFAULT 'STANDARD',
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Create parking_occupancies table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS parking_occupancies (
+        id UUID PRIMARY KEY,
+        space_id UUID NOT NULL REFERENCES parking_spaces(id),
+        owner_name VARCHAR(200) NOT NULL,
+        owner_email VARCHAR(255),
+        license_plate VARCHAR(20) NOT NULL,
+        from_date TIMESTAMPTZ NOT NULL,
+        to_date TIMESTAMPTZ,
+        notes TEXT,
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        released_at TIMESTAMPTZ
+      );
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_parking_occ_space ON parking_occupancies(space_id);
+      CREATE INDEX IF NOT EXISTS idx_parking_occ_active ON parking_occupancies(is_active);
+      CREATE INDEX IF NOT EXISTS idx_parking_occ_plate ON parking_occupancies(license_plate);
+    `);
+
+    // Seed 30 parking spaces if table is empty
+    await client.query(`
+      DO $$
+      DECLARE
+        space_count INT;
+      BEGIN
+        SELECT COUNT(*) INTO space_count FROM parking_spaces;
+        IF space_count = 0 THEN
+          INSERT INTO parking_spaces (id, number, label, type, is_active)
+          SELECT
+            md5('parking_space_' || n)::uuid,
+            n,
+            LPAD(n::text, 2, '0'),
+            CASE
+              WHEN n IN (1, 2) THEN 'DISABLED'
+              WHEN n IN (29, 30) THEN 'VIP'
+              ELSE 'STANDARD'
+            END,
+            true
+          FROM generate_series(1, 30) n;
+        END IF;
+      END $$;
+    `);
+
+    // Create tiers table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS tiers (
+        id UUID PRIMARY KEY,
+        code VARCHAR(50) NOT NULL UNIQUE,
+        name VARCHAR(100) NOT NULL,
+        description TEXT,
+        min_reservations INT,
+        min_spend DECIMAL(10,2),
+        color VARCHAR(7) NOT NULL DEFAULT '#6366f1',
+        sort_order INT NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Create room_maintenance table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS room_maintenance (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        room_id UUID NOT NULL UNIQUE REFERENCES rooms(id) ON DELETE CASCADE,
+        status VARCHAR(20) NOT NULL DEFAULT 'DIRTY',
+        notes TEXT,
+        updated_by VARCHAR(200),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_room_maintenance_status ON room_maintenance(status);
     `);
 
     console.log('Database schema initialized successfully');

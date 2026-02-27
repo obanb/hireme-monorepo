@@ -44,7 +44,7 @@ function buildReservationsQuery(filters: Record<string, string>, limit: number) 
   if (filters.status && filters.status !== 'ALL') parts.push(`status: ${filters.status}`);
   const filterArg = parts.length ? `filter: { ${parts.join(', ')} }, ` : '';
   return `{ reservations(${filterArg}limit: ${limit}, offset: 0) {
-    id originId guestName guestEmail status checkInDate checkOutDate totalAmount currency roomId createdAt
+    id originId guestName guestEmail status checkInDate checkOutDate totalPrice currency roomIds createdAt
   } }`;
 }
 
@@ -80,11 +80,11 @@ function buildGuestsQuery(filters: Record<string, string>, limit: number) {
 
 // ─── Table column definitions ──────────────────────────────────────
 
-const RESERVATION_COLS = ['ID', 'Origin ID', 'Guest', 'Email', 'Status', 'Check-In', 'Check-Out', 'Amount', 'Currency', 'Room ID', 'Created'];
+const RESERVATION_COLS = ['ID', 'Origin ID', 'Guest', 'Email', 'Status', 'Check-In', 'Check-Out', 'Total Price', 'Currency', 'Room IDs', 'Created'];
 const GUEST_COLS = ['Email', 'First Name', 'Last Name', 'Phone', 'DOB', 'Nationality', 'Citizenship', 'Passport', 'Purpose', 'Address', 'Active', 'Created'];
 
 function reservationRow(r: Record<string, unknown>) {
-  return [r.id, r.originId ?? '', r.guestName ?? '', r.guestEmail ?? '', r.status, r.checkInDate ?? '', r.checkOutDate ?? '', r.totalAmount ?? '', r.currency ?? '', r.roomId ?? '', r.createdAt ?? ''];
+  return [r.id, r.originId ?? '', r.guestName ?? '', r.guestEmail ?? '', r.status, r.checkInDate ?? '', r.checkOutDate ?? '', r.totalPrice ?? '', r.currency ?? '', (r.roomIds as string[] | null ?? []).join(', '), r.createdAt ?? ''];
 }
 
 function guestRow(g: Record<string, unknown>) {

@@ -53,6 +53,7 @@ Full-stack hotel management system built with GraphQL Federation, Event Sourcing
 - Address and contact information
 - Reservation history per guest
 - Police report PDF generation (Czech/English bilingual via PDFKit)
+- Email composition directly from guest detail or reception card (Resend API)
 
 ### Room & Rate Management
 - Room CRUD with status tracking (Available, Occupied, Maintenance)
@@ -77,13 +78,35 @@ Full-stack hotel management system built with GraphQL Federation, Event Sourcing
 - Open/click tracking through tracking pixels and link rewriting
 - Test email delivery
 
+### Loyalty Tiers
+- Configurable loyalty tier system (Bronze, Silver, Gold, etc.) with custom colors and badge display
+- Automatic tier evaluation per guest based on reservation count and total spend thresholds
+- Tier badges shown inline in guest list, guest detail modal, and reception reservation cards
+- Sort-order-based priority: guest is assigned the highest-priority tier they qualify for
+
+### Parking Management
+- Visual parking map: 30 spaces across 5 rows, color-coded by status (free/occupied/VIP/disabled)
+- Assign spaces to vehicles with owner name, email, license plate, arrival/departure times and notes
+- Release occupancy with full history preserved (soft delete)
+- Live statistics: occupancy rate, today's arrivals and departures
+- Search highlight and currently-parked table with quick release
+
+### Room Maintenance
+- Housekeeping board: all rooms displayed as color-coded cards by maintenance status
+- Four statuses: Dirty (red), Clean (green), Maintenance (amber), Checked (blue)
+- Click any room card to update its status, add notes, and record which staff member updated it
+- Multi-select and bulk status update for floor-wide or whole-hotel resets
+- Stats bar doubles as a filter: click a status count to filter the board to that status only
+
 ### AI Chat Assistant
 - OpenAI SDK with streaming responses (requesty.ai compatible)
 - MCP (Model Context Protocol) tool calling over stdio transport
-- 12 tools: reservations, rooms, guests, rate codes, navigation
+- 13 tools: reservations, rooms, guests, rate codes, navigation, **web search**
+- **Web search via Tavily API**: answers questions about local events, attractions, ski conditions, weather, restaurants near the hotel — anything requiring live internet data
 - RAG pipeline: MongoDB vector embeddings (text-embedding-3-small) with cosine similarity search
 - Real-time Socket.IO streaming with tool call visualization
 - Auto-indexing worker for reservation/room/rate code data
+- See [`docs/tavily.md`](docs/tavily.md) for web search implementation details
 
 ### Webhook Delivery
 - RabbitMQ consumer for reservation events
@@ -108,10 +131,11 @@ Full-stack hotel management system built with GraphQL Federation, Event Sourcing
 
 ### Frontend
 - Next.js 15 with App Router and React 19
-- Dark mode across all 21 pages (Tailwind CSS `dark:` classes)
-- i18n: English + Czech (~490 translation keys)
+- Dark mode across all pages (Tailwind CSS `dark:` classes)
+- i18n: English + Czech (~540 translation keys)
 - Framer Motion animations
 - Statistics dashboards with revenue timeline and occupancy analytics
+- Reusable `ComposeEmailModal` component wired into guest detail and reception cards
 
 ---
 
@@ -123,7 +147,7 @@ Full-stack hotel management system built with GraphQL Federation, Event Sourcing
 | API | Apollo Gateway, Apollo Server 4, GraphQL Federation v2 |
 | Backend | Express, TypeScript 5, Node.js |
 | Data | PostgreSQL (event store + auth), MongoDB (RAG vectors), RabbitMQ |
-| AI | OpenAI SDK, MCP Protocol, RAG (text-embedding-3-small) |
+| AI | OpenAI SDK, MCP Protocol, RAG (text-embedding-3-small), Tavily (web search) |
 | Email | Resend API |
 | PDF | PDFKit |
 | Observability | Pino (logging), OpenTelemetry (tracing) |
@@ -142,7 +166,7 @@ packages/
 ├── gateway/           Event sourcing (CQRS demo)
 ├── webhooks/          Webhook delivery service                  :4002
 ├── llm/               LLM service (chat + RAG + MCP client)    :4010
-├── mcp/               MCP server (12 tools, stdio transport)
+├── mcp/               MCP server (13 tools, stdio transport)
 ├── shared-schema/     GraphQL schemas + codegen
 ├── telemetry/         Pino + OpenTelemetry
 └── common/            Shared utilities
@@ -225,6 +249,11 @@ Schema-first approach. Source of truth lives in `packages/shared-schema/schema/*
 | `wellness.graphql` | Services, therapists, bookings |
 | `statistics.graphql` | Revenue timeline, occupancy, analytics |
 | `hotel.graphql` | Hotel entity (federation @key) |
+| `account.graphql` | Billing accounts linked to reservations |
+| `rental.graphql` | Rental item catalog and bookings |
+| `tiers.graphql` | Loyalty tiers, guest tier evaluation |
+| `parking.graphql` | Parking spaces and vehicle occupancies |
+| `maintenance.graphql` | Room housekeeping status |
 
 Run `cd packages/shared-schema && npm run codegen` to regenerate TypeScript types.
 

@@ -1,0 +1,69 @@
+enum ParkingSpaceType {
+  STANDARD
+  DISABLED
+  VIP
+}
+
+type ParkingOccupancy {
+  id: ID!
+  spaceId: ID!
+  ownerName: String!
+  ownerEmail: String
+  licensePlate: String!
+  from: String!
+  to: String
+  notes: String
+  createdAt: String!
+  releasedAt: String
+  isActive: Boolean!
+}
+
+type ParkingSpace {
+  id: ID!
+  number: Int!
+  label: String!
+  type: ParkingSpaceType!
+  isActive: Boolean!
+  currentOccupancy: ParkingOccupancy
+}
+
+type ParkingStats {
+  total: Int!
+  occupied: Int!
+  available: Int!
+  occupancyRate: Float!
+  todayArrivals: Int!
+  todayDepartures: Int!
+}
+
+input AssignParkingInput {
+  spaceId: ID!
+  ownerName: String!
+  ownerEmail: String
+  licensePlate: String!
+  from: String!
+  to: String
+  notes: String
+}
+
+input UpdateParkingOccupancyInput {
+  ownerName: String
+  ownerEmail: String
+  licensePlate: String
+  from: String
+  to: String
+  notes: String
+}
+
+extend type Query {
+  parkingSpaces: [ParkingSpace!]!
+  parkingSpace(id: ID!): ParkingSpace
+  parkingStats: ParkingStats!
+  parkingOccupancies(activeOnly: Boolean): [ParkingOccupancy!]!
+}
+
+extend type Mutation {
+  assignParking(input: AssignParkingInput!): ParkingOccupancy!
+  releaseParking(spaceId: ID!): Boolean!
+  updateParkingOccupancy(occupancyId: ID!, input: UpdateParkingOccupancyInput!): ParkingOccupancy!
+}

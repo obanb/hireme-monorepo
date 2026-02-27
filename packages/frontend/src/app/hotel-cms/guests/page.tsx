@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import HotelSidebar from '@/components/HotelSidebar';
+import ComposeEmailModal from '@/components/ComposeEmailModal';
 import { useLocale } from '@/context/LocaleContext';
 
 interface GuestAddress {
@@ -9,6 +10,12 @@ interface GuestAddress {
   city: string | null;
   postalCode: string | null;
   country: string | null;
+}
+
+interface GuestTier {
+  tier: { id: string; name: string; color: string; code: string } | null;
+  reservationCount: number;
+  totalSpend: number;
 }
 
 interface Guest {
@@ -30,12 +37,14 @@ interface Guest {
   version: number;
   createdAt: string;
   updatedAt: string;
+  tierInfo?: GuestTier | null;
   reservations?: Array<{
     id: string;
     status: string;
     checkInDate: string | null;
     checkOutDate: string | null;
-    totalAmount: number | null;
+    totalPrice: number | null;
+    payedPrice: number | null;
     currency: string | null;
   }>;
   vouchers?: Array<{
@@ -48,6 +57,18 @@ interface Guest {
   }>;
 }
 
+function TierBadge({ tier }: { tier: GuestTier['tier'] }) {
+  if (!tier) return <span className="text-xs text-stone-400">—</span>;
+  return (
+    <span
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold text-white shadow-sm whitespace-nowrap"
+      style={{ backgroundColor: tier.color }}
+    >
+      ★ {tier.name}
+    </span>
+  );
+}
+
 type TabType = 'all' | 'active' | 'inactive';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:4001/graphql';
@@ -57,11 +78,12 @@ const GUEST_FIELDS = `
   nationality citizenship passportNumber visaNumber purposeOfStay
   homeAddress { street city postalCode country }
   notes isActive version createdAt updatedAt
+  tierInfo { tier { id name color code } reservationCount totalSpend }
 `;
 
 const GUEST_WITH_RELATIONS = `
   ${GUEST_FIELDS}
-  reservations { id status checkInDate checkOutDate totalAmount currency }
+  reservations { id status checkInDate checkOutDate totalPrice payedPrice currency }
   vouchers { id number valueTotal valueRemaining currency active }
 `;
 
@@ -83,6 +105,7 @@ export default function GuestsPage() {
 
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
 
@@ -487,6 +510,7 @@ export default function GuestsPage() {
                     <th className="px-6 py-4 text-left text-xs font-semibold text-stone-600 dark:text-stone-300 uppercase tracking-wider">{t('guests.nationality')}</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-stone-600 dark:text-stone-300 uppercase tracking-wider">{t('guests.passportNumber')}</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-stone-600 dark:text-stone-300 uppercase tracking-wider">{t('common.status')}</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-stone-600 dark:text-stone-300 uppercase tracking-wider">Tier</th>
                     <th className="px-6 py-4 text-right text-xs font-semibold text-stone-600 dark:text-stone-300 uppercase tracking-wider">{t('common.actions')}</th>
                   </tr>
                 </thead>
@@ -513,6 +537,9 @@ export default function GuestsPage() {
                         }`}>
                           {guest.isActive ? t('common.active') : t('common.inactive')}
                         </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <TierBadge tier={guest.tierInfo?.tier ?? null} />
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -696,6 +723,31 @@ export default function GuestsPage() {
                 </div>
               </div>
 
+              {/* Tier */}
+              {selectedGuest.tierInfo && (
+                <div className="p-4 rounded-xl border-2" style={{ borderColor: selectedGuest.tierInfo.tier?.color ?? '#e5e7eb', backgroundColor: (selectedGuest.tierInfo.tier?.color ?? '#6366f1') + '10' }}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {selectedGuest.tierInfo.tier ? (
+                        <>
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-lg font-black shadow" style={{ backgroundColor: selectedGuest.tierInfo.tier.color }}>★</div>
+                          <div>
+                            <TierBadge tier={selectedGuest.tierInfo.tier} />
+                            <div className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Current loyalty tier</div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-sm text-stone-500 dark:text-stone-400">No tier achieved yet</div>
+                      )}
+                    </div>
+                    <div className="text-right text-sm">
+                      <div className="font-semibold text-stone-900 dark:text-stone-100">{selectedGuest.tierInfo.reservationCount} stays</div>
+                      <div className="text-stone-500 dark:text-stone-400">{selectedGuest.tierInfo.totalSpend.toLocaleString('cs-CZ')} total spend</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Identity */}
               <div className="p-4 bg-stone-50 dark:bg-stone-900 rounded-lg">
                 <div className="text-sm font-semibold text-stone-800 dark:text-stone-100 mb-3 uppercase tracking-wider">Identity</div>
@@ -752,9 +804,12 @@ export default function GuestsPage() {
                           }`}>{r.status}</span>
                           {r.checkInDate && <span className="text-sm text-stone-600 dark:text-stone-300">{formatDate(r.checkInDate)} - {formatDate(r.checkOutDate)}</span>}
                         </div>
-                        {r.totalAmount != null && (
-                          <div className="font-semibold text-sm text-stone-900 dark:text-stone-100">
-                            {r.totalAmount.toLocaleString('cs-CZ')} {r.currency}
+                        {r.totalPrice != null && (
+                          <div className="text-sm text-stone-900 dark:text-stone-100 text-right">
+                            <div className="font-semibold">{r.totalPrice.toLocaleString('cs-CZ')} {r.currency}</div>
+                            {r.payedPrice != null && r.payedPrice > 0 && (
+                              <div className="text-xs text-stone-500 dark:text-stone-400">paid: {r.payedPrice.toLocaleString('cs-CZ')}</div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -795,8 +850,14 @@ export default function GuestsPage() {
 
               {/* Actions */}
               <div className="flex gap-3 pt-4 border-t border-stone-200 dark:border-stone-700">
-                <button onClick={() => setShowDetailModal(false)} className="flex-1 px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300">
+                <button onClick={() => setShowDetailModal(false)} className="px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300">
                   Close
+                </button>
+                <button
+                  onClick={() => setShowEmailModal(true)}
+                  className="px-4 py-2 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-lg hover:bg-stone-700 dark:hover:bg-stone-300 flex items-center gap-2 font-medium"
+                >
+                  <span>✉</span> {t('email.sendEmail')}
                 </button>
                 <button
                   onClick={() => { setShowDetailModal(false); handleDownloadPoliceReport(selectedGuest); }}
@@ -808,6 +869,15 @@ export default function GuestsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Email compose modal */}
+      {showEmailModal && selectedGuest && (
+        <ComposeEmailModal
+          to={selectedGuest.email}
+          toName={[selectedGuest.firstName, selectedGuest.lastName].filter(Boolean).join(' ') || undefined}
+          onClose={() => setShowEmailModal(false)}
+        />
       )}
     </div>
   );
