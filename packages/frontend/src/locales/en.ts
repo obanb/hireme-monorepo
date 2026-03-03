@@ -82,6 +82,18 @@ const en = {
   'stats.revenue': 'Revenue (MTD)',
   'stats.pendingBookings': 'Pending Bookings',
   'stats.activeGuests': 'Active Guests',
+  'stats.totalBookings': 'Total Bookings',
+  'stats.confirmedBookings': 'Confirmed',
+  'stats.avgStay': 'Avg Stay (days)',
+  // Live Status
+  'dashboard.liveStatus': 'Hotel Live Status',
+  'dashboard.liveStatusDesc': 'Real-time overview of hotel operations across all departments',
+  'dashboard.parkingStatus': 'Parking',
+  'dashboard.wellnessToday': 'Wellness Scheduled',
+  'dashboard.activeVouchers': 'Active Vouchers',
+  'dashboard.guestProfiles': 'Guest Profiles',
+  'dashboard.activeRentals': 'Active Rentals',
+  'dashboard.dirtyRooms': 'Rooms Needing Cleaning',
 
   // Bookings
   'bookings.title': 'Bookings',

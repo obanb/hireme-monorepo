@@ -1,10 +1,10 @@
 'use client';
 
-import { Suspense } from 'react';
 import HotelSidebar from '@/components/HotelSidebar';
 import DashboardStats from '@/components/DashboardStats';
 import RoomCalendar from '@/components/RoomCalendar';
 import RecentActivity from '@/components/RecentActivity';
+import HotelLiveStatus from '@/components/HotelLiveStatus';
 import { useLocale } from '@/context/LocaleContext';
 
 export default function HotelCMSDashboard() {
@@ -43,28 +43,17 @@ export default function HotelCMSDashboard() {
             <RoomCalendar />
           </div>
 
-          {/* Federated Live Data */}
+          {/* Live Hotel Status */}
           <div className="mb-8">
             <div className="mb-4">
               <h2 className="text-2xl font-black text-stone-900 dark:text-stone-100 mb-2">
-                {t('dashboard.liveData')}
+                {t('dashboard.liveStatus')}
               </h2>
               <p className="text-stone-500 dark:text-stone-400">
-                {t('dashboard.liveDataDesc')}
+                {t('dashboard.liveStatusDesc')}
               </p>
             </div>
-            <Suspense
-              fallback={
-                <div className="rounded-3xl border-2 border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 p-6 text-stone-500 dark:text-stone-400">
-                  {t('dashboard.loadingRates')}
-                </div>
-              }
-            >
-              {/* LiveRates is a server component - can't import here in use client, wrap separately if needed */}
-              <div className="rounded-3xl border-2 border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 p-6 text-stone-500 dark:text-stone-400">
-                {t('dashboard.loadingRates')}
-              </div>
-            </Suspense>
+            <HotelLiveStatus />
           </div>
 
           {/* Recent Activity Section */}

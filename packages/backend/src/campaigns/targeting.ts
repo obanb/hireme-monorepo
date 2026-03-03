@@ -32,8 +32,8 @@ function buildTargetQuery(rules: TargetingRules): { sql: string; values: unknown
   if (rules.createdFrom) { conditions.push(`r.created_at >= $${idx++}`); values.push(rules.createdFrom); }
   if (rules.createdTo) { conditions.push(`r.created_at <= $${idx++}`); values.push(rules.createdTo); }
   if (rules.status) { conditions.push(`r.status = $${idx++}`); values.push(rules.status); }
-  if (rules.minAmount !== undefined) { conditions.push(`r.total_amount >= $${idx++}`); values.push(rules.minAmount); }
-  if (rules.maxAmount !== undefined) { conditions.push(`r.total_amount <= $${idx++}`); values.push(rules.maxAmount); }
+  if (rules.minAmount !== undefined) { conditions.push(`r.total_price >= $${idx++}`); values.push(rules.minAmount); }
+  if (rules.maxAmount !== undefined) { conditions.push(`r.total_price <= $${idx++}`); values.push(rules.maxAmount); }
   if (rules.currency) { conditions.push(`r.currency = $${idx++}`); values.push(rules.currency); }
 
   const where = conditions.join(' AND ');

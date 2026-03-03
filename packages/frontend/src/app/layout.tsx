@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ChatWidget from "../components/chat/ChatWidget";
-import ScreenRecorder from "../components/ScreenRecorder";
 import ClientProviders from "../components/ClientProviders";
 
 const geistSans = Geist({
@@ -33,7 +32,6 @@ export default function RootLayout({
         <ClientProviders>
           {children}
           <ChatWidget />
-          <ScreenRecorder />
         </ClientProviders>
       </body>
     </html>

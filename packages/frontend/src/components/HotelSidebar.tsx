@@ -31,7 +31,7 @@ const menuItems: MenuItem[] = [
   { nameKey: 'nav.reports', href: '/hotel-cms/reports', icon: '▦', roles: ['ADMIN', 'USER'] },
   { nameKey: 'nav.guests', href: '/hotel-cms/guests', icon: '◐', roles: ['ADMIN', 'USER'] },
   { nameKey: 'nav.tiers', href: '/hotel-cms/tiers', icon: '★', roles: ['ADMIN', 'USER'] },
-  { nameKey: 'nav.parking', href: '/hotel-cms/parking', icon: '⬛', roles: ['ADMIN', 'USER'] },
+  { nameKey: 'nav.parking', href: '/hotel-cms/parking', icon: '🅿', roles: ['ADMIN', 'USER'] },
   { nameKey: 'nav.maintenance', href: '/hotel-cms/maintenance', icon: '◻', roles: ['ADMIN', 'USER'] },
   { nameKey: 'nav.rentals', href: '/hotel-cms/rentals', icon: '◳', roles: ['ADMIN', 'USER'] },
   { nameKey: 'nav.users', href: '/hotel-cms/users', icon: '◑', roles: ['ADMIN'] },
@@ -67,13 +67,14 @@ export default function HotelSidebar() {
       <div className="p-6 border-b border-stone-100 dark:border-stone-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-stone-900 dark:bg-stone-700 flex items-center justify-center shadow-lg flex-shrink-0">
-              <span className="text-lime-400 font-black text-xl">H</span>
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 to-teal-700 flex items-center justify-center shadow-lg flex-shrink-0 overflow-hidden relative">
+              <div className="absolute inset-x-0 bottom-0 h-3 bg-white/10 rounded-t-full" />
+              <span className="relative z-10 text-white font-black text-2xl tracking-tight" style={{textShadow:'0 1px 4px rgba(0,0,0,0.35)'}}>M</span>
             </div>
             {!isCollapsed && (
               <div>
-                <h1 className="text-stone-900 dark:text-stone-100 font-black text-xl tracking-tight">HIREME</h1>
-                <p className="text-stone-400 text-xs tracking-widest uppercase">{t('nav.hotelCms')}</p>
+                <h1 className="text-stone-900 dark:text-stone-100 font-black text-xl tracking-tight">Manatee</h1>
+                <p className="text-teal-500 text-xs font-semibold tracking-widest uppercase">Hotel CMS</p>
               </div>
             )}
           </div>

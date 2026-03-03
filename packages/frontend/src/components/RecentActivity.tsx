@@ -10,7 +10,6 @@ interface RecentReservation {
   guestName: string | null;
   status: string;
   checkInDate: string | null;
-  roomId: string | null;
   createdAt: string | null;
 }
 
@@ -36,7 +35,7 @@ export default function RecentActivity() {
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({
-            query: `{ reservations(limit: 8) { id guestName status checkInDate roomId createdAt } }`,
+            query: `{ reservations(limit: 8) { id guestName status checkInDate createdAt } }`,
           }),
         });
         const json = await res.json();

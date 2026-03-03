@@ -82,6 +82,18 @@ const cs = {
   'stats.revenue': 'Príjmy (tento mesíc)',
   'stats.pendingBookings': 'Cekající rezervace',
   'stats.activeGuests': 'Aktivní hosté',
+  'stats.totalBookings': 'Celkem rezervací',
+  'stats.confirmedBookings': 'Potvrzené',
+  'stats.avgStay': 'Prům. pobyt (dny)',
+  // Live Status
+  'dashboard.liveStatus': 'Živý stav hotelu',
+  'dashboard.liveStatusDesc': 'Přehled provozu všech oddělení v reálném čase',
+  'dashboard.parkingStatus': 'Parkoviště',
+  'dashboard.wellnessToday': 'Wellness rezervace',
+  'dashboard.activeVouchers': 'Aktivní vouchery',
+  'dashboard.guestProfiles': 'Profily hostů',
+  'dashboard.activeRentals': 'Aktivní výpůjčky',
+  'dashboard.dirtyRooms': 'Pokoje k úklidu',
 
   // Bookings
   'bookings.title': 'Rezervace',

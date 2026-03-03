@@ -314,24 +314,41 @@ export default function VouchersPage() {
         },
       };
 
-      // Try API call
-      try {
-        const response = await fetch(GRAPHQL_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            query: `mutation($input: CreateVoucherInput!) { createVoucher(input: $input) { voucher { id } } }`,
-            variables: { input: newVoucher },
-          }),
-        });
-        const result = await response.json();
-        if (result.errors) throw new Error(result.errors[0]?.message);
-      } catch {
-        // API not available, use local state
-      }
+      const mutationInput = {
+        code: voucherForm.code || undefined,
+        hotel: newVoucher.hotel,
+        lang: newVoucher.lang,
+        price: newVoucher.price,
+        purchasePrice: newVoucher.purchasePrice,
+        currency: newVoucher.currency,
+        validity: newVoucher.validity,
+        paymentType: newVoucher.paymentType,
+        deliveryType: newVoucher.deliveryType,
+        deliveryPrice: newVoucher.deliveryPrice,
+        note: newVoucher.note || undefined,
+        format: newVoucher.format,
+        gift: newVoucher.gift || undefined,
+        giftMessage: newVoucher.giftMessage || undefined,
+        applicableInBookolo: newVoucher.applicableInBookolo,
+        isPrivateType: newVoucher.isPrivateType,
+        isFreeType: newVoucher.isFreeType,
+        customerData: newVoucher.customerData,
+        giftData: newVoucher.giftData,
+      };
 
-      setVouchers([newVoucher, ...vouchers]);
+      const response = await fetch(GRAPHQL_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          query: `mutation($input: CreateVoucherInput!) { createVoucher(input: $input) { voucher { id } } }`,
+          variables: { input: mutationInput },
+        }),
+      });
+      const result = await response.json();
+      if (result.errors) throw new Error(result.errors[0]?.message);
+
+      await fetchVouchers();
       setSuccessMessage('Voucher created successfully');
       setShowVoucherModal(false);
       resetForm();

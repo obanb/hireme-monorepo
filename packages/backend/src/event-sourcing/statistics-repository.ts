@@ -69,8 +69,8 @@ class StatisticsRepository {
         COUNT(*) FILTER (WHERE status = 'PENDING')::int AS pending_count,
         COUNT(*) FILTER (WHERE status = 'CONFIRMED')::int AS confirmed_count,
         COUNT(*) FILTER (WHERE status = 'CANCELLED')::int AS cancelled_count,
-        COALESCE(SUM(total_amount), 0)::float AS total_revenue,
-        COALESCE(AVG(total_amount), 0)::float AS average_amount,
+        COALESCE(SUM(total_price), 0)::float AS total_revenue,
+        COALESCE(AVG(total_price), 0)::float AS average_amount,
         COALESCE(AVG(
           CASE WHEN check_in_date IS NOT NULL AND check_out_date IS NOT NULL
             THEN (check_out_date - check_in_date)
@@ -105,7 +105,7 @@ class StatisticsRepository {
       `SELECT
         date_trunc($1, created_at)::date::text AS date,
         COUNT(*)::int AS count,
-        COALESCE(SUM(total_amount), 0)::float AS revenue
+        COALESCE(SUM(total_price), 0)::float AS revenue
       FROM reservations
       WHERE created_at >= $2 AND created_at <= $3
       GROUP BY date_trunc($1, created_at)
@@ -148,7 +148,7 @@ class StatisticsRepository {
 
   async getRevenueTimeline(filter?: StatisticsFilter): Promise<RevenueTimelinePoint[]> {
     const pool = getPool();
-    const conditions: string[] = ['total_amount IS NOT NULL'];
+    const conditions: string[] = ['total_price IS NOT NULL'];
     const params: unknown[] = [];
     let paramIdx = 1;
 
@@ -170,7 +170,7 @@ class StatisticsRepository {
     const result = await pool.query(
       `SELECT
         to_char(date_trunc('month', created_at), 'YYYY-MM') AS month,
-        COALESCE(SUM(total_amount), 0)::float AS revenue
+        COALESCE(SUM(total_price), 0)::float AS revenue
       FROM reservations ${where}
       GROUP BY date_trunc('month', created_at)
       ORDER BY date_trunc('month', created_at)`,
