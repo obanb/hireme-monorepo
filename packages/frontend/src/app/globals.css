@@ -1,19 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F7F4EF;
+  --foreground: #0D0E14;
+  --sidebar-bg: #FAFAF8;
+  --sidebar-border: rgba(0, 0, 0, 0.07);
+  --gold: #A8783A;
+  --gold-light: #C9A96E;
+  --surface: rgba(0, 0, 0, 0.025);
+  --surface-hover: rgba(0, 0, 0, 0.04);
+  --card-border: rgba(0, 0, 0, 0.07);
+  --text-primary: #0D0E14;
+  --text-secondary: rgba(13, 14, 20, 0.55);
+  --text-muted: rgba(13, 14, 20, 0.3);
+  --sidebar-width: 280px;
+  --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
 }
 
 .dark {
-  --background: #1c1917;
-  --foreground: #ededed;
+  --background: #0A0A0C;
+  --foreground: #EDE8E0;
+  --sidebar-bg: #0D0E14;
+  --sidebar-border: rgba(255, 255, 255, 0.05);
+  --gold: #C9A96E;
+  --gold-light: #E8C99A;
+  --surface: rgba(255, 255, 255, 0.03);
+  --surface-hover: rgba(255, 255, 255, 0.055);
+  --card-border: rgba(255, 255, 255, 0.06);
+  --text-primary: #EDE8E0;
+  --text-secondary: rgba(237, 232, 224, 0.5);
+  --text-muted: rgba(237, 232, 224, 0.25);
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
 }
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(169, 120, 58, 0.18) transparent;
+}
+
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(169, 120, 58, 0.18); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(169, 120, 58, 0.35); }
+
+.font-display { font-family: var(--font-display); }

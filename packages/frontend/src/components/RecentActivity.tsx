@@ -16,11 +16,21 @@ interface RecentReservation {
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 60) return `${mins}m`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return `${hours}h`;
   const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  return `${days}d`;
+}
+
+const STATUS_CONFIG: Record<string, { color: string; bg: string; label: string }> = {
+  CONFIRMED: { color: '#4ADE80', bg: 'rgba(74,222,128,0.1)',  label: 'Confirmed' },
+  CANCELLED: { color: '#FB7185', bg: 'rgba(251,113,133,0.1)', label: 'Cancelled' },
+  PENDING:   { color: '#FBBF24', bg: 'rgba(251,191,36,0.1)',  label: 'Pending' },
+};
+
+function getStatus(s: string) {
+  return STATUS_CONFIG[s] ?? { color: '#94A3B8', bg: 'rgba(148,163,184,0.1)', label: s };
 }
 
 export default function RecentActivity() {
@@ -46,45 +56,96 @@ export default function RecentActivity() {
     })();
   }, []);
 
-  if (items.length === 0) {
-    return (
-      <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 p-6">
-        <h2 className="text-2xl font-black text-stone-900 dark:text-stone-100 mb-4">{t('activity.title')}</h2>
-        <p className="text-stone-400 text-center py-8">{t('activity.noActivity')}</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 p-6">
-      <h2 className="text-2xl font-black text-stone-900 dark:text-stone-100 mb-4">{t('activity.title')}</h2>
-      <div className="space-y-4">
-        {items.map((r) => (
-          <div
-            key={r.id}
-            className="flex items-center gap-4 p-4 bg-stone-50 dark:bg-stone-700 rounded-2xl hover:bg-stone-100 dark:hover:bg-stone-600 transition-colors"
-          >
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-              r.status === 'CONFIRMED' ? 'bg-lime-100 text-lime-700' :
-              r.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
-              'bg-amber-100 text-amber-700'
-            }`}>
-              <span className="text-lg">
-                {r.status === 'CONFIRMED' ? '◈' : r.status === 'CANCELLED' ? '◇' : '◎'}
-              </span>
-            </div>
-            <div className="flex-1">
-              <p className="font-bold text-stone-900 dark:text-stone-100">{r.guestName || 'Unknown guest'}</p>
-              <p className="text-sm text-stone-500 dark:text-stone-400">
-                {r.status} {r.checkInDate ? `- Check-in ${r.checkInDate}` : ''}
-              </p>
-            </div>
-            <div className="text-sm text-stone-400">
-              {r.createdAt ? timeAgo(r.createdAt) : '-'}
-            </div>
-          </div>
-        ))}
+    <div
+      className="rounded-xl overflow-hidden"
+      style={{ border: '1px solid var(--card-border)' }}
+    >
+      {/* Header */}
+      <div
+        className="flex items-center justify-between px-5 py-4"
+        style={{ borderBottom: '1px solid var(--card-border)' }}
+      >
+        <h2
+          className="text-[15px] font-semibold"
+          style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
+        >
+          {t('activity.title')}
+        </h2>
+        <span
+          className="text-[10px] font-semibold uppercase tracking-[0.15em]"
+          style={{ color: 'var(--text-muted)' }}
+        >
+          Recent
+        </span>
       </div>
+
+      {/* Rows */}
+      {items.length === 0 ? (
+        <div className="py-12 text-center">
+          <p className="text-[13px]" style={{ color: 'var(--text-muted)' }}>
+            {t('activity.noActivity')}
+          </p>
+        </div>
+      ) : (
+        <div>
+          {items.map((r, i) => {
+            const st = getStatus(r.status);
+            const initials = r.guestName
+              ? r.guestName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
+              : '?';
+            return (
+              <div
+                key={r.id}
+                className="flex items-center gap-4 transition-colors"
+                style={{
+                  padding: '12px 20px',
+                  borderBottom: i < items.length - 1 ? '1px solid var(--card-border)' : 'none',
+                }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'var(--surface)')}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
+              >
+                {/* Avatar */}
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-[11px] font-bold"
+                  style={{ background: 'var(--surface-hover)', color: 'var(--text-secondary)' }}
+                >
+                  {initials}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <p
+                    className="text-[13px] font-medium leading-none mb-[3px] truncate"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    {r.guestName || 'Unknown guest'}
+                  </p>
+                  <p className="text-[11px] leading-none truncate" style={{ color: 'var(--text-muted)' }}>
+                    {r.checkInDate ? `Check-in ${r.checkInDate}` : 'No check-in date'}
+                  </p>
+                </div>
+
+                {/* Status badge */}
+                <span
+                  className="text-[10px] font-semibold uppercase tracking-[0.1em] px-2 py-1 rounded-md flex-shrink-0"
+                  style={{ color: st.color, background: st.bg }}
+                >
+                  {st.label}
+                </span>
+
+                {/* Time */}
+                <span
+                  className="text-[11px] tabular-nums flex-shrink-0 w-8 text-right"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  {r.createdAt ? timeAgo(r.createdAt) : '—'}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
