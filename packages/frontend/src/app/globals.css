@@ -54,3 +54,13 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: rgba(169, 120, 58, 0.35); }
 
 .font-display { font-family: var(--font-display); }
+
+@keyframes toast-slide-in {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes cmd-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}

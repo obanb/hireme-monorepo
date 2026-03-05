@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import HotelSidebar from '@/components/HotelSidebar';
 import { useLocale } from '@/context/LocaleContext';
+import { useToast } from '@/context/ToastContext';
+import { useConfirm } from '@/context/ConfirmContext';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:4001/graphql';
 
@@ -42,16 +44,24 @@ interface AudiencePreview {
   sampleRecipients: Array<{ email: string; name: string | null }>;
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  DRAFT: 'bg-stone-100 text-stone-600',
-  SCHEDULED: 'bg-blue-100 text-blue-700',
-  SENDING: 'bg-amber-100 text-amber-700',
-  SENT: 'bg-lime-100 text-lime-700',
-  FAILED: 'bg-red-100 text-red-700',
+const STATUS_CONFIG: Record<string, { color: string; bg: string }> = {
+  DRAFT:     { color: 'var(--text-muted)',  bg: 'rgba(160,160,140,0.1)' },
+  SCHEDULED: { color: '#60B8D4',             bg: 'rgba(96,184,212,0.1)' },
+  SENDING:   { color: '#FBBF24',             bg: 'rgba(251,191,36,0.1)' },
+  SENT:      { color: '#4ADE80',             bg: 'rgba(74,222,128,0.1)' },
+  FAILED:    { color: '#FB7185',             bg: 'rgba(251,113,133,0.1)' },
+};
+
+const inputStyle = {
+  background: 'var(--surface)',
+  border: '1px solid var(--card-border)',
+  color: 'var(--text-primary)',
 };
 
 export default function CampaignsPage() {
   const { t } = useLocale();
+  const toast = useToast();
+  const confirm = useConfirm();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,19 +71,14 @@ export default function CampaignsPage() {
   const [showStatsModal, setShowStatsModal] = useState<string | null>(null);
   const [stats, setStats] = useState<CampaignStats | null>(null);
   const [audiencePreview, setAudiencePreview] = useState<AudiencePreview | null>(null);
-  const [error, setError] = useState('');
+  const [hoveredRow, setHoveredRow] = useState<string | null>(null);
 
-  // Form state
   const [formName, setFormName] = useState('');
   const [formTemplateId, setFormTemplateId] = useState('');
   const [formRules, setFormRules] = useState({
-    checkOutFrom: '',
-    checkOutTo: '',
-    checkInFrom: '',
-    checkInTo: '',
-    status: '',
-    minAmount: '',
-    maxAmount: '',
+    checkOutFrom: '', checkOutTo: '',
+    checkInFrom: '', checkInTo: '',
+    status: '', minAmount: '', maxAmount: '',
   });
 
   const gqlFetch = useCallback(async (query: string, variables?: Record<string, unknown>) => {
@@ -93,7 +98,7 @@ export default function CampaignsPage() {
       const data = await gqlFetch(`query { campaigns { id name template { id name subject } targetingRules status scheduledAt sentAt totalRecipients totalSent totalFailed createdAt } }`);
       setCampaigns(data.campaigns);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load campaigns');
+      toast.error(err instanceof Error ? err.message : 'Failed to load campaigns');
     } finally {
       setLoading(false);
     }
@@ -103,9 +108,7 @@ export default function CampaignsPage() {
     try {
       const data = await gqlFetch(`query { emailTemplates { id name subject } }`);
       setTemplates(data.emailTemplates);
-    } catch {
-      // templates not critical for listing
-    }
+    } catch { /* not critical */ }
   }, [gqlFetch]);
 
   useEffect(() => {
@@ -114,7 +117,6 @@ export default function CampaignsPage() {
   }, [fetchCampaigns, fetchTemplates]);
 
   const handleCreateOrUpdate = async () => {
-    setError('');
     try {
       const rules: Record<string, unknown> = {};
       if (formRules.checkOutFrom) rules.checkOutFrom = formRules.checkOutFrom;
@@ -136,32 +138,34 @@ export default function CampaignsPage() {
           { input: { name: formName, templateId: formTemplateId, targetingRules: JSON.stringify(rules) } }
         );
       }
-
       setShowModal(false);
       resetForm();
       fetchCampaigns();
+      toast.success(editingCampaign ? 'Campaign updated.' : 'Campaign created.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save campaign');
+      toast.error(err instanceof Error ? err.message : 'Failed to save campaign');
     }
   };
 
   const handleSend = async (id: string) => {
-    if (!confirm('Are you sure you want to send this campaign? This action cannot be undone.')) return;
+    if (!(await confirm({ title: 'Send Campaign', message: 'Are you sure you want to send this campaign? This action cannot be undone.', confirmLabel: 'Send' }))) return;
     try {
       await gqlFetch(`mutation SendCampaign($id: ID!) { sendCampaign(id: $id) { id status } }`, { id });
       fetchCampaigns();
+      toast.success('Campaign sent.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send campaign');
+      toast.error(err instanceof Error ? err.message : 'Failed to send campaign');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this campaign?')) return;
+    if (!(await confirm({ message: 'Delete this campaign?', confirmLabel: 'Delete', danger: true }))) return;
     try {
       await gqlFetch(`mutation DeleteCampaign($id: ID!) { deleteCampaign(id: $id) }`, { id });
       fetchCampaigns();
+      toast.success('Campaign deleted.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete campaign');
+      toast.error(err instanceof Error ? err.message : 'Failed to delete campaign');
     }
   };
 
@@ -174,7 +178,7 @@ export default function CampaignsPage() {
       setStats(data.campaignStats);
       setShowStatsModal(campaignId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load stats');
+      toast.error(err instanceof Error ? err.message : 'Failed to load stats');
     }
   };
 
@@ -188,14 +192,13 @@ export default function CampaignsPage() {
       if (formRules.status) rules.status = formRules.status;
       if (formRules.minAmount) rules.minAmount = parseFloat(formRules.minAmount);
       if (formRules.maxAmount) rules.maxAmount = parseFloat(formRules.maxAmount);
-
       const data = await gqlFetch(
         `query Preview($targetingRules: String!) { previewTargetAudience(targetingRules: $targetingRules) { count sampleRecipients { email name } } }`,
         { targetingRules: JSON.stringify(rules) }
       );
       setAudiencePreview(data.previewTargetAudience);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to preview audience');
+      toast.error(err instanceof Error ? err.message : 'Failed to preview audience');
     }
   };
 
@@ -205,12 +208,9 @@ export default function CampaignsPage() {
     setFormTemplateId(campaign.template.id);
     const rules = JSON.parse(campaign.targetingRules);
     setFormRules({
-      checkOutFrom: rules.checkOutFrom || '',
-      checkOutTo: rules.checkOutTo || '',
-      checkInFrom: rules.checkInFrom || '',
-      checkInTo: rules.checkInTo || '',
-      status: rules.status || '',
-      minAmount: rules.minAmount?.toString() || '',
+      checkOutFrom: rules.checkOutFrom || '', checkOutTo: rules.checkOutTo || '',
+      checkInFrom: rules.checkInFrom || '', checkInTo: rules.checkInTo || '',
+      status: rules.status || '', minAmount: rules.minAmount?.toString() || '',
       maxAmount: rules.maxAmount?.toString() || '',
     });
     setAudiencePreview(null);
@@ -225,167 +225,210 @@ export default function CampaignsPage() {
     setAudiencePreview(null);
   };
 
-  const filtered = statusFilter
-    ? campaigns.filter((c) => c.status === statusFilter)
-    : campaigns;
+  const filtered = statusFilter ? campaigns.filter((c) => c.status === statusFilter) : campaigns;
+
+  const thStyle: React.CSSProperties = {
+    color: 'var(--text-muted)',
+    fontSize: '9px',
+    fontWeight: 600,
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+    padding: '12px 20px',
+    textAlign: 'left',
+  };
+
+  const tdStyle: React.CSSProperties = {
+    padding: '14px 20px',
+    borderTop: '1px solid var(--card-border)',
+    color: 'var(--text-secondary)',
+    fontSize: '13px',
+  };
 
   return (
-    <div className="flex min-h-screen bg-stone-50 dark:bg-stone-900">
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--background)' }}>
       <HotelSidebar />
-      <main className="flex-1 ml-72 p-8">
-        <div className="max-w-6xl mx-auto">
+      <main style={{ flex: 1, marginLeft: 'var(--sidebar-width, 280px)', padding: '32px', transition: 'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 32 }}>
             <div>
-              <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-100">{t('campaigns.title')}</h1>
-              <p className="text-stone-500 dark:text-stone-400 text-sm mt-1">{t('campaigns.subtitle')}</p>
+              <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
+                {t('campaigns.title')}
+              </h1>
+              <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>{t('campaigns.subtitle')}</p>
             </div>
-            <div className="flex gap-3">
+            <div style={{ display: 'flex', gap: 10 }}>
               <Link
                 href="/hotel-cms/campaigns/templates"
-                className="px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 text-sm font-medium hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '9px 16px', borderRadius: 10,
+                  border: '1px solid var(--card-border)',
+                  color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500,
+                  textDecoration: 'none', transition: 'border-color 0.15s',
+                }}
               >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="4" y="4" width="16" height="16" rx="2"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="14" y2="13"/>
+                </svg>
                 {t('campaigns.manageTemplates')}
               </Link>
               <button
                 onClick={() => { resetForm(); setShowModal(true); }}
-                className="px-4 py-2.5 rounded-xl bg-stone-900 text-white text-sm font-semibold hover:bg-stone-800 transition-colors"
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, background: 'var(--gold)', color: '#1a1a14', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}
               >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
                 {t('campaigns.newCampaign')}
               </button>
             </div>
           </div>
 
-          {error && (
-            <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 text-red-700 text-sm border border-red-200">
-              {error}
-              <button onClick={() => setError('')} className="ml-2 font-bold">x</button>
-            </div>
-          )}
 
-          {/* Status filters */}
-          <div className="flex gap-2 mb-6">
-            {['', 'DRAFT', 'SENT', 'SENDING', 'SCHEDULED', 'FAILED'].map((s) => (
-              <button
-                key={s}
-                onClick={() => setStatusFilter(s)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  statusFilter === s
-                    ? 'bg-stone-900 text-white'
-                    : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
-                }`}
-              >
-                {s || t('common.all')}
-              </button>
-            ))}
+          {/* Status filter tabs */}
+          <div style={{ display: 'flex', gap: 6, marginBottom: 24 }}>
+            {['', 'DRAFT', 'SENT', 'SENDING', 'SCHEDULED', 'FAILED'].map((s) => {
+              const cfg = s ? STATUS_CONFIG[s] : null;
+              const isActive = statusFilter === s;
+              return (
+                <button
+                  key={s}
+                  onClick={() => setStatusFilter(s)}
+                  style={{
+                    padding: '5px 12px', borderRadius: 8, fontSize: 11, fontWeight: 600,
+                    border: isActive ? 'none' : '1px solid var(--card-border)',
+                    background: isActive ? (cfg ? cfg.bg : 'var(--surface-hover)') : 'transparent',
+                    color: isActive ? (cfg ? cfg.color : 'var(--text-primary)') : 'var(--text-muted)',
+                    cursor: 'pointer', transition: 'all 0.15s',
+                  }}
+                >
+                  {s || t('common.all')}
+                </button>
+              );
+            })}
           </div>
 
           {/* Campaigns table */}
           {loading ? (
-            <div className="text-center py-12 text-stone-400">{t('common.loading')}</div>
+            <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-muted)' }}>{t('common.loading')}</div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-12 text-stone-400">
-              {t('campaigns.noCampaigns')}
-            </div>
+            <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-muted)' }}>{t('campaigns.noCampaigns')}</div>
           ) : (
-            <div className="bg-white dark:bg-stone-800 rounded-2xl shadow-xl shadow-stone-200/50 dark:shadow-stone-900/50 border border-stone-200 dark:border-stone-700 overflow-hidden">
-              <table className="w-full">
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--card-border)', borderRadius: 14, overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr className="border-b border-stone-100 dark:border-stone-700">
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">{t('common.name')}</th>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">{t('campaigns.template')}</th>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">{t('common.status')}</th>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">{t('campaigns.sent')}</th>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">{t('common.created')}</th>
-                    <th className="text-right px-6 py-4 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">{t('common.actions')}</th>
+                  <tr>
+                    <th style={thStyle}>{t('common.name')}</th>
+                    <th style={thStyle}>{t('campaigns.template')}</th>
+                    <th style={thStyle}>{t('common.status')}</th>
+                    <th style={thStyle}>{t('campaigns.sent')}</th>
+                    <th style={thStyle}>{t('common.created')}</th>
+                    <th style={{ ...thStyle, textAlign: 'right' }}>{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((campaign) => (
-                    <tr key={campaign.id} className="border-b border-stone-50 dark:border-stone-700 hover:bg-stone-50/50 dark:hover:bg-stone-700/50 transition-colors">
-                      <td className="px-6 py-4 text-sm font-medium text-stone-900 dark:text-stone-100">{campaign.name}</td>
-                      <td className="px-6 py-4 text-sm text-stone-600 dark:text-stone-300">{campaign.template.name}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${STATUS_COLORS[campaign.status] || 'bg-stone-100 text-stone-600'}`}>
-                          {campaign.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-stone-600 dark:text-stone-300">
-                        {campaign.totalSent > 0 ? `${campaign.totalSent}/${campaign.totalRecipients}` : '-'}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-stone-500 dark:text-stone-400">
-                        {new Date(campaign.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex gap-2 justify-end">
-                          {campaign.status === 'SENT' && (
+                  {filtered.map((campaign) => {
+                    const cfg = STATUS_CONFIG[campaign.status] || STATUS_CONFIG.DRAFT;
+                    const isHovered = hoveredRow === campaign.id;
+                    return (
+                      <tr
+                        key={campaign.id}
+                        onMouseEnter={() => setHoveredRow(campaign.id)}
+                        onMouseLeave={() => setHoveredRow(null)}
+                        style={{ background: isHovered ? 'var(--surface-hover)' : 'transparent', transition: 'background 0.15s' }}
+                      >
+                        <td style={{ ...tdStyle, color: 'var(--text-primary)', fontWeight: 500 }}>{campaign.name}</td>
+                        <td style={tdStyle}>{campaign.template.name}</td>
+                        <td style={tdStyle}>
+                          <span style={{
+                            display: 'inline-block', padding: '3px 10px', borderRadius: 6,
+                            fontSize: 11, fontWeight: 600,
+                            color: cfg.color, background: cfg.bg,
+                          }}>
+                            {campaign.status}
+                          </span>
+                        </td>
+                        <td style={tdStyle}>
+                          {campaign.totalSent > 0 ? `${campaign.totalSent}/${campaign.totalRecipients}` : '—'}
+                        </td>
+                        <td style={{ ...tdStyle, color: 'var(--text-muted)' }}>
+                          {new Date(campaign.createdAt).toLocaleDateString()}
+                        </td>
+                        <td style={{ ...tdStyle, textAlign: 'right' }}>
+                          <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                            {campaign.status === 'SENT' && (
+                              <button
+                                onClick={() => handleViewStats(campaign.id)}
+                                style={{ padding: '4px 10px', borderRadius: 7, fontSize: 11, fontWeight: 600, border: 'none', background: 'rgba(74,222,128,0.1)', color: '#4ADE80', cursor: 'pointer' }}
+                              >
+                                {t('campaigns.stats')}
+                              </button>
+                            )}
+                            {campaign.status === 'DRAFT' && (
+                              <>
+                                <button
+                                  onClick={() => openEdit(campaign)}
+                                  style={{ padding: '4px 10px', borderRadius: 7, fontSize: 11, fontWeight: 500, border: '1px solid var(--card-border)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer' }}
+                                >
+                                  {t('common.edit')}
+                                </button>
+                                <button
+                                  onClick={() => handleSend(campaign.id)}
+                                  style={{ padding: '4px 10px', borderRadius: 7, fontSize: 11, fontWeight: 600, border: 'none', background: 'var(--gold)', color: '#1a1a14', cursor: 'pointer' }}
+                                >
+                                  {t('campaigns.send')}
+                                </button>
+                              </>
+                            )}
                             <button
-                              onClick={() => handleViewStats(campaign.id)}
-                              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-lime-50 text-lime-700 hover:bg-lime-100 transition-colors"
+                              onClick={() => handleDelete(campaign.id)}
+                              style={{ padding: '4px 10px', borderRadius: 7, fontSize: 11, fontWeight: 500, border: 'none', background: 'rgba(251,113,133,0.08)', color: '#FB7185', cursor: 'pointer' }}
                             >
-                              {t('campaigns.stats')}
+                              {t('common.delete')}
                             </button>
-                          )}
-                          {campaign.status === 'DRAFT' && (
-                            <>
-                              <button
-                                onClick={() => openEdit(campaign)}
-                                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors"
-                              >
-                                {t('common.edit')}
-                              </button>
-                              <button
-                                onClick={() => handleSend(campaign.id)}
-                                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-stone-900 text-white hover:bg-stone-800 transition-colors"
-                              >
-                                {t('campaigns.send')}
-                              </button>
-                            </>
-                          )}
-                          <button
-                            onClick={() => handleDelete(campaign.id)}
-                            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
-                          >
-                            {t('common.delete')}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           )}
         </div>
 
-        {/* Create/Edit Campaign Modal */}
+        {/* Create/Edit Modal */}
         {showModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-stone-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-              <div className="p-6 border-b border-stone-100 dark:border-stone-700">
-                <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100">
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}>
+            <div style={{ background: 'var(--sidebar-bg)', borderRadius: 16, width: '100%', maxWidth: 520, maxHeight: '90vh', overflow: 'auto', border: '1px solid var(--card-border)' }}>
+              <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--card-border)' }}>
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>
                   {editingCampaign ? t('campaigns.editCampaign') : t('campaigns.newCampaign')}
                 </h2>
               </div>
 
-              <div className="p-6 space-y-4">
+              <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">{t('campaigns.campaignName')}</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 6 }}>{t('campaigns.campaignName')}</label>
                   <input
                     type="text"
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-sm text-stone-800 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10"
                     placeholder="e.g. Winter Special"
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: 9, fontSize: 13, outline: 'none', boxSizing: 'border-box', ...inputStyle }}
+                    className="focus:ring-1 focus:ring-[#C9A96E]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">{t('campaigns.template')}</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 6 }}>{t('campaigns.template')}</label>
                   <select
                     value={formTemplateId}
                     onChange={(e) => setFormTemplateId(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-sm text-stone-800 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10"
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: 9, fontSize: 13, outline: 'none', boxSizing: 'border-box', ...inputStyle }}
+                    className="focus:ring-1 focus:ring-[#C9A96E]"
                   >
                     <option value="">{t('campaigns.selectTemplate')}</option>
                     {templates.map((tpl) => (
@@ -394,28 +437,32 @@ export default function CampaignsPage() {
                   </select>
                 </div>
 
-                <div className="border-t border-stone-100 dark:border-stone-700 pt-4">
-                  <h3 className="text-sm font-semibold text-stone-700 dark:text-stone-300 mb-3">{t('campaigns.targetingRules')}</h3>
-                  <div className="grid grid-cols-2 gap-3">
+                <div style={{ borderTop: '1px solid var(--card-border)', paddingTop: 16 }}>
+                  <h3 style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('campaigns.targetingRules')}</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    {[
+                      { label: t('filters.checkOutFrom'), key: 'checkOutFrom' },
+                      { label: t('filters.checkOutTo'), key: 'checkOutTo' },
+                      { label: t('filters.checkInFrom'), key: 'checkInFrom' },
+                      { label: t('filters.checkInTo'), key: 'checkInTo' },
+                    ].map(({ label, key }) => (
+                      <div key={key}>
+                        <label style={{ display: 'block', fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>{label}</label>
+                        <input
+                          type="date"
+                          value={formRules[key as keyof typeof formRules]}
+                          onChange={(e) => setFormRules({ ...formRules, [key]: e.target.value })}
+                          style={{ width: '100%', padding: '7px 10px', borderRadius: 8, fontSize: 12, outline: 'none', boxSizing: 'border-box', ...inputStyle }}
+                        />
+                      </div>
+                    ))}
                     <div>
-                      <label className="block text-xs text-stone-500 dark:text-stone-400 mb-1">{t('filters.checkOutFrom')}</label>
-                      <input type="date" value={formRules.checkOutFrom} onChange={(e) => setFormRules({ ...formRules, checkOutFrom: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100" />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-stone-500 dark:text-stone-400 mb-1">{t('filters.checkOutTo')}</label>
-                      <input type="date" value={formRules.checkOutTo} onChange={(e) => setFormRules({ ...formRules, checkOutTo: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100" />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-stone-500 dark:text-stone-400 mb-1">{t('filters.checkInFrom')}</label>
-                      <input type="date" value={formRules.checkInFrom} onChange={(e) => setFormRules({ ...formRules, checkInFrom: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100" />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-stone-500 dark:text-stone-400 mb-1">{t('filters.checkInTo')}</label>
-                      <input type="date" value={formRules.checkInTo} onChange={(e) => setFormRules({ ...formRules, checkInTo: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100" />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-stone-500 dark:text-stone-400 mb-1">{t('common.status')}</label>
-                      <select value={formRules.status} onChange={(e) => setFormRules({ ...formRules, status: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100">
+                      <label style={{ display: 'block', fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>{t('common.status')}</label>
+                      <select
+                        value={formRules.status}
+                        onChange={(e) => setFormRules({ ...formRules, status: e.target.value })}
+                        style={{ width: '100%', padding: '7px 10px', borderRadius: 8, fontSize: 12, outline: 'none', boxSizing: 'border-box', ...inputStyle }}
+                      >
                         <option value="">{t('common.all')}</option>
                         <option value="PENDING">Pending</option>
                         <option value="CONFIRMED">Confirmed</option>
@@ -423,25 +470,32 @@ export default function CampaignsPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs text-stone-500 dark:text-stone-400 mb-1">{t('campaigns.minAmount')}</label>
-                      <input type="number" value={formRules.minAmount} onChange={(e) => setFormRules({ ...formRules, minAmount: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100" />
+                      <label style={{ display: 'block', fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>{t('campaigns.minAmount')}</label>
+                      <input
+                        type="number"
+                        value={formRules.minAmount}
+                        onChange={(e) => setFormRules({ ...formRules, minAmount: e.target.value })}
+                        style={{ width: '100%', padding: '7px 10px', borderRadius: 8, fontSize: 12, outline: 'none', boxSizing: 'border-box', ...inputStyle }}
+                      />
                     </div>
                   </div>
 
                   <button
                     onClick={handlePreviewAudience}
-                    className="mt-3 px-4 py-2 rounded-lg text-xs font-medium bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors"
+                    style={{ marginTop: 12, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 500, border: '1px solid var(--card-border)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer' }}
                   >
                     {t('campaigns.previewAudience')}
                   </button>
 
                   {audiencePreview && (
-                    <div className="mt-3 p-3 rounded-lg bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700">
-                      <p className="text-sm font-medium text-stone-700 dark:text-stone-300">{audiencePreview.count} {t('campaigns.recipientsMatch')}</p>
+                    <div style={{ marginTop: 12, padding: 12, borderRadius: 9, background: 'rgba(96,184,212,0.06)', border: '1px solid rgba(96,184,212,0.2)' }}>
+                      <p style={{ fontSize: 13, fontWeight: 500, color: '#60B8D4', marginBottom: 4 }}>
+                        {audiencePreview.count} {t('campaigns.recipientsMatch')}
+                      </p>
                       {audiencePreview.sampleRecipients.length > 0 && (
-                        <ul className="mt-2 text-xs text-stone-500 dark:text-stone-400 space-y-1">
+                        <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 2 }}>
                           {audiencePreview.sampleRecipients.map((r, i) => (
-                            <li key={i}>{r.email} {r.name ? `(${r.name})` : ''}</li>
+                            <li key={i} style={{ fontSize: 11, color: 'var(--text-muted)' }}>{r.email} {r.name ? `(${r.name})` : ''}</li>
                           ))}
                         </ul>
                       )}
@@ -450,17 +504,17 @@ export default function CampaignsPage() {
                 </div>
               </div>
 
-              <div className="p-6 border-t border-stone-100 dark:border-stone-700 flex gap-3 justify-end">
+              <div style={{ padding: '16px 24px', borderTop: '1px solid var(--card-border)', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
                 <button
                   onClick={() => { setShowModal(false); resetForm(); }}
-                  className="px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 text-sm font-medium hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors"
+                  style={{ padding: '9px 18px', borderRadius: 9, border: '1px solid var(--card-border)', background: 'transparent', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
                 >
                   {t('common.cancel')}
                 </button>
                 <button
                   onClick={handleCreateOrUpdate}
                   disabled={!formName || !formTemplateId}
-                  className="px-4 py-2.5 rounded-xl bg-stone-900 text-white text-sm font-semibold hover:bg-stone-800 transition-colors disabled:opacity-50"
+                  style={{ padding: '9px 18px', borderRadius: 9, border: 'none', background: 'var(--gold)', color: '#1a1a14', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: (!formName || !formTemplateId) ? 0.5 : 1 }}
                 >
                   {editingCampaign ? t('campaigns.saveChanges') : t('campaigns.createCampaign')}
                 </button>
@@ -471,43 +525,35 @@ export default function CampaignsPage() {
 
         {/* Stats Modal */}
         {showStatsModal && stats && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-stone-800 rounded-2xl shadow-2xl w-full max-w-md">
-              <div className="p-6 border-b border-stone-100 dark:border-stone-700">
-                <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100">{t('campaigns.campaignStats')}</h2>
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}>
+            <div style={{ background: 'var(--sidebar-bg)', borderRadius: 16, width: '100%', maxWidth: 420, border: '1px solid var(--card-border)' }}>
+              <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--card-border)' }}>
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>{t('campaigns.campaignStats')}</h2>
               </div>
-              <div className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl bg-stone-50 dark:bg-stone-900">
-                    <p className="text-xs text-stone-500 dark:text-stone-400">{t('campaigns.recipients')}</p>
-                    <p className="text-2xl font-bold text-stone-900 dark:text-stone-100">{stats.totalRecipients}</p>
+              <div style={{ padding: 24, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                {[
+                  { label: t('campaigns.recipients'), value: stats.totalRecipients, color: 'var(--text-primary)', bg: 'var(--background)' },
+                  { label: t('campaigns.sent'), value: stats.totalSent, color: '#4ADE80', bg: 'rgba(74,222,128,0.08)' },
+                  { label: t('campaigns.opened'), value: stats.totalOpened, sub: `${(stats.openRate * 100).toFixed(1)}%`, color: '#60B8D4', bg: 'rgba(96,184,212,0.08)' },
+                  { label: t('campaigns.clicked'), value: stats.totalClicked, sub: `${(stats.clickRate * 100).toFixed(1)}%`, color: '#A78BFA', bg: 'rgba(167,139,250,0.08)' },
+                ].map(({ label, value, sub, color, bg }) => (
+                  <div key={label} style={{ padding: 16, borderRadius: 10, background: bg, border: '1px solid var(--card-border)' }}>
+                    <p style={{ fontSize: 11, color, marginBottom: 4 }}>{label}</p>
+                    <p style={{ fontSize: 24, fontWeight: 700, color }}>{value}</p>
+                    {sub && <p style={{ fontSize: 11, color, opacity: 0.7, marginTop: 2 }}>{sub}</p>}
                   </div>
-                  <div className="p-4 rounded-xl bg-lime-50">
-                    <p className="text-xs text-lime-600">{t('campaigns.sent')}</p>
-                    <p className="text-2xl font-bold text-lime-700">{stats.totalSent}</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-blue-50">
-                    <p className="text-xs text-blue-600">{t('campaigns.opened')}</p>
-                    <p className="text-2xl font-bold text-blue-700">{stats.totalOpened}</p>
-                    <p className="text-xs text-blue-500 mt-1">{(stats.openRate * 100).toFixed(1)}%</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-violet-50">
-                    <p className="text-xs text-violet-600">{t('campaigns.clicked')}</p>
-                    <p className="text-2xl font-bold text-violet-700">{stats.totalClicked}</p>
-                    <p className="text-xs text-violet-500 mt-1">{(stats.clickRate * 100).toFixed(1)}%</p>
-                  </div>
-                </div>
+                ))}
                 {stats.totalFailed > 0 && (
-                  <div className="p-4 rounded-xl bg-red-50">
-                    <p className="text-xs text-red-600">{t('campaigns.failed')}</p>
-                    <p className="text-2xl font-bold text-red-700">{stats.totalFailed}</p>
+                  <div style={{ gridColumn: '1/-1', padding: 16, borderRadius: 10, background: 'rgba(251,113,133,0.08)', border: '1px solid rgba(251,113,133,0.2)' }}>
+                    <p style={{ fontSize: 11, color: '#FB7185', marginBottom: 4 }}>{t('campaigns.failed')}</p>
+                    <p style={{ fontSize: 24, fontWeight: 700, color: '#FB7185' }}>{stats.totalFailed}</p>
                   </div>
                 )}
               </div>
-              <div className="p-6 border-t border-stone-100 dark:border-stone-700 flex justify-end">
+              <div style={{ padding: '16px 24px', borderTop: '1px solid var(--card-border)', display: 'flex', justifyContent: 'flex-end' }}>
                 <button
                   onClick={() => { setShowStatsModal(null); setStats(null); }}
-                  className="px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 text-sm font-medium hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors"
+                  style={{ padding: '9px 18px', borderRadius: 9, border: '1px solid var(--card-border)', background: 'transparent', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
                 >
                   {t('common.close')}
                 </button>

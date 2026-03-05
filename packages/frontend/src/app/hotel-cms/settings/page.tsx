@@ -45,79 +45,137 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-stone-50 dark:bg-stone-900">
+    <div className="flex min-h-screen" style={{ background: 'var(--background)' }}>
       <HotelSidebar />
-      <main className="flex-1 ml-72 p-8">
-        <div className="max-w-2xl">
-          <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-100 mb-2">{t('settings.title')}</h1>
-          <p className="text-stone-600 dark:text-stone-300 mb-8">{t('settings.subtitle')}</p>
+      <main
+        className="flex-1 px-8 py-8"
+        style={{ marginLeft: 'var(--sidebar-width, 280px)', transition: 'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)' }}
+      >
+        <div className="max-w-[600px]">
+          {/* Header */}
+          <h1
+            style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
+            className="text-[2.75rem] font-bold tracking-tight mb-1"
+          >
+            {t('settings.title')}
+          </h1>
+          <p style={{ color: 'var(--text-muted)' }} className="text-[11px] mb-8">
+            {t('settings.subtitle')}
+          </p>
 
           {/* Profile Info */}
-          <div className="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-6 mb-6">
-            <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100 mb-4">{t('settings.accountInfo')}</h2>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between py-2 border-b border-stone-100 dark:border-stone-700">
-                <span className="text-sm text-stone-500 dark:text-stone-400">{t('common.name')}</span>
-                <span className="text-sm font-medium text-stone-900 dark:text-stone-100">{user?.name}</span>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b border-stone-100 dark:border-stone-700">
-                <span className="text-sm text-stone-500 dark:text-stone-400">{t('common.email')}</span>
-                <span className="text-sm font-medium text-stone-900 dark:text-stone-100">{user?.email}</span>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b border-stone-100 dark:border-stone-700">
-                <span className="text-sm text-stone-500 dark:text-stone-400">{t('users.role')}</span>
-                <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-stone-100 dark:bg-stone-700 text-stone-700 dark:text-stone-300">{user?.role}</span>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span className="text-sm text-stone-500 dark:text-stone-400">Email verified</span>
-                <span className={`text-xs font-medium px-2.5 py-1 rounded-lg ${user?.emailVerified ? 'bg-lime-100 text-lime-700' : 'bg-amber-100 text-amber-700'}`}>
-                  {user?.emailVerified ? 'Verified' : 'Not verified'}
-                </span>
-              </div>
+          <div
+            style={{ background: 'var(--surface)', border: '1px solid var(--card-border)' }}
+            className="rounded-xl p-6 mb-5"
+          >
+            <h2
+              style={{ color: 'var(--text-primary)' }}
+              className="text-[18px] font-semibold leading-none mb-5"
+            >
+              {t('settings.accountInfo')}
+            </h2>
+            <div className="space-y-0">
+              {[
+                { label: t('common.name'), value: user?.name },
+                { label: t('common.email'), value: user?.email },
+                { label: t('users.role'), value: user?.role },
+                {
+                  label: 'Email verified',
+                  value: (
+                    <span
+                      style={{
+                        color: user?.emailVerified ? '#4ADE80' : '#FBBF24',
+                        background: user?.emailVerified ? 'rgba(74,222,128,0.10)' : 'rgba(251,191,36,0.10)',
+                      }}
+                      className="text-[10px] font-semibold uppercase tracking-[0.1em] px-2 py-1 rounded-md"
+                    >
+                      {user?.emailVerified ? 'Verified' : 'Not verified'}
+                    </span>
+                  ),
+                },
+              ].map((row, i) => (
+                <div
+                  key={i}
+                  style={{ borderBottom: i < 3 ? '1px solid var(--card-border)' : 'none' }}
+                  className="flex items-center justify-between py-3"
+                >
+                  <span style={{ color: 'var(--text-muted)' }} className="text-[12px]">
+                    {row.label}
+                  </span>
+                  {typeof row.value === 'string' ? (
+                    <span style={{ color: 'var(--text-primary)' }} className="text-[13px] font-medium">
+                      {row.value}
+                    </span>
+                  ) : (
+                    row.value
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
           {/* Change Password */}
-          <div className="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-6">
-            <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100 mb-4">{t('settings.changePassword')}</h2>
+          <div
+            style={{ background: 'var(--surface)', border: '1px solid var(--card-border)' }}
+            className="rounded-xl p-6"
+          >
+            <h2
+              style={{ color: 'var(--text-primary)' }}
+              className="text-[18px] font-semibold leading-none mb-5"
+            >
+              {t('settings.changePassword')}
+            </h2>
 
             {message && (
-              <div className="mb-4 px-4 py-3 rounded-xl bg-lime-50 text-lime-700 text-sm border border-lime-200">
+              <div
+                style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.20)', color: '#4ADE80' }}
+                className="px-4 py-3 rounded-md text-[13px] mb-4"
+              >
                 {message}
               </div>
             )}
             {error && (
-              <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 text-red-700 text-sm border border-red-200">
+              <div
+                style={{ background: 'rgba(251,113,133,0.08)', border: '1px solid rgba(251,113,133,0.20)', color: '#FB7185' }}
+                className="px-4 py-3 rounded-md text-[13px] mb-4"
+              >
                 {error}
               </div>
             )}
 
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">{t('settings.currentPassword')}</label>
+                <label style={{ color: 'var(--text-secondary)' }} className="block text-[11px] font-semibold tracking-[0.08em] uppercase mb-1.5">
+                  {t('settings.currentPassword')}
+                </label>
                 <input
                   type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   required
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-sm text-stone-800 dark:text-stone-100 dark:bg-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-300"
+                  className="w-full px-3 py-2.5 rounded-md text-[13px] outline-none focus:ring-1 focus:ring-[#C9A96E]"
+                  style={{ background: 'var(--surface)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' }}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">{t('settings.newPassword')}</label>
+                <label style={{ color: 'var(--text-secondary)' }} className="block text-[11px] font-semibold tracking-[0.08em] uppercase mb-1.5">
+                  {t('settings.newPassword')}
+                </label>
                 <input
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-sm text-stone-800 dark:text-stone-100 dark:bg-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-300"
+                  className="w-full px-3 py-2.5 rounded-md text-[13px] outline-none focus:ring-1 focus:ring-[#C9A96E]"
+                  style={{ background: 'var(--surface)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' }}
                 />
               </div>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2.5 rounded-xl bg-stone-900 text-white font-medium text-sm hover:bg-stone-800 transition-colors disabled:opacity-50"
+                style={{ background: 'var(--gold)', color: 'var(--background)' }}
+                className="px-5 py-2.5 text-[13px] font-semibold rounded-md hover:opacity-90 transition-opacity disabled:opacity-50"
               >
                 {loading ? t('settings.changing') : t('settings.updatePassword')}
               </button>

@@ -97,10 +97,23 @@ type AssignRoomsResult {
   events: [StoredEvent!]!
 }
 
+type ActivityEvent {
+  id: Int!
+  streamId: String!
+  version: Int!
+  type: String!
+  data: String!
+  metadata: String
+  occurredAt: String!
+  guestName: String
+}
+
 extend type Query {
   reservation(id: ID!): Reservation
   reservations(filter: ReservationFilterInput, limit: Int, offset: Int): [Reservation!]!
   reservationEventHistory(id: ID!): [StoredEvent!]!
+  recentActivity(limit: Int): [ActivityEvent!]!
+  guestActivity(email: String!, limit: Int): [ActivityEvent!]!
 }
 
 extend type Mutation {

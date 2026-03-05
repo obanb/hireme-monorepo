@@ -4,27 +4,13 @@ import { useState, useEffect, useCallback } from 'react';
 import HotelSidebar from '@/components/HotelSidebar';
 import { useLocale } from '@/context/LocaleContext';
 
-interface RoomType {
-  id: string;
-  code: string;
-  name: string;
-  isActive: boolean;
-  version: number;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-interface RoomTypeFormData {
-  code: string;
-  name: string;
-}
+interface RoomType { id: string; code: string; name: string; isActive: boolean; version: number; createdAt?: string; updatedAt?: string; }
+interface RoomTypeFormData { code: string; name: string; }
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:4001/graphql';
-
-const emptyFormData: RoomTypeFormData = {
-  code: '',
-  name: '',
-};
+const emptyFormData: RoomTypeFormData = { code: '', name: '' };
+const mainStyle = { marginLeft: 'var(--sidebar-width, 280px)', transition: 'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)' };
+const inputStyle = { background: 'var(--surface)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' };
 
 export default function RoomTypesPage() {
   const { t } = useLocale();
@@ -32,435 +18,160 @@ export default function RoomTypesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  // Filter state
   const [includeInactive, setIncludeInactive] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRoomType, setEditingRoomType] = useState<RoomType | null>(null);
   const [formData, setFormData] = useState<RoomTypeFormData>(emptyFormData);
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
-  // Delete confirmation
   const [deleteConfirm, setDeleteConfirm] = useState<RoomType | null>(null);
 
   const fetchRoomTypes = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(GRAPHQL_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          query: `
-            query ListRoomTypes($includeInactive: Boolean) {
-              roomTypes(includeInactive: $includeInactive) {
-                id
-                code
-                name
-                isActive
-                version
-                createdAt
-                updatedAt
-              }
-            }
-          `,
-          variables: { includeInactive },
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.errors) {
-        throw new Error(result.errors[0]?.message ?? 'Failed to fetch room types');
-      }
-
-      setRoomTypes(result.data?.roomTypes ?? []);
+      const res = await fetch(GRAPHQL_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ query: `query($includeInactive:Boolean){roomTypes(includeInactive:$includeInactive){id code name isActive version createdAt updatedAt}}`, variables: { includeInactive } }) });
+      const json = await res.json();
+      if (json.errors) throw new Error(json.errors[0]?.message);
+      setRoomTypes(json.data?.roomTypes ?? []);
       setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch room types');
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { setError(err instanceof Error ? err.message : 'Failed'); }
+    finally { setLoading(false); }
   }, [includeInactive]);
 
-  useEffect(() => {
-    fetchRoomTypes();
-  }, [fetchRoomTypes]);
+  useEffect(() => { fetchRoomTypes(); }, [fetchRoomTypes]);
+  useEffect(() => { if (successMessage) { const t = setTimeout(() => setSuccessMessage(null), 3000); return () => clearTimeout(t); } }, [successMessage]);
 
-  // Clear success message after 3 seconds
-  useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage]);
+  const filteredRoomTypes = roomTypes.filter(rt => !searchQuery || rt.code.toLowerCase().includes(searchQuery.toLowerCase()) || rt.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  const filteredRoomTypes = roomTypes.filter((roomType) => {
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return (
-        roomType.code.toLowerCase().includes(query) ||
-        roomType.name.toLowerCase().includes(query)
-      );
-    }
-    return true;
-  });
-
-  const openCreateModal = () => {
-    setEditingRoomType(null);
-    setFormData(emptyFormData);
-    setFormError(null);
-    setIsModalOpen(true);
-  };
-
-  const openEditModal = (roomType: RoomType) => {
-    setEditingRoomType(roomType);
-    setFormData({
-      code: roomType.code,
-      name: roomType.name,
-    });
-    setFormError(null);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setEditingRoomType(null);
-    setFormData(emptyFormData);
-    setFormError(null);
-  };
+  const openCreateModal = () => { setEditingRoomType(null); setFormData(emptyFormData); setFormError(null); setIsModalOpen(true); };
+  const openEditModal = (rt: RoomType) => { setEditingRoomType(rt); setFormData({ code: rt.code, name: rt.name }); setFormError(null); setIsModalOpen(true); };
+  const closeModal = () => { setIsModalOpen(false); setEditingRoomType(null); setFormData(emptyFormData); setFormError(null); };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError(null);
-    setSaving(true);
-
+    e.preventDefault(); setFormError(null); setSaving(true);
     try {
-      if (editingRoomType) {
-        // Update existing room type
-        const response = await fetch(GRAPHQL_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query: `
-              mutation UpdateRoomType($id: ID!, $input: UpdateRoomTypeInput!) {
-                updateRoomType(id: $id, input: $input) {
-                  roomType {
-                    id
-                    code
-                    name
-                    isActive
-                    version
-                  }
-                }
-              }
-            `,
-            variables: {
-              id: editingRoomType.id,
-              input: {
-                code: formData.code,
-                name: formData.name,
-              },
-            },
-          }),
-        });
-
-        const result = await response.json();
-
-        if (result.errors) {
-          throw new Error(result.errors[0]?.message ?? 'Failed to update room type');
-        }
-
-        setSuccessMessage(`Room type "${formData.name}" updated successfully`);
-      } else {
-        // Create new room type
-        const response = await fetch(GRAPHQL_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query: `
-              mutation CreateRoomType($input: CreateRoomTypeInput!) {
-                createRoomType(input: $input) {
-                  roomType {
-                    id
-                    code
-                    name
-                    isActive
-                    version
-                  }
-                }
-              }
-            `,
-            variables: {
-              input: {
-                code: formData.code,
-                name: formData.name,
-              },
-            },
-          }),
-        });
-
-        const result = await response.json();
-
-        if (result.errors) {
-          throw new Error(result.errors[0]?.message ?? 'Failed to create room type');
-        }
-
-        setSuccessMessage(`Room type "${formData.name}" created successfully`);
-      }
-
-      closeModal();
-      fetchRoomTypes();
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Failed to save room type');
-    } finally {
-      setSaving(false);
-    }
+      const query = editingRoomType
+        ? `mutation($id:ID!,$input:UpdateRoomTypeInput!){updateRoomType(id:$id,input:$input){roomType{id code name isActive version}}}`
+        : `mutation($input:CreateRoomTypeInput!){createRoomType(input:$input){roomType{id code name isActive version}}}`;
+      const variables = editingRoomType ? { id: editingRoomType.id, input: { code: formData.code, name: formData.name } } : { input: { code: formData.code, name: formData.name } };
+      const res = await fetch(GRAPHQL_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query, variables }) });
+      const json = await res.json();
+      if (json.errors) throw new Error(json.errors[0]?.message);
+      setSuccessMessage(`Room type "${formData.name}" ${editingRoomType ? 'updated' : 'created'}`);
+      closeModal(); fetchRoomTypes();
+    } catch (err) { setFormError(err instanceof Error ? err.message : 'Failed'); }
+    finally { setSaving(false); }
   };
 
-  const handleDelete = async (roomType: RoomType) => {
+  const handleDelete = async (rt: RoomType) => {
     setSaving(true);
     try {
-      const response = await fetch(GRAPHQL_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          query: `
-            mutation DeleteRoomType($id: ID!) {
-              deleteRoomType(id: $id) {
-                success
-              }
-            }
-          `,
-          variables: { id: roomType.id },
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.errors) {
-        throw new Error(result.errors[0]?.message ?? 'Failed to delete room type');
-      }
-
-      setSuccessMessage(`Room type "${roomType.name}" deactivated successfully`);
-      setDeleteConfirm(null);
-      fetchRoomTypes();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete room type');
-    } finally {
-      setSaving(false);
-    }
+      const res = await fetch(GRAPHQL_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ query: `mutation($id:ID!){deleteRoomType(id:$id){success}}`, variables: { id: rt.id } }) });
+      const json = await res.json();
+      if (json.errors) throw new Error(json.errors[0]?.message);
+      setSuccessMessage(`"${rt.name}" deactivated`); setDeleteConfirm(null); fetchRoomTypes();
+    } catch (err) { setError(err instanceof Error ? err.message : 'Failed'); }
+    finally { setSaving(false); }
   };
 
-  const handleReactivate = async (roomType: RoomType) => {
+  const handleReactivate = async (rt: RoomType) => {
     setSaving(true);
     try {
-      const response = await fetch(GRAPHQL_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          query: `
-            mutation UpdateRoomType($id: ID!, $input: UpdateRoomTypeInput!) {
-              updateRoomType(id: $id, input: $input) {
-                roomType {
-                  id
-                  isActive
-                }
-              }
-            }
-          `,
-          variables: {
-            id: roomType.id,
-            input: { isActive: true },
-          },
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.errors) {
-        throw new Error(result.errors[0]?.message ?? 'Failed to reactivate room type');
-      }
-
-      setSuccessMessage(`Room type "${roomType.name}" reactivated successfully`);
-      fetchRoomTypes();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to reactivate room type');
-    } finally {
-      setSaving(false);
-    }
+      const res = await fetch(GRAPHQL_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ query: `mutation($id:ID!,$input:UpdateRoomTypeInput!){updateRoomType(id:$id,input:$input){roomType{id isActive}}}`, variables: { id: rt.id, input: { isActive: true } } }) });
+      const json = await res.json();
+      if (json.errors) throw new Error(json.errors[0]?.message);
+      setSuccessMessage(`"${rt.name}" reactivated`); fetchRoomTypes();
+    } catch (err) { setError(err instanceof Error ? err.message : 'Failed'); }
+    finally { setSaving(false); }
   };
+
+  const thStyle = { color: 'var(--text-muted)', borderBottom: '1px solid var(--card-border)', fontSize: 9, fontWeight: 600, letterSpacing: '0.2em', textTransform: 'uppercase' as const };
 
   return (
-    <div className="flex min-h-screen bg-stone-100 dark:bg-stone-900">
+    <div className="flex min-h-screen" style={{ background: 'var(--background)' }}>
       <HotelSidebar />
-      <main className="flex-1 ml-72 p-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Page Header */}
-          <div className="flex items-center justify-between mb-8">
+      <main className="flex-1 px-8 py-8" style={mainStyle}>
+        <div className="max-w-[1380px] mx-auto">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-8">
             <div>
-              <h1 className="text-4xl font-black text-stone-900 dark:text-stone-100 mb-2">{t('roomTypes.title')}</h1>
-              <p className="text-stone-500 dark:text-stone-400">{t('roomTypes.subtitle')}</p>
+              <h1 style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }} className="text-[2.75rem] font-bold tracking-tight mb-1">{t('roomTypes.title')}</h1>
+              <p style={{ color: 'var(--text-muted)' }} className="text-[11px]">{t('roomTypes.subtitle')}</p>
             </div>
-            <button
-              onClick={openCreateModal}
-              className="px-4 py-2 bg-stone-900 text-white rounded-xl hover:bg-stone-800 transition-colors text-sm font-bold flex items-center gap-2"
-            >
-              <span className="text-lime-400">+</span> {t('roomTypes.addRoomType')}
+            <button onClick={openCreateModal} style={{ background: 'var(--gold)', color: 'var(--background)' }} className="px-4 py-2 text-[12.5px] font-semibold rounded-md hover:opacity-90 flex items-center gap-2">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" /><line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" /></svg>
+              {t('roomTypes.addRoomType')}
             </button>
           </div>
 
-          {/* Success Message */}
+          {/* Alerts */}
           {successMessage && (
-            <div className="mb-6 p-4 bg-lime-50 border-2 border-lime-200 rounded-2xl text-lime-700 flex items-center justify-between">
-              <span>{successMessage}</span>
-              <button onClick={() => setSuccessMessage(null)} className="text-lime-500 hover:text-lime-700">
-                &times;
-              </button>
+            <div style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.25)', color: '#4ADE80' }} className="px-4 py-3 rounded-md text-[13px] mb-5 flex items-center justify-between">
+              <span>{successMessage}</span><button onClick={() => setSuccessMessage(null)} className="opacity-70 hover:opacity-100 text-lg">&times;</button>
             </div>
           )}
-
-          {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-2xl text-red-700 flex items-center justify-between">
-              <span>{error}</span>
-              <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">
-                &times;
-              </button>
+            <div style={{ background: 'rgba(251,113,133,0.08)', border: '1px solid rgba(251,113,133,0.20)', color: '#FB7185' }} className="px-4 py-3 rounded-md text-[13px] mb-5 flex items-center justify-between">
+              <span>{error}</span><button onClick={() => setError(null)} className="opacity-70 hover:opacity-100 text-lg">&times;</button>
             </div>
           )}
 
           {/* Filters */}
-          <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 p-4 mb-6">
-            <div className="flex flex-wrap gap-4 items-center">
-              {/* Search */}
-              <div className="flex-1 min-w-[200px]">
-                <input
-                  type="text"
-                  placeholder={t('roomTypes.searchPlaceholder')}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 dark:bg-stone-800 dark:text-stone-100"
-                />
-              </div>
-
-              {/* Include Inactive Toggle */}
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={includeInactive}
-                  onChange={(e) => setIncludeInactive(e.target.checked)}
-                  className="w-4 h-4 text-lime-600 rounded focus:ring-lime-400"
-                />
-                <span className="text-sm text-stone-700 dark:text-stone-300 font-medium">{t('roomTypes.showInactive')}</span>
-              </label>
-
-              {/* Refresh */}
-              <button
-                onClick={fetchRoomTypes}
-                disabled={loading}
-                className="px-4 py-2 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-xl transition-colors flex items-center gap-2 font-medium"
-              >
-                <span className={loading ? 'animate-spin' : ''}>&#x21bb;</span>
-                {t('common.refresh')}
-              </button>
-            </div>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--card-border)' }} className="rounded-xl p-4 mb-5 flex flex-wrap items-center gap-4">
+            <input type="text" placeholder={t('roomTypes.searchPlaceholder')} value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+              className="flex-1 min-w-[200px] px-3 py-1.5 rounded-md text-[12px] outline-none focus:ring-1 focus:ring-[#C9A96E]" style={inputStyle} />
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={includeInactive} onChange={e => setIncludeInactive(e.target.checked)} className="w-4 h-4 accent-[#C9A96E] rounded" />
+              <span style={{ color: 'var(--text-secondary)' }} className="text-[12px] font-medium">{t('roomTypes.showInactive')}</span>
+            </label>
+            <button onClick={fetchRoomTypes} disabled={loading} style={{ color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }}
+              className="px-3 py-1.5 rounded-md text-[12px] font-medium hover:opacity-80 disabled:opacity-50 flex items-center gap-1.5">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={loading ? 'animate-spin' : ''}><path d="M23 4v6h-6M1 20v-6h6" strokeLinecap="round" strokeLinejoin="round" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              {t('common.refresh')}
+            </button>
           </div>
 
-          {/* Room Types Table */}
-          <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 overflow-hidden">
+          {/* Table */}
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--card-border)' }} className="rounded-xl overflow-hidden">
             {loading ? (
-              <div className="p-12 text-center text-stone-500 dark:text-stone-400">
-                <div className="animate-pulse">{t('roomTypes.loadingRoomTypes')}</div>
-              </div>
+              <div className="flex items-center justify-center h-48"><div className="animate-spin w-8 h-8 rounded-full border-2" style={{ borderColor: 'var(--card-border)', borderTopColor: 'var(--gold)' }} /></div>
             ) : filteredRoomTypes.length === 0 ? (
-              <div className="p-12 text-center text-stone-500 dark:text-stone-400">
-                <div className="text-4xl mb-4">&#9703;</div>
-                <p className="text-lg font-bold">{t('roomTypes.noRoomTypes')}</p>
-                <p className="text-sm mt-1">
-                  {roomTypes.length === 0
-                    ? t('roomTypes.createFirst')
-                    : t('common.tryAdjusting')}
-                </p>
-                {roomTypes.length === 0 && (
-                  <button
-                    onClick={openCreateModal}
-                    className="mt-4 px-4 py-2 bg-stone-900 text-white rounded-xl hover:bg-stone-800 font-bold"
-                  >
-                    {t('roomTypes.addFirst')}
-                  </button>
-                )}
+              <div className="p-16 text-center">
+                <p style={{ color: 'var(--text-primary)' }} className="text-[17px] font-semibold mb-2">{t('roomTypes.noRoomTypes')}</p>
+                <p style={{ color: 'var(--text-muted)' }} className="text-[13px] mb-5">{roomTypes.length === 0 ? t('roomTypes.createFirst') : t('common.tryAdjusting')}</p>
+                {roomTypes.length === 0 && <button onClick={openCreateModal} style={{ background: 'var(--gold)', color: 'var(--background)' }} className="px-5 py-2 rounded-md text-[12.5px] font-semibold hover:opacity-90">{t('roomTypes.addFirst')}</button>}
               </div>
             ) : (
               <table className="w-full">
-                <thead className="bg-stone-50 dark:bg-stone-700 border-b border-stone-200 dark:border-stone-700">
+                <thead>
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
-                      {t('common.code')}
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
-                      {t('common.name')}
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
-                      {t('common.status')}
-                    </th>
-                    <th className="px-6 py-4 text-right text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
-                      {t('common.actions')}
-                    </th>
+                    {[t('common.code'), t('common.name'), t('common.status'), t('common.actions')].map((h, i) => (
+                      <th key={h} className="px-6 py-4 text-left" style={{ ...thStyle, textAlign: i === 3 ? 'right' : 'left' }}>{h}</th>
+                    ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-stone-200 dark:divide-stone-700">
-                  {filteredRoomTypes.map((roomType) => (
-                    <tr key={roomType.id} className={`hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors ${!roomType.isActive ? 'opacity-60' : ''}`}>
+                <tbody>
+                  {filteredRoomTypes.map(rt => (
+                    <tr key={rt.id} style={{ opacity: rt.isActive ? 1 : 0.6, borderBottom: '1px solid var(--card-border)' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-hover)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       <td className="px-6 py-4">
-                        <span className="font-mono text-sm bg-stone-100 dark:bg-stone-700 px-2 py-1 rounded-lg">
-                          {roomType.code}
+                        <span style={{ color: 'var(--text-muted)', background: 'var(--background)', border: '1px solid var(--card-border)' }} className="font-mono text-[11px] px-2 py-1 rounded-md">{rt.code}</span>
+                      </td>
+                      <td className="px-6 py-4"><span style={{ color: 'var(--text-primary)' }} className="text-[13px] font-semibold">{rt.name}</span></td>
+                      <td className="px-6 py-4">
+                        <span style={{ color: rt.isActive ? '#4ADE80' : '#FB7185', background: (rt.isActive ? '#4ADE80' : '#FB7185') + '1A' }}
+                          className="text-[10px] font-semibold uppercase tracking-[0.1em] px-2 py-1 rounded-md">
+                          {rt.isActive ? t('common.active') : t('common.inactive')}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="font-bold text-stone-900 dark:text-stone-100">{roomType.name}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`px-2 py-1 text-xs font-bold rounded-lg ${
-                            roomType.isActive
-                              ? 'bg-lime-100 text-lime-700'
-                              : 'bg-red-100 text-red-700'
-                          }`}
-                        >
-                          {roomType.isActive ? t('common.active') : t('common.inactive')}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => openEditModal(roomType)}
-                            className="px-3 py-1 text-sm text-lime-600 hover:bg-lime-50 rounded-lg transition-colors font-bold"
-                          >
-                            {t('common.edit')}
-                          </button>
-                          {roomType.isActive ? (
-                            <button
-                              onClick={() => setDeleteConfirm(roomType)}
-                              className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
-                            >
-                              {t('common.deactivate')}
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleReactivate(roomType)}
-                              disabled={saving}
-                              className="px-3 py-1 text-sm text-lime-600 hover:bg-lime-50 rounded-lg transition-colors disabled:opacity-50 font-medium"
-                            >
-                              {t('common.reactivate')}
-                            </button>
-                          )}
+                          <button onClick={() => openEditModal(rt)} style={{ color: 'var(--gold)' }} className="px-3 py-1 text-[12px] font-semibold hover:opacity-80">{t('common.edit')}</button>
+                          {rt.isActive
+                            ? <button onClick={() => setDeleteConfirm(rt)} style={{ color: '#FB7185' }} className="px-3 py-1 text-[12px] font-medium hover:opacity-80">{t('common.deactivate')}</button>
+                            : <button onClick={() => handleReactivate(rt)} disabled={saving} style={{ color: '#4ADE80' }} className="px-3 py-1 text-[12px] font-medium hover:opacity-80 disabled:opacity-50">{t('common.reactivate')}</button>}
                         </div>
                       </td>
                     </tr>
@@ -469,80 +180,37 @@ export default function RoomTypesPage() {
               </table>
             )}
           </div>
-
-          {/* Count */}
           {!loading && filteredRoomTypes.length > 0 && (
-            <div className="mt-4 text-sm text-stone-500 dark:text-stone-400 text-center">
-              Showing {filteredRoomTypes.length} of {roomTypes.length} room types
-            </div>
+            <p style={{ color: 'var(--text-muted)' }} className="mt-4 text-[11px] text-center">Showing {filteredRoomTypes.length} of {roomTypes.length} room types</p>
           )}
         </div>
       </main>
 
       {/* Create/Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 shadow-2xl w-full max-w-md mx-4">
-            <div className="p-6 border-b border-stone-200 dark:border-stone-700">
-              <h2 className="text-xl font-black text-stone-900 dark:text-stone-100">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--card-border)' }} className="rounded-xl shadow-2xl w-full max-w-md">
+            <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--card-border)' }}>
+              <h2 style={{ color: 'var(--text-primary)' }} className="text-[18px] font-semibold">
                 {editingRoomType ? t('roomTypes.editRoomType') : t('roomTypes.addNew')}
               </h2>
             </div>
-
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {formError && (
-                <div className="p-3 bg-red-50 border-2 border-red-200 rounded-xl text-red-700 text-sm">
-                  {formError}
-                </div>
-              )}
-
-              {/* Code */}
+            <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+              {formError && <div style={{ background: 'rgba(251,113,133,0.08)', border: '1px solid rgba(251,113,133,0.20)', color: '#FB7185' }} className="px-4 py-3 rounded-md text-[13px]">{formError}</div>}
               <div>
-                <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
-                  {t('common.code')}
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.code}
-                  onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                  placeholder="e.g., SINGLE"
-                  maxLength={20}
-                  className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 font-mono uppercase dark:bg-stone-800 dark:text-stone-100"
-                />
-                <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">{t('roomTypes.uniqueId')}</p>
+                <label style={{ color: 'var(--text-secondary)' }} className="block text-[11px] font-semibold uppercase tracking-[0.15em] mb-1.5">{t('common.code')}</label>
+                <input type="text" required value={formData.code} onChange={e => setFormData({ ...formData, code: e.target.value.toUpperCase() })} placeholder="e.g., SINGLE" maxLength={20}
+                  className="w-full px-3 py-2 rounded-md font-mono uppercase text-[13px] outline-none focus:ring-1 focus:ring-[#C9A96E]" style={inputStyle} />
+                <p style={{ color: 'var(--text-muted)' }} className="text-[10px] mt-1">{t('roomTypes.uniqueId')}</p>
               </div>
-
-              {/* Name */}
               <div>
-                <label className="block text-sm font-bold text-stone-700 dark:text-stone-300 mb-1">
-                  {t('common.name')}
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g., Single Room"
-                  maxLength={100}
-                  className="w-full px-4 py-2 border-2 border-stone-200 dark:border-stone-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 dark:bg-stone-800 dark:text-stone-100"
-                />
+                <label style={{ color: 'var(--text-secondary)' }} className="block text-[11px] font-semibold uppercase tracking-[0.15em] mb-1.5">{t('common.name')}</label>
+                <input type="text" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="e.g., Single Room" maxLength={100}
+                  className="w-full px-3 py-2 rounded-md text-[13px] outline-none focus:ring-1 focus:ring-[#C9A96E]" style={inputStyle} />
               </div>
-
-              {/* Actions */}
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="flex-1 px-4 py-2 border-2 border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors font-bold"
-                >
-                  {t('common.cancel')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex-1 px-4 py-2 bg-stone-900 text-white rounded-xl hover:bg-stone-800 transition-colors disabled:opacity-50 font-bold"
-                >
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={closeModal} style={{ color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }} className="flex-1 px-4 py-2.5 rounded-md text-[12.5px] font-medium hover:opacity-80">{t('common.cancel')}</button>
+                <button type="submit" disabled={saving} style={{ background: 'var(--gold)', color: 'var(--background)' }} className="flex-1 px-4 py-2.5 rounded-md text-[12.5px] font-semibold hover:opacity-90 disabled:opacity-50">
                   {saving ? t('common.saving') : editingRoomType ? t('common.update') : t('common.create')}
                 </button>
               </div>
@@ -551,28 +219,15 @@ export default function RoomTypesPage() {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirm */}
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 shadow-2xl w-full max-w-sm mx-4 p-6">
-            <h2 className="text-xl font-black text-stone-900 dark:text-stone-100 mb-2">
-              {t('roomTypes.deactivateTitle')}
-            </h2>
-            <p className="text-stone-600 dark:text-stone-300 mb-6">
-              Are you sure you want to deactivate &quot;{deleteConfirm.name}&quot;? This room type will no longer be available for selection.
-            </p>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--card-border)' }} className="rounded-xl shadow-2xl w-full max-w-sm p-6">
+            <h2 style={{ color: 'var(--text-primary)' }} className="text-[18px] font-semibold mb-2">{t('roomTypes.deactivateTitle')}</h2>
+            <p style={{ color: 'var(--text-secondary)' }} className="text-[13px] mb-6">Deactivate &quot;{deleteConfirm.name}&quot;? It will no longer be available.</p>
             <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="flex-1 px-4 py-2 border-2 border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors font-bold"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                onClick={() => handleDelete(deleteConfirm)}
-                disabled={saving}
-                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50 font-bold"
-              >
+              <button onClick={() => setDeleteConfirm(null)} style={{ color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }} className="flex-1 px-4 py-2.5 rounded-md text-[12.5px] font-medium hover:opacity-80">{t('common.cancel')}</button>
+              <button onClick={() => handleDelete(deleteConfirm)} disabled={saving} style={{ background: '#FB7185', color: '#0a0a0a' }} className="flex-1 px-4 py-2.5 rounded-md text-[12.5px] font-semibold hover:opacity-90 disabled:opacity-50">
                 {saving ? t('common.deactivating') : t('common.deactivate')}
               </button>
             </div>

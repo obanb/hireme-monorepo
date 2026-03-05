@@ -80,10 +80,16 @@ export default function UsersPage() {
 
   if (currentUser?.role !== 'ADMIN') {
     return (
-      <div className="flex min-h-screen bg-stone-50 dark:bg-stone-900">
+      <div className="flex min-h-screen" style={{ background: 'var(--background)' }}>
         <HotelSidebar />
-        <main className="flex-1 ml-72 p-8">
-          <div className="px-4 py-3 rounded-xl bg-red-50 text-red-700 text-sm border border-red-200">
+        <main
+          className="flex-1 px-8 py-8"
+          style={{ marginLeft: 'var(--sidebar-width, 280px)', transition: 'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)' }}
+        >
+          <div
+            style={{ background: 'rgba(251,113,133,0.08)', border: '1px solid rgba(251,113,133,0.20)', color: '#FB7185' }}
+            className="px-4 py-3 rounded-md text-[13px]"
+          >
             Access denied. Admin role required.
           </div>
         </main>
@@ -92,77 +98,112 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-stone-50 dark:bg-stone-900">
+    <div className="flex min-h-screen" style={{ background: 'var(--background)' }}>
       <HotelSidebar />
-      <main className="flex-1 ml-72 p-8">
-        <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-100 mb-2">{t('users.title')}</h1>
-        <p className="text-stone-600 dark:text-stone-300 mb-8">{t('users.subtitle')}</p>
+      <main
+        className="flex-1 px-8 py-8"
+        style={{ marginLeft: 'var(--sidebar-width, 280px)', transition: 'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)' }}
+      >
+        <div className="max-w-[1380px] mx-auto">
+          <h1
+            style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
+            className="text-[2.75rem] font-bold tracking-tight mb-1"
+          >
+            {t('users.title')}
+          </h1>
+          <p style={{ color: 'var(--text-muted)' }} className="text-[11px] mb-8">
+            {t('users.subtitle')}
+          </p>
 
-        {loading ? (
-          <p className="text-stone-500 dark:text-stone-400 text-sm">{t('common.loading')}</p>
-        ) : users.length === 0 ? (
-          <p className="text-stone-500 dark:text-stone-400 text-sm">{t('users.noUsers')}</p>
-        ) : (
-          <div className="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-900">
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">{t('common.name')}</th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">{t('common.email')}</th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">{t('users.role')}</th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">{t('common.status')}</th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">{t('common.actions')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u) => (
-                  <tr key={u.id} className="border-b border-stone-100 dark:border-stone-700 last:border-0">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center flex-shrink-0">
-                          <span className="text-white font-bold text-xs">{u.name.slice(0, 2).toUpperCase()}</span>
-                        </div>
-                        <span className="text-sm font-medium text-stone-900 dark:text-stone-100">{u.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-stone-600 dark:text-stone-300">{u.email}</td>
-                    <td className="px-6 py-4">
-                      <select
-                        value={u.role}
-                        onChange={(e) => updateRole(u.id, e.target.value)}
-                        disabled={u.id === currentUser?.id}
-                        className="text-xs font-medium px-2.5 py-1.5 rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300 focus:outline-none disabled:opacity-50"
+          {loading ? (
+            <p style={{ color: 'var(--text-muted)' }} className="text-[13px] animate-pulse">{t('common.loading')}</p>
+          ) : users.length === 0 ? (
+            <p style={{ color: 'var(--text-muted)' }} className="text-[13px]">{t('users.noUsers')}</p>
+          ) : (
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--card-border)' }} className="rounded-xl overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr style={{ background: 'var(--surface-hover)' }}>
+                    {[t('common.name'), t('common.email'), t('users.role'), t('common.status'), t('common.actions')].map((h) => (
+                      <th
+                        key={h}
+                        style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--card-border)' }}
+                        className="text-left px-5 py-3 text-[9px] font-semibold tracking-[0.2em] uppercase"
                       >
-                        <option value="ADMIN">ADMIN</option>
-                        <option value="USER">USER</option>
-                        <option value="VIEWER">VIEWER</option>
-                      </select>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`text-xs font-medium px-2.5 py-1 rounded-lg ${u.isActive ? 'bg-lime-100 text-lime-700' : 'bg-red-100 text-red-700'}`}>
-                        {u.isActive ? t('common.active') : t('common.inactive')}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      {u.id !== currentUser?.id && (
-                        <button
-                          onClick={() => toggleStatus(u.id, !u.isActive)}
-                          className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
-                            u.isActive
-                              ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                              : 'bg-lime-50 text-lime-600 hover:bg-lime-100'
-                          }`}
-                        >
-                          {u.isActive ? t('common.deactivate') : t('users.activateUser')}
-                        </button>
-                      )}
-                    </td>
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody>
+                  {users.map((u, i) => (
+                    <tr
+                      key={u.id}
+                      style={{ borderBottom: i < users.length - 1 ? '1px solid var(--card-border)' : 'none' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-hover)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ background: 'rgba(167,139,250,0.15)', color: '#A78BFA' }}
+                          >
+                            <span style={{  }} className="font-bold text-[12px]">
+                              {u.name.slice(0, 2).toUpperCase()}
+                            </span>
+                          </div>
+                          <span style={{ color: 'var(--text-primary)' }} className="text-[13px] font-medium">{u.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span style={{ color: 'var(--text-secondary)' }} className="text-[13px]">{u.email}</span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <select
+                          value={u.role}
+                          onChange={(e) => updateRole(u.id, e.target.value)}
+                          disabled={u.id === currentUser?.id}
+                          className="text-[11px] font-medium px-2.5 py-1.5 rounded-md outline-none focus:ring-1 focus:ring-[#C9A96E] disabled:opacity-50"
+                          style={{ background: 'var(--surface)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' }}
+                        >
+                          <option value="ADMIN">ADMIN</option>
+                          <option value="USER">USER</option>
+                          <option value="VIEWER">VIEWER</option>
+                        </select>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span
+                          style={{
+                            color: u.isActive ? '#4ADE80' : '#FB7185',
+                            background: u.isActive ? 'rgba(74,222,128,0.10)' : 'rgba(251,113,133,0.10)',
+                          }}
+                          className="text-[10px] font-semibold uppercase tracking-[0.1em] px-2 py-1 rounded-md"
+                        >
+                          {u.isActive ? t('common.active') : t('common.inactive')}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        {u.id !== currentUser?.id && (
+                          <button
+                            onClick={() => toggleStatus(u.id, !u.isActive)}
+                            style={{
+                              color: u.isActive ? '#FB7185' : '#4ADE80',
+                              background: u.isActive ? 'rgba(251,113,133,0.10)' : 'rgba(74,222,128,0.10)',
+                            }}
+                            className="text-[11px] font-semibold px-3 py-1.5 rounded-md hover:opacity-80 transition-opacity"
+                          >
+                            {u.isActive ? t('common.deactivate') : t('users.activateUser')}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );

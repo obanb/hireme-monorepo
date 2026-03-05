@@ -63,6 +63,7 @@ const cs = {
   'nav.hotelCms': 'Hotel CMS',
   'nav.rentals': 'Půjčovna',
   'nav.logout': 'Odhlasit',
+  'nav.predictions': 'Predikce',
 
   // Dashboard
   'dashboard.title': 'Prehled',

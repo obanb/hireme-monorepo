@@ -45,9 +45,25 @@ input TimelineFilterInput {
   granularity: TimelineGranularity
 }
 
+type RoomTypeRevenue {
+  roomType: String!
+  revenue: Float!
+  bookingCount: Int!
+  avgStayDays: Float!
+}
+
+type OccupancyTimelinePoint {
+  date: String!
+  occupancyRate: Float!
+  occupiedRooms: Int!
+  totalRooms: Int!
+}
+
 extend type Query {
   reservationStats(filter: StatisticsFilterInput): ReservationStats!
   reservationTimeline(filter: TimelineFilterInput!): [ReservationTimelinePoint!]!
   roomOccupancyStats: RoomOccupancyStats!
   revenueTimeline(filter: StatisticsFilterInput): [RevenueTimelinePoint!]!
+  revenueByRoomType(filter: StatisticsFilterInput): [RoomTypeRevenue!]!
+  occupancyTimeline(filter: TimelineFilterInput!): [OccupancyTimelinePoint!]!
 }

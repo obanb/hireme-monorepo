@@ -4,8 +4,13 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import HotelSidebar from '@/components/HotelSidebar';
 import { useLocale } from '@/context/LocaleContext';
+import { useToast } from '@/context/ToastContext';
+import { useConfirm } from '@/context/ConfirmContext';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:4001/graphql';
+
+const inputStyle = { background: 'var(--surface)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' };
+const inputClass = 'w-full px-3 py-2 rounded-md text-[13px] outline-none focus:ring-1 focus:ring-[#C9A96E]';
 
 interface EmailTemplate {
   id: string;
@@ -20,6 +25,8 @@ interface EmailTemplate {
 
 export default function TemplatesPage() {
   const { t } = useLocale();
+  const toast = useToast();
+  const confirm = useConfirm();
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -95,18 +102,20 @@ export default function TemplatesPage() {
       }
       setShowEditor(false);
       fetchTemplates();
+      toast.success(editingTemplate ? 'Template updated.' : 'Template created.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save template');
+      toast.error(err instanceof Error ? err.message : 'Failed to save template');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this template?')) return;
+    if (!(await confirm({ message: 'Delete this template?', confirmLabel: 'Delete', danger: true }))) return;
     try {
       await gqlFetch(`mutation DeleteTemplate($id: ID!) { deleteEmailTemplate(id: $id) }`, { id });
       fetchTemplates();
+      toast.success('Template deleted.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete template');
+      toast.error(err instanceof Error ? err.message : 'Failed to delete template');
     }
   };
 
@@ -129,66 +138,93 @@ export default function TemplatesPage() {
 
   if (showEditor) {
     return (
-      <div className="flex min-h-screen bg-stone-50 dark:bg-stone-900">
+      <div className="flex min-h-screen" style={{ background: 'var(--background)' }}>
         <HotelSidebar />
-        <main className="flex-1 ml-72 flex flex-col h-screen">
+        <main
+          className="flex-1 flex flex-col h-screen"
+          style={{ marginLeft: 'var(--sidebar-width, 280px)', transition: 'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)' }}
+        >
           {/* Editor header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800">
+          <div
+            className="flex items-center justify-between px-6 py-4"
+            style={{ background: 'var(--surface)', borderBottom: '1px solid var(--card-border)' }}
+          >
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setShowEditor(false)}
-                className="text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 text-sm font-medium"
+                style={{ color: 'var(--text-secondary)' }}
+                className="text-[13px] font-medium hover:opacity-70 transition-opacity"
               >
-                &larr; {t('common.back')}
+                ← {t('common.back')}
               </button>
-              <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100">
+              <h2
+                style={{ color: 'var(--text-primary)' }}
+                className="text-[18px] font-semibold leading-none"
+              >
                 {editingTemplate ? t('campaigns.editTemplate') : t('campaigns.newTemplate')}
               </h2>
             </div>
             <button
               onClick={handleSave}
               disabled={!formName || !formSubject || !formHtml}
-              className="px-4 py-2 rounded-xl bg-stone-900 text-white text-sm font-semibold hover:bg-stone-800 transition-colors disabled:opacity-50"
+              style={{ background: 'var(--gold)', color: 'var(--background)' }}
+              className="px-5 py-2 text-[13px] font-semibold rounded-md hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               {t('campaigns.saveTemplate')}
             </button>
           </div>
 
           {error && (
-            <div className="mx-6 mt-4 px-4 py-3 rounded-xl bg-red-50 text-red-700 text-sm border border-red-200">
-              {error}
+            <div
+              style={{ background: 'rgba(251,113,133,0.08)', border: '1px solid rgba(251,113,133,0.20)', color: '#FB7185' }}
+              className="mx-6 mt-4 px-4 py-3 rounded-md text-[13px] flex items-center justify-between"
+            >
+              <span>{error}</span>
+              <button onClick={() => setError('')} className="ml-4 hover:opacity-70">✕</button>
             </div>
           )}
 
           {/* Metadata inputs */}
-          <div className="px-6 py-4 bg-white dark:bg-stone-800 border-b border-stone-100 dark:border-stone-700 flex gap-4">
+          <div
+            className="px-6 py-4 flex gap-4"
+            style={{ background: 'var(--surface)', borderBottom: '1px solid var(--card-border)' }}
+          >
             <div className="flex-1">
-              <label className="block text-xs font-medium text-stone-500 dark:text-stone-400 mb-1">{t('campaigns.templateName')}</label>
+              <label style={{ color: 'var(--text-muted)' }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">
+                {t('campaigns.templateName')}
+              </label>
               <input
                 type="text"
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100"
+                className={inputClass}
+                style={inputStyle}
                 placeholder="e.g. Welcome"
               />
             </div>
             <div className="flex-1">
-              <label className="block text-xs font-medium text-stone-500 dark:text-stone-400 mb-1">{t('campaigns.subjectLine')}</label>
+              <label style={{ color: 'var(--text-muted)' }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">
+                {t('campaigns.subjectLine')}
+              </label>
               <input
                 type="text"
                 value={formSubject}
                 onChange={(e) => setFormSubject(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100"
+                className={inputClass}
+                style={inputStyle}
                 placeholder="e.g. Welcome to {{hotel_name}}"
               />
             </div>
             <div className="flex-1">
-              <label className="block text-xs font-medium text-stone-500 dark:text-stone-400 mb-1">{t('campaigns.previewText')}</label>
+              <label style={{ color: 'var(--text-muted)' }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">
+                {t('campaigns.previewText')}
+              </label>
               <input
                 type="text"
                 value={formPreviewText}
                 onChange={(e) => setFormPreviewText(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100"
+                className={inputClass}
+                style={inputStyle}
                 placeholder="Brief preview shown in inbox"
               />
             </div>
@@ -197,14 +233,18 @@ export default function TemplatesPage() {
           {/* Split pane: HTML editor + Preview */}
           <div className="flex-1 flex overflow-hidden">
             {/* HTML editor */}
-            <div className="w-1/2 flex flex-col border-r border-stone-200 dark:border-stone-700">
-              <div className="px-4 py-2 bg-stone-100 dark:bg-stone-700 text-xs font-medium text-stone-500 dark:text-stone-400 border-b border-stone-200 dark:border-stone-700">
+            <div className="w-1/2 flex flex-col" style={{ borderRight: '1px solid var(--card-border)' }}>
+              <div
+                className="px-4 py-2 text-[10px] font-semibold tracking-[0.15em] uppercase"
+                style={{ background: 'var(--surface-hover)', borderBottom: '1px solid var(--card-border)', color: 'var(--text-muted)' }}
+              >
                 {t('campaigns.htmlSource')}
               </div>
               <textarea
                 value={formHtml}
                 onChange={(e) => setFormHtml(e.target.value)}
-                className="flex-1 p-4 font-mono text-sm text-stone-800 dark:text-stone-100 resize-none focus:outline-none bg-white dark:bg-stone-800"
+                className="flex-1 p-4 font-mono text-[13px] resize-none focus:outline-none"
+                style={{ background: 'var(--background)', color: 'var(--text-primary)' }}
                 placeholder="Enter HTML email template..."
                 spellCheck={false}
               />
@@ -212,10 +252,13 @@ export default function TemplatesPage() {
 
             {/* Live preview */}
             <div className="w-1/2 flex flex-col">
-              <div className="px-4 py-2 bg-stone-100 dark:bg-stone-700 text-xs font-medium text-stone-500 dark:text-stone-400 border-b border-stone-200 dark:border-stone-700">
+              <div
+                className="px-4 py-2 text-[10px] font-semibold tracking-[0.15em] uppercase"
+                style={{ background: 'var(--surface-hover)', borderBottom: '1px solid var(--card-border)', color: 'var(--text-muted)' }}
+              >
                 {t('campaigns.preview')}
               </div>
-              <div className="flex-1 bg-stone-50 dark:bg-stone-900 overflow-auto">
+              <div className="flex-1 overflow-auto" style={{ background: 'var(--surface)' }}>
                 <iframe
                   srcDoc={formHtml || '<p style="padding:40px;color:#999;text-align:center;">Enter HTML to see preview</p>'}
                   className="w-full h-full border-0"
@@ -231,74 +274,121 @@ export default function TemplatesPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-stone-50 dark:bg-stone-900">
+    <div className="flex min-h-screen" style={{ background: 'var(--background)' }}>
       <HotelSidebar />
-      <main className="flex-1 ml-72 p-8">
-        <div className="max-w-6xl mx-auto">
+      <main
+        className="flex-1 px-8 py-8"
+        style={{ marginLeft: 'var(--sidebar-width, 280px)', transition: 'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)' }}
+      >
+        <div className="max-w-[1380px] mx-auto">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-start justify-between mb-8">
             <div>
-              <div className="flex items-center gap-3 mb-1">
-                <Link href="/hotel-cms/campaigns" className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 text-sm">{t('campaigns.backToCampaigns')}</Link>
-              </div>
-              <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-100">{t('campaigns.emailTemplates')}</h1>
-              <p className="text-stone-500 dark:text-stone-400 text-sm mt-1">{t('campaigns.templatesSubtitle')}</p>
+              <Link
+                href="/hotel-cms/campaigns"
+                style={{ color: 'var(--text-muted)' }}
+                className="text-[11px] font-medium hover:opacity-70 transition-opacity block mb-2"
+              >
+                ← {t('campaigns.backToCampaigns')}
+              </Link>
+              <h1
+                style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
+                className="text-[2.75rem] font-bold tracking-tight mb-1"
+              >
+                {t('campaigns.emailTemplates')}
+              </h1>
+              <p style={{ color: 'var(--text-muted)' }} className="text-[11px]">
+                {t('campaigns.templatesSubtitle')}
+              </p>
             </div>
             <button
               onClick={() => openEditor()}
-              className="px-4 py-2.5 rounded-xl bg-stone-900 text-white text-sm font-semibold hover:bg-stone-800 transition-colors"
+              style={{ background: 'var(--gold)', color: 'var(--background)' }}
+              className="px-5 py-2.5 text-[13px] font-semibold rounded-md hover:opacity-90 transition-opacity"
             >
               {t('campaigns.newTemplate')}
             </button>
           </div>
 
           {error && (
-            <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 text-red-700 text-sm border border-red-200">
-              {error}
-              <button onClick={() => setError('')} className="ml-2 font-bold">x</button>
+            <div
+              style={{ background: 'rgba(251,113,133,0.08)', border: '1px solid rgba(251,113,133,0.20)', color: '#FB7185' }}
+              className="px-4 py-3 rounded-md text-[13px] flex items-center justify-between mb-5"
+            >
+              <span>{error}</span>
+              <button onClick={() => setError('')} className="ml-4 hover:opacity-70">✕</button>
             </div>
           )}
 
           {loading ? (
-            <div className="text-center py-12 text-stone-400">{t('common.loading')}</div>
+            <div style={{ color: 'var(--text-muted)' }} className="py-16 text-center text-[13px] animate-pulse">
+              {t('common.loading')}
+            </div>
           ) : templates.length === 0 ? (
-            <div className="text-center py-12 text-stone-400">
-              {t('campaigns.noTemplates')}
+            <div style={{ color: 'var(--text-muted)' }} className="py-16 text-center">
+              <p style={{ color: 'var(--text-primary)' }} className="text-[15px] font-semibold mb-1">
+                {t('campaigns.noTemplates')}
+              </p>
             </div>
           ) : (
             <div className="grid gap-4">
               {templates.map((template) => (
-                <div key={template.id} className="bg-white dark:bg-stone-800 rounded-2xl shadow-xl shadow-stone-200/50 dark:shadow-stone-900/50 border border-stone-200 dark:border-stone-700 p-6">
+                <div
+                  key={template.id}
+                  style={{ background: 'var(--surface)', border: '1px solid var(--card-border)' }}
+                  className="rounded-xl p-6"
+                >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-100">{template.name}</h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3
+                          style={{ color: 'var(--text-primary)' }}
+                          className="text-[18px] font-semibold leading-none"
+                        >
+                          {template.name}
+                        </h3>
                         {!template.isActive && (
-                          <span className="px-2 py-0.5 rounded-lg text-xs font-medium bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400">{t('common.inactive')}</span>
+                          <span
+                            style={{ color: '#FBBF24', background: 'rgba(251,191,36,0.10)' }}
+                            className="text-[10px] font-semibold uppercase tracking-[0.1em] px-2 py-1 rounded-md"
+                          >
+                            {t('common.inactive')}
+                          </span>
                         )}
                       </div>
-                      <p className="text-sm text-stone-600 dark:text-stone-300 mt-1">{template.subject}</p>
+                      <p style={{ color: 'var(--text-secondary)' }} className="text-[13px] mt-1">
+                        {template.subject}
+                      </p>
                       {template.previewText && (
-                        <p className="text-xs text-stone-400 mt-1">{template.previewText}</p>
+                        <p style={{ color: 'var(--text-muted)' }} className="text-[11px] mt-1">
+                          {template.previewText}
+                        </p>
                       )}
-                      <p className="text-xs text-stone-400 mt-2">Updated {new Date(template.updatedAt).toLocaleDateString()}</p>
+                      <p style={{ color: 'var(--text-muted)' }} className="text-[11px] mt-2 tabular-nums">
+                        Updated {new Date(template.updatedAt).toLocaleDateString()}
+                      </p>
                     </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setShowPreview(showPreview === template.id ? null : template.id)}
-                        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors"
+                        style={{ color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }}
+                        className="px-3 py-1.5 rounded-md text-[12px] font-medium hover:opacity-80 transition-opacity"
+                        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-hover)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                       >
                         {showPreview === template.id ? t('campaigns.hide') : t('campaigns.preview')}
                       </button>
                       <button
                         onClick={() => openEditor(template)}
-                        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors"
+                        style={{ color: 'var(--gold)' }}
+                        className="px-3 py-1.5 rounded-md text-[12px] font-semibold hover:opacity-70 transition-opacity"
                       >
                         {t('common.edit')}
                       </button>
                       <button
                         onClick={() => handleDelete(template.id)}
-                        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                        style={{ color: '#FB7185', background: 'rgba(251,113,133,0.08)', border: '1px solid rgba(251,113,133,0.20)' }}
+                        className="px-3 py-1.5 rounded-md text-[12px] font-medium hover:opacity-80 transition-opacity"
                       >
                         {t('common.delete')}
                       </button>
@@ -306,8 +396,8 @@ export default function TemplatesPage() {
                   </div>
 
                   {showPreview === template.id && (
-                    <div className="mt-4 border-t border-stone-100 dark:border-stone-700 pt-4">
-                      <div className="rounded-xl border border-stone-200 dark:border-stone-700 overflow-hidden" style={{ height: 400 }}>
+                    <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--card-border)' }}>
+                      <div className="rounded-xl overflow-hidden" style={{ height: 400, border: '1px solid var(--card-border)' }}>
                         <iframe
                           srcDoc={template.htmlBody}
                           className="w-full h-full border-0"
@@ -320,13 +410,15 @@ export default function TemplatesPage() {
                           type="email"
                           value={testEmail}
                           onChange={(e) => setTestEmail(e.target.value)}
-                          className="px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-700 text-sm flex-1 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100"
+                          className="px-3 py-2 rounded-md text-[13px] flex-1 outline-none focus:ring-1 focus:ring-[#C9A96E]"
+                          style={inputStyle}
                           placeholder="Send test to email..."
                         />
                         <button
                           onClick={() => handleSendTest(template.id)}
                           disabled={!testEmail || sending}
-                          className="px-4 py-2 rounded-lg text-xs font-medium bg-stone-900 text-white hover:bg-stone-800 transition-colors disabled:opacity-50"
+                          style={{ background: 'var(--gold)', color: 'var(--background)' }}
+                          className="px-4 py-2 rounded-md text-[12.5px] font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
                         >
                           {sending ? t('auth.sending') : t('campaigns.sendTest')}
                         </button>

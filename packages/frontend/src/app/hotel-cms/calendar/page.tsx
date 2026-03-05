@@ -5,51 +5,18 @@ import { useRouter } from 'next/navigation';
 import HotelSidebar from '@/components/HotelSidebar';
 import { useLocale } from '@/context/LocaleContext';
 
-interface Room {
-  id: string;
-  name: string;
-  roomNumber: string;
-  type: string;
-  capacity: number;
-  status: string;
-  color: string;
-}
-
-interface Reservation {
-  id: string;
-  guestName: string;
-  status: string;
-  checkInDate: string;
-  checkOutDate: string;
-  roomIds: string[];
-}
+interface Room { id: string; name: string; roomNumber: string; type: string; capacity: number; status: string; color: string; }
+interface Reservation { id: string; guestName: string; status: string; checkInDate: string; checkOutDate: string; roomIds: string[]; }
 
 type ViewMode = 'week' | 'month';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:4001/graphql';
+const mainStyle = { marginLeft: 'var(--sidebar-width, 280px)', transition: 'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)' };
 
-function addDays(date: Date, days: number): Date {
-  const result = new Date(date);
-  result.setDate(result.getDate() + days);
-  return result;
-}
-
-function formatDateKey(date: Date): string {
-  return date.toISOString().split('T')[0];
-}
-
-function getStartOfWeek(date: Date): Date {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  d.setDate(diff);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function getStartOfMonth(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), 1);
-}
+function addDays(date: Date, days: number): Date { const r = new Date(date); r.setDate(r.getDate() + days); return r; }
+function formatDateKey(date: Date): string { return date.toISOString().split('T')[0]; }
+function getStartOfWeek(date: Date): Date { const d = new Date(date); const day = d.getDay(); d.setDate(d.getDate() - day + (day === 0 ? -6 : 1)); d.setHours(0, 0, 0, 0); return d; }
+function getStartOfMonth(date: Date): Date { return new Date(date.getFullYear(), date.getMonth(), 1); }
 
 export default function CalendarPage() {
   const router = useRouter();
@@ -59,11 +26,7 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('week');
-  const [currentDate, setCurrentDate] = useState(() => {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    return now;
-  });
+  const [currentDate, setCurrentDate] = useState(() => { const now = new Date(); now.setHours(0, 0, 0, 0); return now; });
   const [dragData, setDragData] = useState<{ reservationId: string; sourceRoomId: string; guestName: string } | null>(null);
   const [dropTargetRoomId, setDropTargetRoomId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -72,11 +35,8 @@ export default function CalendarPage() {
   const dateRange = useMemo(() => {
     const start = viewMode === 'week' ? getStartOfWeek(currentDate) : getStartOfMonth(currentDate);
     const days = viewMode === 'week' ? 7 : new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
-
     const dates: Date[] = [];
-    for (let i = 0; i < days; i++) {
-      dates.push(addDays(start, i));
-    }
+    for (let i = 0; i < days; i++) dates.push(addDays(start, i));
     return dates;
   }, [currentDate, viewMode]);
 
@@ -86,453 +46,217 @@ export default function CalendarPage() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-
-      // Fetch rooms and reservations in parallel
-      const [roomsResponse, reservationsResponse] = await Promise.all([
-        fetch(GRAPHQL_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            query: `
-              query ListRooms {
-                rooms {
-                  id
-                  name
-                  roomNumber
-                  type
-                  capacity
-                  status
-                  color
-                }
-              }
-            `,
-          }),
-        }),
-        fetch(GRAPHQL_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            query: `
-              query ListReservations($filter: ReservationFilterInput) {
-                reservations(filter: $filter) {
-                  id
-                  guestName
-                  status
-                  checkInDate
-                  checkOutDate
-                  roomIds
-                }
-              }
-            `,
-            variables: {
-              filter: {
-                checkInFrom: formatDateKey(addDays(startDate, -30)),
-                checkOutTo: formatDateKey(addDays(endDate, 30)),
-              },
-            },
-          }),
-        }),
+      const [roomsRes, resRes] = await Promise.all([
+        fetch(GRAPHQL_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ query: `{ rooms { id name roomNumber type capacity status color } }` }) }),
+        fetch(GRAPHQL_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ query: `query($filter:ReservationFilterInput){reservations(filter:$filter){id guestName status checkInDate checkOutDate roomIds}}`, variables: { filter: { checkInFrom: formatDateKey(addDays(startDate, -30)), checkOutTo: formatDateKey(addDays(endDate, 30)) } } }) }),
       ]);
-
-      const [roomsResult, reservationsResult] = await Promise.all([
-        roomsResponse.json(),
-        reservationsResponse.json(),
-      ]);
-
-      if (roomsResult.errors) {
-        throw new Error(roomsResult.errors[0]?.message ?? 'Failed to fetch rooms');
-      }
-      if (reservationsResult.errors) {
-        throw new Error(reservationsResult.errors[0]?.message ?? 'Failed to fetch reservations');
-      }
-
-      setRooms(roomsResult.data?.rooms ?? []);
-      setReservations(reservationsResult.data?.reservations ?? []);
+      const [roomsJson, resJson] = await Promise.all([roomsRes.json(), resRes.json()]);
+      if (roomsJson.errors) throw new Error(roomsJson.errors[0]?.message);
+      if (resJson.errors) throw new Error(resJson.errors[0]?.message);
+      setRooms(roomsJson.data?.rooms ?? []);
+      setReservations(resJson.data?.reservations ?? []);
       setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch data');
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { setError(err instanceof Error ? err.message : 'Failed'); }
+    finally { setLoading(false); }
   }, [startDate, endDate]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handlePrevious = () => {
-    if (viewMode === 'week') {
-      setCurrentDate(addDays(currentDate, -7));
-    } else {
-      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
-    }
-  };
+  const handlePrev = () => viewMode === 'week' ? setCurrentDate(addDays(currentDate, -7)) : setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  const handleNext = () => viewMode === 'week' ? setCurrentDate(addDays(currentDate, 7)) : setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  const handleToday = () => { const now = new Date(); now.setHours(0, 0, 0, 0); setCurrentDate(now); };
 
-  const handleNext = () => {
-    if (viewMode === 'week') {
-      setCurrentDate(addDays(currentDate, 7));
-    } else {
-      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
-    }
-  };
+  const handleCellClick = (roomId: string, date: Date) => router.push(`/hotel-cms/bookings?roomId=${roomId}&checkInDate=${formatDateKey(date)}`);
 
-  const handleToday = () => {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    setCurrentDate(now);
-  };
-
-  const handleCellClick = (roomId: string, date: Date) => {
-    const dateStr = formatDateKey(date);
-    router.push(`/hotel-cms/bookings?roomId=${roomId}&checkInDate=${dateStr}`);
-  };
-
-  const handleReservationClick = (reservationId: string, e: React.MouseEvent) => {
+  const handleReservationClick = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (didDrag) {
-      setDidDrag(false);
-      return;
-    }
-    router.push(`/hotel-cms/bookings/${reservationId}`);
+    if (didDrag) { setDidDrag(false); return; }
+    router.push(`/hotel-cms/bookings/${id}`);
   };
 
-  const handleDragStart = (e: React.DragEvent, reservation: Reservation) => {
+  const handleDragStart = (e: React.DragEvent, res: Reservation) => {
     e.stopPropagation();
-    setDragData({ reservationId: reservation.id, sourceRoomId: reservation.roomIds[0] ?? '', guestName: reservation.guestName });
+    setDragData({ reservationId: res.id, sourceRoomId: res.roomIds[0] ?? '', guestName: res.guestName });
     e.dataTransfer.effectAllowed = 'move';
   };
 
-  const handleDragEnd = () => {
-    if (dragData) setDidDrag(true);
-    setDragData(null);
-    setDropTargetRoomId(null);
-  };
-
-  const handleDragOver = (e: React.DragEvent, roomId: string) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setDropTargetRoomId(roomId);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    const relatedTarget = e.relatedTarget as Node | null;
-    if (relatedTarget && (e.currentTarget as Node).contains(relatedTarget)) return;
-    setDropTargetRoomId(null);
-  };
+  const handleDragEnd = () => { if (dragData) setDidDrag(true); setDragData(null); setDropTargetRoomId(null); };
 
   const handleDrop = async (e: React.DragEvent, targetRoomId: string) => {
     e.preventDefault();
     setDropTargetRoomId(null);
     if (!dragData || dragData.sourceRoomId === targetRoomId) return;
-
     const { reservationId, sourceRoomId, guestName } = dragData;
     const targetRoom = rooms.find(r => r.id === targetRoomId);
-
-    // Optimistic update
-    setReservations(prev => prev.map(r =>
-      r.id === reservationId ? { ...r, roomIds: [targetRoomId] } : r
-    ));
-
+    setReservations(prev => prev.map(r => r.id === reservationId ? { ...r, roomIds: [targetRoomId] } : r));
     try {
-      const response = await fetch(GRAPHQL_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          query: `
-            mutation AssignRooms($input: AssignRoomsInput!) {
-              assignRooms(input: $input) {
-                reservation { id roomIds }
-              }
-            }
-          `,
-          variables: { input: { reservationId, roomIds: [targetRoomId] } },
-        }),
-      });
-      const result = await response.json();
-      if (result.errors) throw new Error(result.errors[0].message);
+      const res = await fetch(GRAPHQL_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ query: `mutation($input:AssignRoomsInput!){assignRooms(input:$input){reservation{id roomIds}}}`, variables: { input: { reservationId, roomIds: [targetRoomId] } } }) });
+      const json = await res.json();
+      if (json.errors) throw new Error(json.errors[0].message);
       setSuccessMessage(`Moved "${guestName}" to ${targetRoom?.name ?? 'room'}`);
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch {
-      // Revert optimistic update
-      setReservations(prev => prev.map(r =>
-        r.id === reservationId ? { ...r, roomIds: [sourceRoomId] } : r
-      ));
+      setReservations(prev => prev.map(r => r.id === reservationId ? { ...r, roomIds: [sourceRoomId] } : r));
       setError('Failed to move reservation');
     }
   };
 
-  // Group reservations by roomId (a reservation may span multiple rooms)
   const reservationsByRoom = useMemo(() => {
     const map = new Map<string, Reservation[]>();
-    for (const reservation of reservations) {
-      for (const roomId of reservation.roomIds) {
-        const list = map.get(roomId) || [];
-        list.push(reservation);
-        map.set(roomId, list);
-      }
-    }
+    reservations.forEach(res => res.roomIds.forEach(roomId => { const list = map.get(roomId) ?? []; list.push(res); map.set(roomId, list); }));
     return map;
   }, [reservations]);
 
-  // Calculate reservation bar position and width
-  const getReservationStyle = (reservation: Reservation) => {
-    const checkIn = new Date(reservation.checkInDate);
-    const checkOut = new Date(reservation.checkOutDate);
-
+  const getReservationStyle = (res: Reservation) => {
+    const checkIn = new Date(res.checkInDate);
+    const checkOut = new Date(res.checkOutDate);
     const startIdx = dateRange.findIndex(d => formatDateKey(d) === formatDateKey(checkIn));
     const endIdx = dateRange.findIndex(d => formatDateKey(d) === formatDateKey(checkOut));
-
-    // If reservation is completely outside the visible range, skip
     if (endIdx < 0 && checkOut < startDate) return null;
     if (startIdx < 0 && checkIn > endDate) return null;
-
-    // Clamp to visible range
     const visibleStart = Math.max(0, startIdx >= 0 ? startIdx : 0);
     const visibleEnd = Math.min(dateRange.length - 1, endIdx >= 0 ? endIdx : dateRange.length - 1);
-
     const startOffset = checkIn < startDate ? 0 : startIdx;
-    const totalDays = visibleEnd - visibleStart + 1;
-
-    return {
-      left: `${(startOffset / dateRange.length) * 100}%`,
-      width: `${(totalDays / dateRange.length) * 100}%`,
-    };
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'CONFIRMED':
-        return 'opacity-100';
-      case 'PENDING':
-        return 'opacity-70';
-      case 'CANCELLED':
-        return 'opacity-40 line-through';
-      default:
-        return 'opacity-100';
-    }
+    return { left: `${(startOffset / dateRange.length) * 100}%`, width: `${((visibleEnd - visibleStart + 1) / dateRange.length) * 100}%` };
   };
 
   const monthYear = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const todayKey = formatDateKey(new Date());
 
   return (
-    <div className="flex min-h-screen bg-stone-100 dark:bg-stone-900">
+    <div className="flex min-h-screen" style={{ background: 'var(--background)' }}>
       <HotelSidebar />
-      <main className="flex-1 ml-72 p-8">
+      <main className="flex-1 px-8 py-8" style={mainStyle}>
         <div className="max-w-full mx-auto">
-          {/* Page Header */}
-          <div className="flex items-center justify-between mb-8">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-8">
             <div>
-              <h1 className="text-4xl font-black text-stone-900 dark:text-stone-100 mb-2">{t('calendar.title')}</h1>
-              <p className="text-stone-500 dark:text-stone-400">
-                {t('calendar.subtitle')}
-              </p>
+              <h1 style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }} className="text-[2.75rem] font-bold tracking-tight mb-1">{t('calendar.title')}</h1>
+              <p style={{ color: 'var(--text-muted)' }} className="text-[11px]">{t('calendar.subtitle')}</p>
             </div>
-            <div className="flex items-center gap-4">
-              {/* View Mode Toggle */}
-              <div className="flex bg-white dark:bg-stone-800 rounded-2xl border-2 border-stone-200 dark:border-stone-700 p-1">
-                <button
-                  onClick={() => setViewMode('week')}
-                  className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors ${
-                    viewMode === 'week'
-                      ? 'bg-stone-900 text-white'
-                      : 'text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-700'
-                  }`}
-                >
-                  {t('calendar.week')}
+            {/* View toggle */}
+            <div className="flex p-1 rounded-lg gap-1" style={{ background: 'var(--surface)', border: '1px solid var(--card-border)' }}>
+              {(['week', 'month'] as ViewMode[]).map(m => (
+                <button key={m} onClick={() => setViewMode(m)}
+                  style={viewMode === m ? { background: 'var(--gold)', color: 'var(--background)' } : { color: 'var(--text-secondary)', background: 'transparent' }}
+                  className="px-4 py-1.5 rounded-md text-[12px] font-semibold capitalize transition-all">
+                  {t(`calendar.${m}` as 'calendar.week' | 'calendar.month')}
                 </button>
-                <button
-                  onClick={() => setViewMode('month')}
-                  className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors ${
-                    viewMode === 'month'
-                      ? 'bg-stone-900 text-white'
-                      : 'text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-700'
-                  }`}
-                >
-                  {t('calendar.month')}
-                </button>
-              </div>
+              ))}
             </div>
           </div>
 
-          {/* Success Message */}
+          {/* Alerts */}
           {successMessage && (
-            <div className="mb-6 p-4 bg-green-50 border-2 border-green-200 rounded-2xl text-green-700 flex items-center justify-between">
-              {successMessage}
-              <button
-                onClick={() => setSuccessMessage(null)}
-                className="ml-4 text-green-500 hover:text-green-700"
-              >
-                {t('common.dismiss')}
-              </button>
+            <div style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.25)', color: '#4ADE80' }} className="px-4 py-3 rounded-md text-[13px] mb-5 flex items-center justify-between">
+              <span>{successMessage}</span>
+              <button onClick={() => setSuccessMessage(null)} className="opacity-70 hover:opacity-100">&times;</button>
             </div>
           )}
-
-          {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-2xl text-red-700">
-              {error}
-              <button
-                onClick={() => setError(null)}
-                className="ml-4 text-red-500 hover:text-red-700"
-              >
-                {t('common.dismiss')}
-              </button>
+            <div style={{ background: 'rgba(251,113,133,0.08)', border: '1px solid rgba(251,113,133,0.20)', color: '#FB7185' }} className="px-4 py-3 rounded-md text-[13px] mb-5 flex items-center justify-between">
+              <span>{error}</span>
+              <button onClick={() => setError(null)} className="opacity-70 hover:opacity-100">&times;</button>
             </div>
           )}
 
-          {/* Calendar Controls */}
-          <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 mb-6">
-            <div className="p-4 flex items-center justify-between border-b border-stone-200 dark:border-stone-700">
+          {/* Calendar card */}
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--card-border)' }} className="rounded-xl mb-5">
+            {/* Nav bar */}
+            <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid var(--card-border)' }}>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={handlePrevious}
-                  className="p-2 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-xl transition-colors text-stone-600 dark:text-stone-300"
-                  aria-label="Previous"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
+                <button onClick={handlePrev} style={{ color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }}
+                  className="p-1.5 rounded-md hover:opacity-80">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
                 </button>
-                <button
-                  onClick={handleToday}
-                  className="px-4 py-2 text-sm font-bold text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-xl transition-colors"
-                >
+                <button onClick={handleToday} style={{ color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }}
+                  className="px-3 py-1.5 rounded-md text-[12px] font-medium hover:opacity-80">
                   {t('calendar.today')}
                 </button>
-                <button
-                  onClick={handleNext}
-                  className="p-2 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-xl transition-colors text-stone-600 dark:text-stone-300"
-                  aria-label="Next"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                <button onClick={handleNext} style={{ color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }}
+                  className="p-1.5 rounded-md hover:opacity-80">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
                 </button>
               </div>
-              <h2 className="text-xl font-black text-stone-900 dark:text-stone-100">{monthYear}</h2>
-              <button
-                onClick={fetchData}
-                disabled={loading}
-                className="px-4 py-2 text-sm text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-xl transition-colors flex items-center gap-2 font-medium"
-              >
-                <span className={loading ? 'animate-spin' : ''}>&#x21bb;</span>
+              <h2 style={{ color: 'var(--text-primary)' }} className="text-[17px] font-semibold">{monthYear}</h2>
+              <button onClick={fetchData} disabled={loading} style={{ color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }}
+                className="px-3 py-1.5 rounded-md text-[12px] font-medium hover:opacity-80 disabled:opacity-50 flex items-center gap-1.5">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={loading ? 'animate-spin' : ''}><path d="M23 4v6h-6M1 20v-6h6" strokeLinecap="round" strokeLinejoin="round" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 {t('common.refresh')}
               </button>
             </div>
 
-            {/* Calendar Grid */}
+            {/* Grid */}
             {loading ? (
-              <div className="p-12 text-center text-stone-500 dark:text-stone-400">
-                <div className="animate-pulse">{t('calendar.loadingCalendar')}</div>
-              </div>
+              <div className="p-12 text-center"><div className="animate-spin w-8 h-8 rounded-full border-2 mx-auto" style={{ borderColor: 'var(--card-border)', borderTopColor: 'var(--gold)' }} /></div>
             ) : rooms.length === 0 ? (
-              <div className="p-12 text-center text-stone-500 dark:text-stone-400">
-                <div className="text-4xl mb-4">&#x25EB;</div>
-                <p className="text-lg font-bold">{t('calendar.noRooms')}</p>
-                <p className="text-sm mt-1">{t('calendar.createRoomsFirst')}</p>
+              <div style={{ color: 'var(--text-muted)' }} className="p-12 text-center">
+                <p style={{ color: 'var(--text-primary)' }} className="text-[17px] font-semibold mb-2">{t('calendar.noRooms')}</p>
+                <p className="text-[13px]">{t('calendar.createRoomsFirst')}</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
-                  {/* Date Headers */}
                   <thead>
                     <tr>
-                      <th className="sticky left-0 z-10 bg-stone-50 dark:bg-stone-700 border-b border-r border-stone-200 dark:border-stone-700 p-3 text-left text-xs font-bold text-stone-600 dark:text-stone-300 uppercase min-w-[180px]">
+                      <th className="sticky left-0 z-10 px-4 py-3 text-left min-w-[200px]"
+                        style={{ background: 'var(--surface)', borderBottom: '1px solid var(--card-border)', borderRight: '1px solid var(--card-border)', color: 'var(--text-muted)', fontSize: 9, fontWeight: 600, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
                         {t('bookings.room')}
                       </th>
-                      {dateRange.map((date) => {
-                        const isToday = formatDateKey(date) === formatDateKey(new Date());
-                        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-                        const dayNum = date.getDate();
+                      {dateRange.map(date => {
+                        const isToday = formatDateKey(date) === todayKey;
                         return (
-                          <th
-                            key={formatDateKey(date)}
-                            className={`border-b border-stone-200 dark:border-stone-700 p-2 text-center min-w-[80px] ${
-                              isToday ? 'bg-lime-50 dark:bg-lime-900/30' : 'bg-stone-50 dark:bg-stone-700'
-                            }`}
-                          >
-                            <div className="text-xs text-stone-500 dark:text-stone-400">{dayName}</div>
-                            <div className={`text-sm font-bold ${isToday ? 'text-lime-600' : 'text-stone-700 dark:text-stone-300'}`}>
-                              {dayNum}
-                            </div>
+                          <th key={formatDateKey(date)} className="p-2 text-center min-w-[72px]"
+                            style={{ background: isToday ? 'rgba(201,169,110,0.08)' : 'var(--surface)', borderBottom: '1px solid var(--card-border)' }}>
+                            <div style={{ color: 'var(--text-muted)', fontSize: 10 }}>{date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                            <div style={{ color: isToday ? 'var(--gold)' : 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}>{date.getDate()}</div>
                           </th>
                         );
                       })}
                     </tr>
                   </thead>
                   <tbody>
-                    {rooms.map((room) => {
-                      const roomReservations = reservationsByRoom.get(room.id) || [];
+                    {rooms.map(room => {
+                      const roomRes = reservationsByRoom.get(room.id) ?? [];
                       return (
-                        <tr
-                          key={room.id}
-                          className={`group ${dropTargetRoomId === room.id && dragData?.sourceRoomId !== room.id ? 'bg-blue-50' : ''}`}
-                          onDragOver={(e) => handleDragOver(e, room.id)}
-                          onDragLeave={handleDragLeave}
-                          onDrop={(e) => handleDrop(e, room.id)}
-                        >
-                          {/* Room Info */}
-                          <td className="sticky left-0 z-10 bg-white dark:bg-stone-800 border-b border-r border-stone-200 dark:border-stone-700 p-3 group-hover:bg-stone-50 dark:group-hover:bg-stone-700">
+                        <tr key={room.id}
+                          style={{ background: dropTargetRoomId === room.id && dragData?.sourceRoomId !== room.id ? 'rgba(201,169,110,0.06)' : 'transparent' }}
+                          onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDropTargetRoomId(room.id); }}
+                          onDragLeave={e => { const rel = e.relatedTarget as Node | null; if (rel && (e.currentTarget as Node).contains(rel)) return; setDropTargetRoomId(null); }}
+                          onDrop={e => handleDrop(e, room.id)}>
+                          <td className="sticky left-0 z-10 px-4 py-3"
+                            style={{ background: 'var(--surface)', borderBottom: '1px solid var(--card-border)', borderRight: '1px solid var(--card-border)' }}>
                             <div className="flex items-center gap-3">
-                              <div
-                                className="w-3 h-3 rounded-full flex-shrink-0"
-                                style={{ backgroundColor: room.color }}
-                              />
+                              <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: room.color }} />
                               <div>
-                                <div className="font-bold text-stone-900 dark:text-stone-100">{room.name}</div>
-                                <div className="text-xs text-stone-500 dark:text-stone-400">
-                                  #{room.roomNumber} - {room.type}
-                                </div>
+                                <div style={{ color: 'var(--text-primary)' }} className="text-[13px] font-semibold">{room.name}</div>
+                                <div style={{ color: 'var(--text-muted)' }} className="text-[10px]">#{room.roomNumber} · {room.type}</div>
                               </div>
                             </div>
                           </td>
-                          {/* Date Cells */}
-                          {dateRange.map((date) => {
-                            const isToday = formatDateKey(date) === formatDateKey(new Date());
+                          {dateRange.map(date => {
+                            const isToday = formatDateKey(date) === todayKey;
                             return (
-                              <td
-                                key={formatDateKey(date)}
-                                className={`border-b border-stone-200 dark:border-stone-700 p-0 relative h-16 cursor-pointer hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors ${
-                                  isToday ? 'bg-lime-50/50 dark:bg-lime-900/20' : ''
-                                }`}
-                                onClick={() => handleCellClick(room.id, date)}
-                              >
-                                {/* Render reservations that start on this date or span through it */}
-                                {roomReservations
-                                  .filter((res) => res.checkInDate === formatDateKey(date))
-                                  .map((res) => {
-                                    const style = getReservationStyle(res);
-                                    if (!style) return null;
-
-                                    const checkIn = new Date(res.checkInDate);
-                                    const checkOut = new Date(res.checkOutDate);
-                                    const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
-
-                                    return (
-                                      <div
-                                        key={res.id}
-                                        draggable
-                                        onDragStart={(e) => handleDragStart(e, res)}
-                                        onDragEnd={handleDragEnd}
-                                        onClick={(e) => handleReservationClick(res.id, e)}
-                                        className={`absolute top-1 left-1 right-1 h-14 rounded-md px-2 py-1 text-white text-xs cursor-grab hover:shadow-lg transition-shadow overflow-hidden ${getStatusColor(res.status)} ${dragData?.reservationId === res.id ? 'opacity-50' : ''}`}
-                                        style={{
-                                          backgroundColor: room.color,
-                                          width: `calc(${nights * 100}% - 8px)`,
-                                          zIndex: 5,
-                                        }}
-                                        title={`${res.guestName} - ${res.status}`}
-                                      >
-                                        <div className="font-semibold truncate">{res.guestName}</div>
-                                        <div className="text-xs opacity-80 truncate">
-                                          {res.checkInDate} - {res.checkOutDate}
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
+                              <td key={formatDateKey(date)} className="relative h-14 cursor-pointer" onClick={() => handleCellClick(room.id, date)}
+                                style={{ background: isToday ? 'rgba(201,169,110,0.04)' : 'transparent', borderBottom: '1px solid var(--card-border)', borderRight: '1px solid rgba(255,255,255,0.03)' }}
+                                onMouseEnter={e => (e.currentTarget.style.background = isToday ? 'rgba(201,169,110,0.08)' : 'rgba(255,255,255,0.02)')}
+                                onMouseLeave={e => (e.currentTarget.style.background = isToday ? 'rgba(201,169,110,0.04)' : 'transparent')}>
+                                {roomRes.filter(res => res.checkInDate === formatDateKey(date)).map(res => {
+                                  const style = getReservationStyle(res);
+                                  if (!style) return null;
+                                  const nights = Math.ceil((new Date(res.checkOutDate).getTime() - new Date(res.checkInDate).getTime()) / 86400000);
+                                  const opacity = res.status === 'CANCELLED' ? 0.4 : res.status === 'PENDING' ? 0.7 : 1;
+                                  return (
+                                    <div key={res.id} draggable onDragStart={e => handleDragStart(e, res)} onDragEnd={handleDragEnd}
+                                      onClick={e => handleReservationClick(res.id, e)}
+                                      style={{ position: 'absolute', top: 4, left: 4, right: 4, height: 48, background: room.color, opacity: dragData?.reservationId === res.id ? 0.4 : opacity, width: `calc(${nights * 100}% - 8px)`, zIndex: 5, borderRadius: 6 }}
+                                      className="px-2 py-1 text-white text-[11px] cursor-grab hover:shadow-lg transition-shadow overflow-hidden"
+                                      title={`${res.guestName} - ${res.status}`}>
+                                      <div className="font-semibold truncate">{res.guestName}</div>
+                                      <div className="opacity-80 truncate text-[10px]">{res.checkInDate} — {res.checkOutDate}</div>
+                                    </div>
+                                  );
+                                })}
                               </td>
                             );
                           })}
@@ -546,30 +270,24 @@ export default function CalendarPage() {
           </div>
 
           {/* Legend */}
-          <div className="bg-white dark:bg-stone-800 rounded-3xl border-2 border-stone-200 dark:border-stone-700 p-4">
-            <h3 className="text-sm font-bold text-stone-700 dark:text-stone-300 mb-3">{t('calendar.legend')}</h3>
-            <div className="flex flex-wrap gap-4">
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--card-border)' }} className="rounded-xl p-4">
+            <p style={{ color: 'var(--text-muted)' }} className="text-[9px] font-semibold uppercase tracking-[0.2em] mb-3">{t('calendar.legend')}</p>
+            <div className="flex flex-wrap gap-5">
+              {[
+                { label: t('calendar.confirmed'), opacity: 1 },
+                { label: t('calendar.pending'), opacity: 0.7 },
+                { label: t('calendar.cancelled'), opacity: 0.4 },
+              ].map(({ label, opacity }) => (
+                <div key={label} className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded" style={{ background: 'var(--gold)', opacity }} />
+                  <span style={{ color: 'var(--text-secondary)' }} className="text-[12px]">{label}</span>
+                </div>
+              ))}
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-lg bg-lime-500" />
-                <span className="text-sm text-stone-600 dark:text-stone-300">{t('calendar.confirmed')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-lg bg-lime-500 opacity-70" />
-                <span className="text-sm text-stone-600 dark:text-stone-300">{t('calendar.pending')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-lg bg-lime-500 opacity-40" />
-                <span className="text-sm text-stone-600 dark:text-stone-300">{t('calendar.cancelled')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-lg border-2 border-dashed border-stone-300 dark:border-stone-500" />
-                <span className="text-sm text-stone-600 dark:text-stone-300">{t('calendar.clickToCreate')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ color: 'var(--text-muted)' }}>
+                  <path d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <span className="text-sm text-stone-600 dark:text-stone-300">{t('calendar.dragToMove')}</span>
+                <span style={{ color: 'var(--text-secondary)' }} className="text-[12px]">{t('calendar.dragToMove')}</span>
               </div>
             </div>
           </div>

@@ -58,9 +58,7 @@ export default function HotelCMSDashboard() {
 
             {/* Page header */}
             <div className="mb-9">
-              <h1
-                className="text-[2.75rem] font-bold leading-none tracking-tight mb-2"
-                style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
+              <h1 style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }} className="text-[2.75rem] font-bold leading-none tracking-tight mb-2"
               >
                 {t('dashboard.title')}
               </h1>
@@ -103,7 +101,7 @@ function SectionHeader({ title, sub }: { title: string; sub: string }) {
     <div className="mb-4">
       <h2
         className="text-[18px] font-semibold leading-none mb-1.5"
-        style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
+        style={{ color: 'var(--text-primary)' }}
       >
         {title}
       </h2>

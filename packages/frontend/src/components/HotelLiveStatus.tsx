@@ -191,7 +191,6 @@ export default function HotelLiveStatus() {
               className="text-[15px] font-semibold tabular-nums"
               style={{
                 color: tile?.alert ? '#FBBF24' : 'var(--text-primary)',
-                fontFamily: 'var(--font-display)',
               }}
             >
               {tile?.value ?? '—'}

@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import HotelSidebar from '@/components/HotelSidebar';
 import { useLocale } from '@/context/LocaleContext';
+import { useToast } from '@/context/ToastContext';
+import { useConfirm } from '@/context/ConfirmContext';
 
 // Types
 interface CustomerData {
@@ -97,7 +99,7 @@ function getVoucherStatus(voucher: Voucher): { label: string; color: string } {
     return { label: 'Canceled', color: 'bg-red-100 text-red-700' };
   }
   if (voucher.valueRemaining === 0 && voucher.valueUsed > 0) {
-    return { label: 'Used', color: 'bg-stone-100 text-stone-700' };
+    return { label: 'Used', color: 'bg-[var(--surface-hover)] text-[var(--text-secondary)] border border-[var(--card-border)]' };
   }
   if (new Date(voucher.validity) < new Date()) {
     return { label: 'Expired', color: 'bg-orange-100 text-orange-700' };
@@ -106,9 +108,9 @@ function getVoucherStatus(voucher: Voucher): { label: string; color: string } {
     if (voucher.valueUsed > 0) {
       return { label: 'Partial', color: 'bg-blue-100 text-blue-700' };
     }
-    return { label: 'Active', color: 'bg-green-100 text-green-700' };
+    return { label: 'Active', color: 'bg-[rgba(74,222,128,0.10)] text-[#4ADE80]' };
   }
-  return { label: 'Inactive', color: 'bg-stone-100 text-stone-600' };
+  return { label: 'Inactive', color: 'bg-[var(--surface-hover)] text-[var(--text-muted)] border border-[var(--card-border)]' };
 }
 
 function isExpired(voucher: Voucher): boolean {
@@ -117,6 +119,8 @@ function isExpired(voucher: Voucher): boolean {
 
 export default function VouchersPage() {
   const { t } = useLocale();
+  const toast = useToast();
+  const confirm = useConfirm();
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -417,20 +421,20 @@ export default function VouchersPage() {
   // Toggle active status
   const handleToggleActive = async (voucher: Voucher) => {
     const action = voucher.active ? 'deactivate' : 'activate';
-    if (!confirm(`Are you sure you want to ${action} this voucher?`)) return;
+    if (!(await confirm({ message: `${action === 'deactivate' ? 'Deactivate' : 'Activate'} this voucher?`, confirmLabel: action === 'deactivate' ? 'Deactivate' : 'Activate', danger: action === 'deactivate' }))) return;
 
     try {
       const updatedVoucher = { ...voucher, active: !voucher.active };
       setVouchers(vouchers.map((v) => (v.id === voucher.id ? updatedVoucher : v)));
-      setSuccessMessage(`Voucher ${action}d successfully`);
+      toast.success(`Voucher ${action}d.`);
     } catch {
-      setError(`Failed to ${action} voucher`);
+      toast.error(`Failed to ${action} voucher`);
     }
   };
 
   // Cancel voucher
   const handleCancelVoucher = async (voucher: Voucher) => {
-    if (!confirm('Are you sure you want to cancel this voucher? This cannot be undone.')) return;
+    if (!(await confirm({ message: 'Cancel this voucher? This cannot be undone.', confirmLabel: 'Cancel Voucher', danger: true }))) return;
 
     try {
       const updatedVoucher = {
@@ -439,9 +443,9 @@ export default function VouchersPage() {
         canceledAt: new Date().toISOString(),
       };
       setVouchers(vouchers.map((v) => (v.id === voucher.id ? updatedVoucher : v)));
-      setSuccessMessage('Voucher canceled successfully');
+      toast.success('Voucher cancelled.');
     } catch {
-      setError('Failed to cancel voucher');
+      toast.error('Failed to cancel voucher');
     }
   };
 
@@ -671,14 +675,14 @@ export default function VouchersPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-stone-50 dark:bg-stone-900">
+    <div className="flex min-h-screen" style={{ background: 'var(--background)' }}>
       <HotelSidebar />
-      <main className="flex-1 ml-72 p-8">
-        <div className="max-w-7xl mx-auto">
+      <main className="flex-1 px-8 py-8" style={{ marginLeft: 'var(--sidebar-width, 280px)', transition: 'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)' }}>
+        <div className="max-w-[1380px] mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold text-stone-800 dark:text-stone-100 mb-2">{t('vouchers.title')}</h1>
-            <p className="text-stone-600 dark:text-stone-300">{t('vouchers.subtitle')}</p>
+            <h1 style={{ color: "var(--text-primary)", fontFamily: "var(--font-display)" }} className="text-[2.75rem] font-bold tracking-tight mb-2">{t('vouchers.title')}</h1>
+            <p style={{ color: 'var(--text-secondary)' }}>{t('vouchers.subtitle')}</p>
           </div>
 
           {/* Messages */}
@@ -701,26 +705,26 @@ export default function VouchersPage() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 p-4">
-              <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.totalVouchers')}</div>
-              <div className="text-2xl font-bold text-stone-800 dark:text-stone-100">{stats.total}</div>
+            <div className="rounded-xl p-4" style={{ background: 'var(--surface)', border: '1px solid var(--card-border)' }}>
+              <div style={{ color: 'var(--text-muted)' }} className="text-[13px]">{t('vouchers.totalVouchers')}</div>
+              <div style={{ color: "var(--text-primary)", fontFamily: "var(--font-display)" }} className="text-[1.75rem] font-bold tracking-tight tabular-nums">{stats.total}</div>
             </div>
-            <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 p-4">
-              <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.activeVouchers')}</div>
+            <div className="rounded-xl p-4" style={{ background: 'var(--surface)', border: '1px solid var(--card-border)' }}>
+              <div style={{ color: 'var(--text-muted)' }} className="text-[13px]">{t('vouchers.activeVouchers')}</div>
               <div className="text-2xl font-bold text-green-600">{stats.active}</div>
             </div>
-            <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 p-4">
-              <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.totalValue')}</div>
-              <div className="text-2xl font-bold text-stone-800 dark:text-stone-100">{formatCurrency(stats.totalValue, 'CZK')}</div>
+            <div className="rounded-xl p-4" style={{ background: 'var(--surface)', border: '1px solid var(--card-border)' }}>
+              <div style={{ color: 'var(--text-muted)' }} className="text-[13px]">{t('vouchers.totalValue')}</div>
+              <div style={{ color: "var(--text-primary)", fontFamily: "var(--font-display)" }} className="text-[1.75rem] font-bold tracking-tight tabular-nums">{formatCurrency(stats.totalValue, 'CZK')}</div>
             </div>
-            <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 p-4">
-              <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.remainingValue')}</div>
+            <div className="rounded-xl p-4" style={{ background: 'var(--surface)', border: '1px solid var(--card-border)' }}>
+              <div style={{ color: 'var(--text-muted)' }} className="text-[13px]">{t('vouchers.remainingValue')}</div>
               <div className="text-2xl font-bold text-blue-600">{formatCurrency(stats.remainingValue, 'CZK')}</div>
             </div>
           </div>
 
           {/* Filters */}
-          <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 p-4 mb-6">
+          <div className="bg-[var(--surface)] rounded-xl  border border-[var(--card-border)] p-4 mb-6">
             <div className="flex flex-wrap gap-4 items-center">
               <div className="flex-1 min-w-[200px]">
                 <input
@@ -728,30 +732,30 @@ export default function VouchersPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={t('vouchers.searchPlaceholder')}
-                  className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-stone-900 dark:text-stone-100"
+                  className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500  "
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm text-stone-600 dark:text-stone-300">{t('vouchers.from')}</label>
+                <label style={{ color: 'var(--text-secondary)' }} className="text-[13px]">{t('vouchers.from')}</label>
                 <input
                   type="date"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
-                  className="px-3 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                  className="px-3 py-2 border border-[var(--card-border)] rounded-lg  "
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm text-stone-600 dark:text-stone-300">{t('vouchers.to')}</label>
+                <label style={{ color: 'var(--text-secondary)' }} className="text-[13px]">{t('vouchers.to')}</label>
                 <input
                   type="date"
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
-                  className="px-3 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                  className="px-3 py-2 border border-[var(--card-border)] rounded-lg  "
                 />
               </div>
               <button
                 onClick={fetchVouchers}
-                className="px-4 py-2 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg transition-colors"
+                style={{ color: "var(--text-secondary)" }} className="px-4 py-2 rounded-md text-[13px] hover:opacity-70 transition-opacity"
               >
                 {t('common.refresh')}
               </button>
@@ -773,16 +777,16 @@ export default function VouchersPage() {
           </div>
 
           {/* Tabs */}
-          <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 mb-6">
-            <div className="flex border-b border-stone-200 dark:border-stone-700">
+          <div className="bg-[var(--surface)] rounded-xl  border border-[var(--card-border)] mb-6">
+            <div className="flex border-b border-[var(--card-border)]">
               {(['all', 'active', 'used', 'expired', 'canceled'] as TabType[]).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`flex-1 px-6 py-4 text-sm font-medium transition-colors capitalize ${
+                  className={`flex-1 px-6 py-4 text-[13px] font-medium transition-colors capitalize border-b-2 ${
                     activeTab === tab
-                      ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 dark:bg-blue-900/30'
-                      : 'text-stone-600 dark:text-stone-300 hover:text-stone-800 dark:hover:text-stone-100 hover:bg-stone-50 dark:hover:bg-stone-700'
+                      ? 'border-[var(--gold)] text-[var(--text-primary)]'
+                      : 'border-transparent text-[var(--text-secondary)] hover:opacity-70'
                   }`}
                 >
                   {tab}
@@ -792,84 +796,84 @@ export default function VouchersPage() {
           </div>
 
           {/* Vouchers Table */}
-          <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 overflow-hidden">
+          <div className="bg-[var(--surface)] rounded-xl  border border-[var(--card-border)] overflow-hidden">
             {loading ? (
-              <div className="p-8 text-center text-stone-500 dark:text-stone-400">
+              <div className="p-8 text-center text-[var(--text-muted)]">
                 <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
                 {t('common.loading')}
               </div>
             ) : filteredVouchers.length === 0 ? (
               <div className="p-12 text-center">
                 <div className="text-6xl mb-4">🎁</div>
-                <h3 className="text-xl font-semibold text-stone-800 dark:text-stone-100 mb-2">{t('vouchers.noVouchers')}</h3>
-                <p className="text-stone-500 dark:text-stone-400">
+                <h3 style={{ color: "var(--text-primary)", fontFamily: "var(--font-display)" }} className="text-[18px] font-semibold leading-none mb-2">{t('vouchers.noVouchers')}</h3>
+                <p style={{ color: 'var(--text-muted)' }}>
                   {searchQuery || dateFrom || dateTo ? t('common.tryAdjusting') : t('vouchers.createFirst')}
                 </p>
               </div>
             ) : (
               <table className="w-full">
-                <thead className="bg-stone-50 dark:bg-stone-900 border-b border-stone-200 dark:border-stone-700">
+                <thead className="bg-[var(--background)] border-b border-[var(--card-border)]">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
                       {t('vouchers.number')}
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
                       {t('vouchers.customer')}
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
                       {t('vouchers.value')}
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
                       {t('vouchers.remaining')}
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
                       {t('vouchers.validUntil')}
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
                       {t('common.status')}
                     </th>
-                    <th className="px-6 py-4 text-right text-xs font-semibold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
                       {t('common.actions')}
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-stone-200 dark:divide-stone-700">
+                <tbody className="divide-y divide-[var(--card-border)]">
                   {filteredVouchers.map((voucher) => {
                     const status = getVoucherStatus(voucher);
                     return (
-                      <tr key={voucher.id} className="hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors">
+                      <tr key={voucher.id} className="transition-colors" onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-hover)")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
                         <td className="px-6 py-4">
-                          <div className="font-mono font-semibold text-stone-800 dark:text-stone-100">{voucher.number}</div>
-                          {voucher.code && <div className="text-xs text-stone-500 dark:text-stone-400">Code: {voucher.code}</div>}
+                          <div style={{ color: "var(--text-primary)" }} className="font-mono font-semibold">{voucher.number}</div>
+                          {voucher.code && <div className="text-xs text-[var(--text-muted)]">Code: {voucher.code}</div>}
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-stone-800 dark:text-stone-100">{voucher.customerData.name || '-'}</div>
-                          <div className="text-xs text-stone-500 dark:text-stone-400">{voucher.customerData.email || ''}</div>
+                          <div style={{ color: "var(--text-primary)" }}>{voucher.customerData.name || '-'}</div>
+                          <div className="text-xs text-[var(--text-muted)]">{voucher.customerData.email || ''}</div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="font-semibold text-stone-800 dark:text-stone-100">
+                          <div style={{ color: "var(--text-primary)" }} className="font-semibold">
                             {formatCurrency(voucher.valueTotal, voucher.currency)}
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div
                             className={`font-semibold ${
-                              voucher.valueRemaining > 0 ? 'text-green-600' : 'text-stone-400 dark:text-stone-400'
+                              voucher.valueRemaining > 0 ? 'text-[#4ADE80]' : 'text-[var(--text-muted)] '
                             }`}
                           >
                             {formatCurrency(voucher.valueRemaining, voucher.currency)}
                           </div>
                           {voucher.valueUsed > 0 && (
-                            <div className="text-xs text-stone-500 dark:text-stone-400">
+                            <div className="text-xs text-[var(--text-muted)]">
                               Used: {formatCurrency(voucher.valueUsed, voucher.currency)}
                             </div>
                           )}
                         </td>
                         <td className="px-6 py-4">
-                          <div className={isExpired(voucher) ? 'text-red-600' : 'text-stone-800 dark:text-stone-100'}>
+                          <div className={isExpired(voucher) ? 'text-[#FB7185]' : 'text-[var(--text-primary)] '}>
                             {formatDate(voucher.validity)}
                           </div>
-                          <div className="text-xs text-stone-500 dark:text-stone-400">Created: {formatDate(voucher.createdAt)}</div>
+                          <div className="text-xs text-[var(--text-muted)]">Created: {formatDate(voucher.createdAt)}</div>
                         </td>
                         <td className="px-6 py-4">
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${status.color}`}>
@@ -880,14 +884,14 @@ export default function VouchersPage() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => openDetailModal(voucher)}
-                              className="px-2 py-1 text-sm text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 rounded"
+                              style={{ color: "var(--text-secondary)" }} className="px-2 py-1 text-[12px] rounded-md hover:opacity-70 transition-opacity"
                               title="View details"
                             >
                               {t('common.view')}
                             </button>
                             <button
                               onClick={() => handleDownloadPdf(voucher)}
-                              className="px-2 py-1 text-sm text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded"
+                              style={{ color: "#A78BFA" }} className="px-2 py-1 text-[12px] rounded-md hover:opacity-70 transition-opacity"
                               title="Download PDF"
                             >
                               {t('vouchers.pdf')}
@@ -896,7 +900,7 @@ export default function VouchersPage() {
                               <>
                                 <button
                                   onClick={() => openEditVoucher(voucher)}
-                                  className="px-2 py-1 text-sm text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded"
+                                  style={{ color: "var(--gold)" }} className="px-2 py-1 text-[12px] rounded-md hover:opacity-70 transition-opacity"
                                 >
                                   {t('common.edit')}
                                 </button>
@@ -904,8 +908,8 @@ export default function VouchersPage() {
                                   onClick={() => handleToggleActive(voucher)}
                                   className={`px-2 py-1 text-sm rounded ${
                                     voucher.active
-                                      ? 'text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/30'
-                                      : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30'
+                                      ? 'text-[#FBBF24] hover:opacity-70 transition-opacity'
+                                      : 'text-[#4ADE80] hover:opacity-70 transition-opacity'
                                   }`}
                                 >
                                   {voucher.active ? t('vouchers.disable') : t('vouchers.enable')}
@@ -913,7 +917,7 @@ export default function VouchersPage() {
                                 {voucher.active && (
                                   <button
                                     onClick={() => handleCancelVoucher(voucher)}
-                                    className="px-2 py-1 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
+                                    style={{ color: "#FB7185", background: "rgba(251,113,133,0.08)" }} className="px-2 py-1 text-[12px] rounded-md hover:opacity-80 transition-opacity"
                                   >
                                     {t('common.cancel')}
                                   </button>
@@ -934,32 +938,32 @@ export default function VouchersPage() {
 
       {/* Create/Edit Voucher Modal */}
       {showVoucherModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-stone-800 rounded-xl shadow-2xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-stone-200 dark:border-stone-700 sticky top-0 bg-white dark:bg-stone-800 z-10">
-              <h2 className="text-xl font-semibold dark:text-stone-100">{editingVoucher ? t('vouchers.editVoucher') : t('vouchers.createNew')}</h2>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-[var(--surface)] rounded-xl  w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-[var(--card-border)] sticky top-0 bg-[var(--surface)] z-10">
+              <h2 className="text-xl font-semibold ">{editingVoucher ? t('vouchers.editVoucher') : t('vouchers.createNew')}</h2>
             </div>
             <div className="p-6 space-y-6">
               {/* Basic Info */}
               <div>
-                <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-100 mb-3 uppercase tracking-wider">{t('vouchers.basicInfo')}</h3>
+                <h3 style={{ color: "var(--text-muted)" }} className="text-[10px] font-semibold tracking-[0.15em] uppercase mb-3">{t('vouchers.basicInfo')}</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.promoCode')}</label>
+                    <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('vouchers.promoCode')}</label>
                     <input
                       type="text"
                       value={voucherForm.code}
                       onChange={(e) => setVoucherForm({ ...voucherForm, code: e.target.value.toUpperCase() })}
-                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                      className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                       placeholder="e.g., WELLNESS2024"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.format')}</label>
+                    <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('vouchers.format')}</label>
                     <select
                       value={voucherForm.format}
                       onChange={(e) => setVoucherForm({ ...voucherForm, format: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                      className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                     >
                       <option value="DL">DL (99x210mm)</option>
                       <option value="A5">A5 (148x210mm)</option>
@@ -967,22 +971,22 @@ export default function VouchersPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.valueStar')}</label>
+                    <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('vouchers.valueStar')}</label>
                     <input
                       type="number"
                       value={voucherForm.price}
                       onChange={(e) => setVoucherForm({ ...voucherForm, price: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                      className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                       min="0"
                       step="100"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('bookings.currency')}</label>
+                    <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('bookings.currency')}</label>
                     <select
                       value={voucherForm.currency}
                       onChange={(e) => setVoucherForm({ ...voucherForm, currency: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                      className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                     >
                       <option value="CZK">CZK</option>
                       <option value="EUR">EUR</option>
@@ -990,20 +994,20 @@ export default function VouchersPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.validUntilStar')}</label>
+                    <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('vouchers.validUntilStar')}</label>
                     <input
                       type="date"
                       value={voucherForm.validity}
                       onChange={(e) => setVoucherForm({ ...voucherForm, validity: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                      className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.paymentType')}</label>
+                    <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('vouchers.paymentType')}</label>
                     <select
                       value={voucherForm.paymentType}
                       onChange={(e) => setVoucherForm({ ...voucherForm, paymentType: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                      className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                     >
                       <option value="payment-online-card">Online Card</option>
                       <option value="payment-bank-transfer">Bank Transfer</option>
@@ -1012,11 +1016,11 @@ export default function VouchersPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.deliveryType')}</label>
+                    <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('vouchers.deliveryType')}</label>
                     <select
                       value={voucherForm.deliveryType}
                       onChange={(e) => setVoucherForm({ ...voucherForm, deliveryType: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                      className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                     >
                       <option value="email">Email</option>
                       <option value="post">Post</option>
@@ -1024,22 +1028,22 @@ export default function VouchersPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.deliveryPrice')}</label>
+                    <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('vouchers.deliveryPrice')}</label>
                     <input
                       type="number"
                       value={voucherForm.deliveryPrice}
                       onChange={(e) => setVoucherForm({ ...voucherForm, deliveryPrice: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                      className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                       min="0"
                     />
                   </div>
                 </div>
                 <div className="mt-4">
-                  <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.note')}</label>
+                  <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('vouchers.note')}</label>
                   <textarea
                     value={voucherForm.note}
                     onChange={(e) => setVoucherForm({ ...voucherForm, note: e.target.value })}
-                    className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                    className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                     rows={2}
                     placeholder={t('vouchers.internalNote')}
                   />
@@ -1048,88 +1052,88 @@ export default function VouchersPage() {
 
               {/* Customer Data */}
               <div>
-                <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-100 mb-3 uppercase tracking-wider">{t('vouchers.customerInfo')}</h3>
+                <h3 style={{ color: "var(--text-muted)" }} className="text-[10px] font-semibold tracking-[0.15em] uppercase mb-3">{t('vouchers.customerInfo')}</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.nameStar')}</label>
+                    <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('vouchers.nameStar')}</label>
                     <input
                       type="text"
                       value={voucherForm.customerName}
                       onChange={(e) => setVoucherForm({ ...voucherForm, customerName: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                      className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.emailStar')}</label>
+                    <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('vouchers.emailStar')}</label>
                     <input
                       type="email"
                       value={voucherForm.customerEmail}
                       onChange={(e) => setVoucherForm({ ...voucherForm, customerEmail: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                      className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('common.phone')}</label>
+                    <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('common.phone')}</label>
                     <input
                       type="tel"
                       value={voucherForm.customerTel}
                       onChange={(e) => setVoucherForm({ ...voucherForm, customerTel: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                      className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.company')}</label>
+                    <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('vouchers.company')}</label>
                     <input
                       type="text"
                       value={voucherForm.customerCompany}
                       onChange={(e) => setVoucherForm({ ...voucherForm, customerCompany: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                      className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                     />
                   </div>
                   <div className="col-span-2 grid grid-cols-4 gap-4">
                     <div className="col-span-2">
-                      <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.street')}</label>
+                      <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('vouchers.street')}</label>
                       <input
                         type="text"
                         value={voucherForm.customerStreet}
                         onChange={(e) => setVoucherForm({ ...voucherForm, customerStreet: e.target.value })}
-                        className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                        className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.houseNo')}</label>
+                      <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('vouchers.houseNo')}</label>
                       <input
                         type="text"
                         value={voucherForm.customerHouseNumber}
                         onChange={(e) => setVoucherForm({ ...voucherForm, customerHouseNumber: e.target.value })}
-                        className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                        className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.postalCode')}</label>
+                      <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('vouchers.postalCode')}</label>
                       <input
                         type="text"
                         value={voucherForm.customerPostalCode}
                         onChange={(e) => setVoucherForm({ ...voucherForm, customerPostalCode: e.target.value })}
-                        className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                        className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.city')}</label>
+                    <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('vouchers.city')}</label>
                     <input
                       type="text"
                       value={voucherForm.customerCity}
                       onChange={(e) => setVoucherForm({ ...voucherForm, customerCity: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                      className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.country')}</label>
+                    <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('vouchers.country')}</label>
                     <select
                       value={voucherForm.customerCountry}
                       onChange={(e) => setVoucherForm({ ...voucherForm, customerCountry: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                      className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                     >
                       <option value="CZ">Czech Republic</option>
                       <option value="SK">Slovakia</option>
@@ -1141,21 +1145,21 @@ export default function VouchersPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.cin')}</label>
+                    <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('vouchers.cin')}</label>
                     <input
                       type="text"
                       value={voucherForm.customerCin}
                       onChange={(e) => setVoucherForm({ ...voucherForm, customerCin: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                      className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.tin')}</label>
+                    <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('vouchers.tin')}</label>
                     <input
                       type="text"
                       value={voucherForm.customerTin}
                       onChange={(e) => setVoucherForm({ ...voucherForm, customerTin: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                      className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                     />
                   </div>
                 </div>
@@ -1163,34 +1167,34 @@ export default function VouchersPage() {
 
               {/* Gift Data */}
               <div>
-                <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-100 mb-3 uppercase tracking-wider">
+                <h3 style={{ color: "var(--text-muted)" }} className="text-[10px] font-semibold tracking-[0.15em] uppercase mb-3">
                   {t('vouchers.giftRecipient')}
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.recipientName')}</label>
+                    <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('vouchers.recipientName')}</label>
                     <input
                       type="text"
                       value={voucherForm.giftName}
                       onChange={(e) => setVoucherForm({ ...voucherForm, giftName: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                      className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.recipientEmail')}</label>
+                    <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('vouchers.recipientEmail')}</label>
                     <input
                       type="email"
                       value={voucherForm.giftEmail}
                       onChange={(e) => setVoucherForm({ ...voucherForm, giftEmail: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                      className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                     />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('vouchers.giftMessage')}</label>
+                    <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('vouchers.giftMessage')}</label>
                     <textarea
                       value={voucherForm.giftMessage}
                       onChange={(e) => setVoucherForm({ ...voucherForm, giftMessage: e.target.value })}
-                      className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-900 dark:text-stone-100"
+                      className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  "
                       rows={2}
                       placeholder={t('vouchers.giftMessagePlaceholder')}
                     />
@@ -1199,14 +1203,14 @@ export default function VouchersPage() {
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3 pt-4 border-t border-stone-200 dark:border-stone-700">
+              <div className="flex gap-3 pt-4 border-t border-[var(--card-border)]">
                 <button
                   onClick={() => {
                     setShowVoucherModal(false);
                     setEditingVoucher(null);
                     resetForm();
                   }}
-                  className="flex-1 px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-700 dark:text-stone-100"
+                  className="flex-1 px-4 py-2 border border-[var(--card-border)] rounded-lg "
                 >
                   {t('common.cancel')}
                 </button>
@@ -1225,11 +1229,11 @@ export default function VouchersPage() {
 
       {/* Detail Modal */}
       {showDetailModal && selectedVoucher && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-stone-800 rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-stone-200 dark:border-stone-700">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-[var(--surface)] rounded-xl  w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-[var(--card-border)]">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold dark:text-stone-100">{t('vouchers.voucherDetails')}</h2>
+                <h2 className="text-xl font-semibold ">{t('vouchers.voucherDetails')}</h2>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${getVoucherStatus(selectedVoucher).color}`}>
                   {getVoucherStatus(selectedVoucher).label}
                 </span>
@@ -1239,32 +1243,32 @@ export default function VouchersPage() {
               {/* Voucher Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.voucherNumber')}</div>
-                  <div className="font-mono font-semibold text-lg dark:text-stone-100">{selectedVoucher.number}</div>
+                  <div style={{ color: 'var(--text-muted)' }} className="text-[13px]">{t('vouchers.voucherNumber')}</div>
+                  <div className="font-mono font-semibold text-lg ">{selectedVoucher.number}</div>
                 </div>
                 {selectedVoucher.code && (
                   <div>
-                    <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.promoCode')}</div>
-                    <div className="font-semibold dark:text-stone-100">{selectedVoucher.code}</div>
+                    <div style={{ color: 'var(--text-muted)' }} className="text-[13px]">{t('vouchers.promoCode')}</div>
+                    <div className="font-semibold ">{selectedVoucher.code}</div>
                   </div>
                 )}
                 <div>
-                  <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.totalValue')}</div>
-                  <div className="font-semibold text-lg dark:text-stone-100">{formatCurrency(selectedVoucher.valueTotal, selectedVoucher.currency)}</div>
+                  <div style={{ color: 'var(--text-muted)' }} className="text-[13px]">{t('vouchers.totalValue')}</div>
+                  <div className="font-semibold text-lg ">{formatCurrency(selectedVoucher.valueTotal, selectedVoucher.currency)}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.remainingValue')}</div>
-                  <div className={`font-semibold text-lg ${selectedVoucher.valueRemaining > 0 ? 'text-green-600' : 'text-stone-400 dark:text-stone-400'}`}>
+                  <div style={{ color: 'var(--text-muted)' }} className="text-[13px]">{t('vouchers.remainingValue')}</div>
+                  <div className={`font-semibold text-lg ${selectedVoucher.valueRemaining > 0 ? 'text-[#4ADE80]' : 'text-[var(--text-muted)] '}`}>
                     {formatCurrency(selectedVoucher.valueRemaining, selectedVoucher.currency)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.used')}</div>
-                  <div className="font-semibold dark:text-stone-100">{formatCurrency(selectedVoucher.valueUsed, selectedVoucher.currency)}</div>
+                  <div style={{ color: 'var(--text-muted)' }} className="text-[13px]">{t('vouchers.used')}</div>
+                  <div className="font-semibold ">{formatCurrency(selectedVoucher.valueUsed, selectedVoucher.currency)}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.validUntil')}</div>
-                  <div className={`font-semibold ${isExpired(selectedVoucher) ? 'text-red-600' : 'dark:text-stone-100'}`}>
+                  <div style={{ color: 'var(--text-muted)' }} className="text-[13px]">{t('vouchers.validUntil')}</div>
+                  <div className={`font-semibold ${isExpired(selectedVoucher) ? 'text-[#FB7185]' : ''}`}>
                     {formatDate(selectedVoucher.validity)}
                   </div>
                 </div>
@@ -1272,37 +1276,37 @@ export default function VouchersPage() {
 
               {/* Usage Progress */}
               <div>
-                <div className="text-sm text-stone-500 dark:text-stone-400 mb-2">{t('vouchers.usageProgress')}</div>
-                <div className="w-full bg-stone-100 dark:bg-stone-700 rounded-full h-3">
+                <div className="text-sm text-[var(--text-muted)] mb-2">{t('vouchers.usageProgress')}</div>
+                <div className="w-full bg-[var(--surface-hover)]  rounded-full h-3">
                   <div
                     className="bg-blue-600 h-3 rounded-full transition-all"
                     style={{ width: `${(selectedVoucher.valueUsed / selectedVoucher.valueTotal) * 100}%` }}
                   />
                 </div>
-                <div className="text-xs text-stone-500 dark:text-stone-400 mt-1">
+                <div className="text-xs text-[var(--text-muted)] mt-1">
                   {((selectedVoucher.valueUsed / selectedVoucher.valueTotal) * 100).toFixed(1)}% used
                 </div>
               </div>
 
               {/* Dates */}
-              <div className="grid grid-cols-2 gap-4 p-4 bg-stone-50 dark:bg-stone-900 rounded-lg">
+              <div className="grid grid-cols-2 gap-4 p-4 bg-[var(--background)] rounded-lg">
                 <div>
-                  <div className="text-sm text-stone-500 dark:text-stone-400">{t('common.created')}</div>
-                  <div className="dark:text-stone-100">{formatDateTime(selectedVoucher.createdAt)}</div>
+                  <div style={{ color: 'var(--text-muted)' }} className="text-[13px]">{t('common.created')}</div>
+                  <div className="">{formatDateTime(selectedVoucher.createdAt)}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.paid')}</div>
-                  <div className="dark:text-stone-100">{formatDateTime(selectedVoucher.paidAt)}</div>
+                  <div style={{ color: 'var(--text-muted)' }} className="text-[13px]">{t('vouchers.paid')}</div>
+                  <div className="">{formatDateTime(selectedVoucher.paidAt)}</div>
                 </div>
                 {selectedVoucher.usedAt && (
                   <div>
-                    <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.firstUsed')}</div>
-                    <div className="dark:text-stone-100">{formatDateTime(selectedVoucher.usedAt)}</div>
+                    <div style={{ color: 'var(--text-muted)' }} className="text-[13px]">{t('vouchers.firstUsed')}</div>
+                    <div className="">{formatDateTime(selectedVoucher.usedAt)}</div>
                   </div>
                 )}
                 {selectedVoucher.canceledAt && (
                   <div>
-                    <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.canceled')}</div>
+                    <div style={{ color: 'var(--text-muted)' }} className="text-[13px]">{t('vouchers.canceled')}</div>
                     <div className="text-red-600">{formatDateTime(selectedVoucher.canceledAt)}</div>
                   </div>
                 )}
@@ -1310,21 +1314,21 @@ export default function VouchersPage() {
 
               {/* Customer */}
               <div>
-                <div className="text-sm font-semibold text-stone-800 dark:text-stone-100 mb-2 uppercase tracking-wider">{t('vouchers.customer')}</div>
-                <div className="p-4 bg-stone-50 dark:bg-stone-900 rounded-lg">
-                  <div className="font-semibold dark:text-stone-100">{selectedVoucher.customerData.name}</div>
-                  <div className="text-sm text-stone-600 dark:text-stone-300">{selectedVoucher.customerData.email}</div>
+                <div className="text-sm font-semibold text-[var(--text-primary)]  mb-2 uppercase tracking-wider">{t('vouchers.customer')}</div>
+                <div className="p-4 bg-[var(--background)] rounded-lg">
+                  <div className="font-semibold ">{selectedVoucher.customerData.name}</div>
+                  <div style={{ color: 'var(--text-secondary)' }} className="text-[13px]">{selectedVoucher.customerData.email}</div>
                   {selectedVoucher.customerData.tel && (
-                    <div className="text-sm text-stone-600 dark:text-stone-300">{selectedVoucher.customerData.tel}</div>
+                    <div style={{ color: 'var(--text-secondary)' }} className="text-[13px]">{selectedVoucher.customerData.tel}</div>
                   )}
                   {selectedVoucher.customerData.company && (
-                    <div className="text-sm text-stone-600 dark:text-stone-300 mt-2">
+                    <div className="text-sm text-[var(--text-secondary)] mt-2">
                       {selectedVoucher.customerData.company}
                       {selectedVoucher.customerData.cin && ` (ICO: ${selectedVoucher.customerData.cin})`}
                     </div>
                   )}
                   {selectedVoucher.customerData.street && (
-                    <div className="text-sm text-stone-500 dark:text-stone-400 mt-2">
+                    <div className="text-sm text-[var(--text-muted)] mt-2">
                       {selectedVoucher.customerData.street} {selectedVoucher.customerData.houseNumber},{' '}
                       {selectedVoucher.customerData.postalCode} {selectedVoucher.customerData.city},{' '}
                       {selectedVoucher.customerData.country}
@@ -1336,14 +1340,14 @@ export default function VouchersPage() {
               {/* Gift Recipient */}
               {selectedVoucher.giftData.name && (
                 <div>
-                  <div className="text-sm font-semibold text-stone-800 dark:text-stone-100 mb-2 uppercase tracking-wider">{t('vouchers.giftRecipient')}</div>
-                  <div className="p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-                    <div className="font-semibold dark:text-stone-100">{selectedVoucher.giftData.name}</div>
+                  <div className="text-sm font-semibold text-[var(--text-primary)]  mb-2 uppercase tracking-wider">{t('vouchers.giftRecipient')}</div>
+                  <div className="p-4 rounded-md" style={{ background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.15)" }}>
+                    <div className="font-semibold ">{selectedVoucher.giftData.name}</div>
                     {selectedVoucher.giftData.email && (
-                      <div className="text-sm text-stone-600 dark:text-stone-300">{selectedVoucher.giftData.email}</div>
+                      <div style={{ color: 'var(--text-secondary)' }} className="text-[13px]">{selectedVoucher.giftData.email}</div>
                     )}
                     {selectedVoucher.giftMessage && (
-                      <div className="mt-2 italic text-stone-600 dark:text-stone-300">&ldquo;{selectedVoucher.giftMessage}&rdquo;</div>
+                      <div className="mt-2 italic text-[var(--text-secondary)]">&ldquo;{selectedVoucher.giftMessage}&rdquo;</div>
                     )}
                   </div>
                 </div>
@@ -1352,24 +1356,24 @@ export default function VouchersPage() {
               {/* Note */}
               {selectedVoucher.note && (
                 <div>
-                  <div className="text-sm font-semibold text-stone-800 dark:text-stone-100 mb-2 uppercase tracking-wider">{t('vouchers.note')}</div>
-                  <div className="p-4 bg-amber-50 dark:bg-amber-900/30 rounded-lg text-stone-700 dark:text-stone-300">{selectedVoucher.note}</div>
+                  <div className="text-sm font-semibold text-[var(--text-primary)]  mb-2 uppercase tracking-wider">{t('vouchers.note')}</div>
+                  <div className="p-4 rounded-md" style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.15)", color: "var(--text-secondary)" }}>{selectedVoucher.note}</div>
                 </div>
               )}
 
               {/* Reservation */}
               {selectedVoucher.reservationNumber && (
-                <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
-                  <div className="text-sm text-stone-500 dark:text-stone-400">{t('vouchers.usedInReservation')}</div>
+                <div className="p-4 rounded-md" style={{ background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.15)" }}>
+                  <div style={{ color: 'var(--text-muted)' }} className="text-[13px]">{t('vouchers.usedInReservation')}</div>
                   <div className="font-semibold text-green-700">{selectedVoucher.reservationNumber}</div>
                 </div>
               )}
 
               {/* Actions */}
-              <div className="flex gap-3 pt-4 border-t border-stone-200 dark:border-stone-700">
+              <div className="flex gap-3 pt-4 border-t border-[var(--card-border)]">
                 <button
                   onClick={() => setShowDetailModal(false)}
-                  className="flex-1 px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-700 dark:text-stone-100"
+                  className="flex-1 px-4 py-2 border border-[var(--card-border)] rounded-lg "
                 >
                   {t('common.close')}
                 </button>
@@ -1390,9 +1394,9 @@ export default function VouchersPage() {
 
       {/* PDF Preview Modal */}
       {showPdfPreview && selectedVoucher && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-stone-200 flex items-center justify-between">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl  w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-[var(--card-border)] flex items-center justify-between">
               <h2 className="text-xl font-semibold">Voucher Preview</h2>
               <div className="flex gap-2">
                 <button
@@ -1403,13 +1407,13 @@ export default function VouchersPage() {
                 </button>
                 <button
                   onClick={() => setShowPdfPreview(false)}
-                  className="px-4 py-2 border border-stone-200 rounded-lg hover:bg-stone-50"
+                  className="px-4 py-2 border border-[var(--card-border)] rounded-lg"
                 >
                   Close
                 </button>
               </div>
             </div>
-            <div className="p-8 bg-stone-100">
+            <div className="p-8 bg-[var(--surface-hover)]">
               {/* PDF Content */}
               <div ref={pdfRef}>
                 <div

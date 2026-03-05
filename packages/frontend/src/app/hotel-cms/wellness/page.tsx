@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import HotelSidebar from '@/components/HotelSidebar';
 import { useLocale } from '@/context/LocaleContext';
+import { useToast } from '@/context/ToastContext';
+import { useConfirm } from '@/context/ConfirmContext';
 
 // Types
 interface WellnessTherapist {
@@ -78,6 +80,8 @@ function getToday(): string {
 
 export default function WellnessPage() {
   const { t } = useLocale();
+  const toast = useToast();
+  const confirm = useConfirm();
   const [activeTab, setActiveTab] = useState<TabType>('services');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -303,7 +307,7 @@ export default function WellnessPage() {
   };
 
   const handleDeleteService = async (id: string) => {
-    if (!confirm('Deactivate this service?')) return;
+    if (!(await confirm({ message: 'Deactivate this service?', confirmLabel: 'Deactivate', danger: true }))) return;
     try {
       await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
@@ -313,10 +317,10 @@ export default function WellnessPage() {
           query: `mutation { deleteWellnessService(id: "${id}") { success } }`,
         }),
       });
-      setSuccessMessage('Service deactivated');
+      toast.success('Service deactivated.');
       fetchServices();
     } catch {
-      setError('Failed to delete service');
+      toast.error('Failed to delete service');
     }
   };
 
@@ -376,7 +380,7 @@ export default function WellnessPage() {
   };
 
   const handleDeleteTherapist = async (id: string) => {
-    if (!confirm('Deactivate this therapist?')) return;
+    if (!(await confirm({ message: 'Deactivate this therapist?', confirmLabel: 'Deactivate', danger: true }))) return;
     try {
       await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
@@ -386,10 +390,10 @@ export default function WellnessPage() {
           query: `mutation { deleteWellnessTherapist(id: "${id}") { success } }`,
         }),
       });
-      setSuccessMessage('Therapist deactivated');
+      toast.success('Therapist deactivated.');
       fetchTherapists();
     } catch {
-      setError('Failed to delete therapist');
+      toast.error('Failed to delete therapist');
     }
   };
 
@@ -449,7 +453,7 @@ export default function WellnessPage() {
   };
 
   const handleDeleteRoom = async (id: string) => {
-    if (!confirm('Deactivate this room?')) return;
+    if (!(await confirm({ message: 'Deactivate this room?', confirmLabel: 'Deactivate', danger: true }))) return;
     try {
       await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
@@ -459,10 +463,10 @@ export default function WellnessPage() {
           query: `mutation { deleteWellnessRoomType(id: "${id}") { success } }`,
         }),
       });
-      setSuccessMessage('Room deactivated');
+      toast.success('Room deactivated.');
       fetchRoomTypes();
     } catch {
-      setError('Failed to delete room');
+      toast.error('Failed to delete room');
     }
   };
 
@@ -508,7 +512,7 @@ export default function WellnessPage() {
   };
 
   const handleCancelBooking = async (id: string) => {
-    if (!confirm('Cancel this booking?')) return;
+    if (!(await confirm({ message: 'Cancel this booking?', confirmLabel: 'Cancel', danger: true }))) return;
     try {
       await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
@@ -518,10 +522,10 @@ export default function WellnessPage() {
           query: `mutation { cancelWellnessBooking(id: "${id}") { booking { id } } }`,
         }),
       });
-      setSuccessMessage('Booking cancelled');
+      toast.success('Booking cancelled.');
       fetchBookings();
     } catch {
-      setError('Failed to cancel booking');
+      toast.error('Failed to cancel booking');
     }
   };
 
@@ -571,14 +575,14 @@ export default function WellnessPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-stone-50 dark:bg-stone-900">
+    <div className="flex min-h-screen" style={{ background: 'var(--background)' }}>
       <HotelSidebar />
-      <main className="flex-1 ml-72 p-8">
-        <div className="max-w-7xl mx-auto">
+      <main className="flex-1 px-8 py-8" style={{ marginLeft: 'var(--sidebar-width, 280px)', transition: 'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)' }}>
+        <div className="max-w-[1380px] mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold text-stone-800 dark:text-stone-100 mb-2">{t('wellness.title')}</h1>
-            <p className="text-stone-600 dark:text-stone-300">{t('wellness.subtitle')}</p>
+            <h1 style={{ color: "var(--text-primary)", fontFamily: "var(--font-display)" }} className="text-[2.75rem] font-bold tracking-tight mb-2">{t('wellness.title')}</h1>
+            <p style={{ color: 'var(--text-secondary)' }}>{t('wellness.subtitle')}</p>
           </div>
 
           {/* Messages */}
@@ -596,8 +600,8 @@ export default function WellnessPage() {
           )}
 
           {/* Tabs */}
-          <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 mb-6">
-            <div className="flex border-b border-stone-200 dark:border-stone-700">
+          <div className="bg-[var(--surface)] rounded-xl  border border-[var(--card-border)] mb-6">
+            <div className="flex border-b border-[var(--card-border)]">
               {(['services', 'therapists', 'rooms', 'calendar'] as TabType[]).map((tab) => (
                 <button
                   key={tab}
@@ -605,7 +609,7 @@ export default function WellnessPage() {
                   className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
                     activeTab === tab
                       ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50'
-                      : 'text-stone-600 dark:text-stone-300 hover:text-stone-800 dark:hover:text-stone-100 hover:bg-stone-50 dark:hover:bg-stone-700'
+                      : 'text-[var(--text-secondary)] hover:opacity-70'
                   }`}
                 >
                   {tab === 'services' && t('wellness.services')}
@@ -623,7 +627,7 @@ export default function WellnessPage() {
                   <div className="flex items-center justify-between mb-6">
                     <label className="flex items-center gap-2">
                       <input type="checkbox" checked={includeInactive} onChange={(e) => setIncludeInactive(e.target.checked)} className="rounded" />
-                      <span className="text-sm text-stone-600 dark:text-stone-300">{t('wellness.showInactive')}</span>
+                      <span style={{ color: 'var(--text-secondary)' }} className="text-[13px]">{t('wellness.showInactive')}</span>
                     </label>
                     <button
                       onClick={() => { setEditingService(null); setServiceForm({ name: '', priceNormal: 0, vatCharge: 21, duration: 60, pauseBefore: 0, pauseAfter: 0, needsTherapist: true, needsRoom: true }); setShowServiceModal(true); }}
@@ -634,14 +638,14 @@ export default function WellnessPage() {
                   </div>
                   <div className="grid gap-4">
                     {services.map((service) => (
-                      <div key={service.id} className={`p-4 border rounded-lg ${service.isActive ? 'border-stone-200 dark:border-stone-700' : 'border-stone-200 dark:border-stone-700 opacity-60'}`}>
+                      <div key={service.id} className={`p-4 border rounded-lg ${service.isActive ? 'border-[var(--card-border)]' : 'border-[var(--card-border)] opacity-60'}`}>
                         <div className="flex items-center justify-between">
                           <div>
-                            <h3 className="font-semibold text-stone-800 dark:text-stone-100">{service.name}</h3>
-                            <div className="text-sm text-stone-500 dark:text-stone-400 mt-1">
+                            <h3 style={{ color: "var(--text-primary)" }} className="font-semibold">{service.name}</h3>
+                            <div className="text-sm text-[var(--text-muted)] mt-1">
                               {service.duration} min | {service.priceNormal.toLocaleString('cs-CZ')} CZK | VAT {service.vatCharge}%
                             </div>
-                            <div className="text-xs text-stone-400 mt-1">
+                            <div style={{ color: "var(--text-muted)" }} className="text-[11px] mt-1">
                               {service.needsTherapist && t('wellness.needsTherapist')} {service.needsRoom && `| ${t('wellness.needsRoom')}`}
                               {service.pauseBefore > 0 && ` | ${service.pauseBefore}min before`}
                               {service.pauseAfter > 0 && ` | ${service.pauseAfter}min after`}
@@ -656,7 +660,7 @@ export default function WellnessPage() {
                         </div>
                       </div>
                     ))}
-                    {services.length === 0 && <div className="text-center text-stone-500 dark:text-stone-400 py-8">{t('wellness.noServices')}</div>}
+                    {services.length === 0 && <div className="text-center text-[var(--text-muted)] py-8">{t('wellness.noServices')}</div>}
                   </div>
                 </div>
               )}
@@ -667,7 +671,7 @@ export default function WellnessPage() {
                   <div className="flex items-center justify-between mb-6">
                     <label className="flex items-center gap-2">
                       <input type="checkbox" checked={includeInactive} onChange={(e) => setIncludeInactive(e.target.checked)} className="rounded" />
-                      <span className="text-sm text-stone-600 dark:text-stone-300">{t('wellness.showInactive')}</span>
+                      <span style={{ color: 'var(--text-secondary)' }} className="text-[13px]">{t('wellness.showInactive')}</span>
                     </label>
                     <button
                       onClick={() => { setEditingTherapist(null); setTherapistForm({ code: '', name: '', isVirtual: false }); setShowTherapistModal(true); }}
@@ -678,11 +682,11 @@ export default function WellnessPage() {
                   </div>
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {therapists.map((therapist) => (
-                      <div key={therapist.id} className={`p-4 border rounded-lg ${therapist.isActive ? 'border-stone-200 dark:border-stone-700' : 'border-stone-200 dark:border-stone-700 opacity-60'}`}>
+                      <div key={therapist.id} className={`p-4 border rounded-lg ${therapist.isActive ? 'border-[var(--card-border)]' : 'border-[var(--card-border)] opacity-60'}`}>
                         <div className="flex items-start justify-between">
                           <div>
-                            <h3 className="font-semibold text-stone-800 dark:text-stone-100">{therapist.name}</h3>
-                            <div className="text-sm text-stone-500 dark:text-stone-400 mt-1">{therapist.code}</div>
+                            <h3 style={{ color: "var(--text-primary)" }} className="font-semibold">{therapist.name}</h3>
+                            <div className="text-sm text-[var(--text-muted)] mt-1">{therapist.code}</div>
                             {therapist.isVirtual && <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded mt-2 inline-block">{t('wellness.virtual')}</span>}
                           </div>
                           <div className="flex items-center gap-1">
@@ -694,7 +698,7 @@ export default function WellnessPage() {
                         </div>
                       </div>
                     ))}
-                    {therapists.length === 0 && <div className="col-span-full text-center text-stone-500 dark:text-stone-400 py-8">{t('wellness.noTherapists')}</div>}
+                    {therapists.length === 0 && <div className="col-span-full text-center text-[var(--text-muted)] py-8">{t('wellness.noTherapists')}</div>}
                   </div>
                 </div>
               )}
@@ -705,7 +709,7 @@ export default function WellnessPage() {
                   <div className="flex items-center justify-between mb-6">
                     <label className="flex items-center gap-2">
                       <input type="checkbox" checked={includeInactive} onChange={(e) => setIncludeInactive(e.target.checked)} className="rounded" />
-                      <span className="text-sm text-stone-600 dark:text-stone-300">{t('wellness.showInactive')}</span>
+                      <span style={{ color: 'var(--text-secondary)' }} className="text-[13px]">{t('wellness.showInactive')}</span>
                     </label>
                     <button
                       onClick={() => { setEditingRoom(null); setRoomForm({ name: '', bit: 0, maskValue: 1 }); setShowRoomModal(true); }}
@@ -716,11 +720,11 @@ export default function WellnessPage() {
                   </div>
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {roomTypes.map((room) => (
-                      <div key={room.id} className={`p-4 border rounded-lg ${room.isActive ? 'border-stone-200 dark:border-stone-700' : 'border-stone-200 dark:border-stone-700 opacity-60'}`}>
+                      <div key={room.id} className={`p-4 border rounded-lg ${room.isActive ? 'border-[var(--card-border)]' : 'border-[var(--card-border)] opacity-60'}`}>
                         <div className="flex items-start justify-between">
                           <div>
-                            <h3 className="font-semibold text-stone-800 dark:text-stone-100">{room.name}</h3>
-                            <div className="text-xs text-stone-400 mt-1">{t('wellness.bit')}: {room.bit} | {t('wellness.maskValue')}: {room.maskValue}</div>
+                            <h3 style={{ color: "var(--text-primary)" }} className="font-semibold">{room.name}</h3>
+                            <div style={{ color: "var(--text-muted)" }} className="text-[11px] mt-1">{t('wellness.bit')}: {room.bit} | {t('wellness.maskValue')}: {room.maskValue}</div>
                           </div>
                           <div className="flex items-center gap-1">
                             <button onClick={() => openEditRoom(room)} className="px-2 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded">{t('common.edit')}</button>
@@ -731,7 +735,7 @@ export default function WellnessPage() {
                         </div>
                       </div>
                     ))}
-                    {roomTypes.length === 0 && <div className="col-span-full text-center text-stone-500 dark:text-stone-400 py-8">{t('wellness.noRooms')}</div>}
+                    {roomTypes.length === 0 && <div className="col-span-full text-center text-[var(--text-muted)] py-8">{t('wellness.noRooms')}</div>}
                   </div>
                 </div>
               )}
@@ -745,9 +749,9 @@ export default function WellnessPage() {
                         type="date"
                         value={calendarDate}
                         onChange={(e) => setCalendarDate(e.target.value)}
-                        className="px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-700 dark:text-stone-100"
+                        className="px-3 py-2 rounded-md text-[13px] outline-none focus:ring-1 focus:ring-[#C9A96E]" style={{ background: 'var(--surface)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' }}
                       />
-                      <button onClick={fetchBookings} className="px-4 py-2 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg">{t('common.refresh')}</button>
+                      <button onClick={fetchBookings} style={{ color: "var(--text-secondary)" }} className="px-4 py-2 rounded-md text-[13px] hover:opacity-70 transition-opacity">{t('common.refresh')}</button>
                     </div>
                     <button
                       onClick={() => { setBookingForm({ ...bookingForm, scheduledDate: calendarDate }); setShowBookingModal(true); }}
@@ -758,12 +762,12 @@ export default function WellnessPage() {
                   </div>
 
                   {/* Timeline */}
-                  <div className="border border-stone-200 dark:border-stone-700 rounded-lg overflow-hidden">
+                  <div className="border border-[var(--card-border)] rounded-lg overflow-hidden">
                     {timeSlots.map((time) => {
                       const slotBookings = getBookingsForSlot(time);
                       return (
-                        <div key={time} className="flex border-b border-stone-100 dark:border-stone-700 last:border-b-0">
-                          <div className="w-20 p-3 bg-stone-50 dark:bg-stone-900 text-sm font-medium text-stone-600 dark:text-stone-300 border-r border-stone-200 dark:border-stone-700">
+                        <div key={time} className="flex border-b border-[var(--card-border)] last:border-b-0">
+                          <div className="w-20 p-3 bg-[var(--background)] text-sm font-medium text-[var(--text-secondary)] border-r border-[var(--card-border)]">
                             {time}
                           </div>
                           <div className="flex-1 p-2 min-h-[60px]">
@@ -796,7 +800,7 @@ export default function WellnessPage() {
                                 ))}
                               </div>
                             ) : (
-                              <div className="text-stone-300 text-sm">-</div>
+                              <div style={{ color: "var(--text-muted)" }} className="text-[13px]">-</div>
                             )}
                           </div>
                         </div>
@@ -812,58 +816,58 @@ export default function WellnessPage() {
 
       {/* Service Modal */}
       {showServiceModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-stone-800 rounded-xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-stone-200 dark:border-stone-700">
-              <h2 className="text-xl font-semibold dark:text-stone-100">{editingService ? t('wellness.editService') : t('wellness.addService')}</h2>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-[var(--surface)] rounded-xl  w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-[var(--card-border)]">
+              <h2 className="text-xl font-semibold ">{editingService ? t('wellness.editService') : t('wellness.addService')}</h2>
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('common.name')}</label>
+                <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('common.name')}</label>
                 <input type="text" value={serviceForm.name} onChange={(e) => setServiceForm({ ...serviceForm, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-700 dark:text-stone-100" placeholder="Relaxing massage 60min" />
+                  className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  " placeholder="Relaxing massage 60min" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('wellness.priceNormal')}</label>
+                  <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('wellness.priceNormal')}</label>
                   <input type="number" value={serviceForm.priceNormal} onChange={(e) => setServiceForm({ ...serviceForm, priceNormal: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-700 dark:text-stone-100" />
+                    className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  " />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('wellness.vatPercent')}</label>
+                  <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('wellness.vatPercent')}</label>
                   <input type="number" value={serviceForm.vatCharge} onChange={(e) => setServiceForm({ ...serviceForm, vatCharge: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-700 dark:text-stone-100" />
+                    className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  " />
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('wellness.duration')}</label>
+                  <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('wellness.duration')}</label>
                   <input type="number" value={serviceForm.duration} onChange={(e) => setServiceForm({ ...serviceForm, duration: parseInt(e.target.value) || 0 })}
-                    className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-700 dark:text-stone-100" />
+                    className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  " />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('wellness.pauseBefore')}</label>
+                  <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('wellness.pauseBefore')}</label>
                   <input type="number" value={serviceForm.pauseBefore} onChange={(e) => setServiceForm({ ...serviceForm, pauseBefore: parseInt(e.target.value) || 0 })}
-                    className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-700 dark:text-stone-100" />
+                    className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  " />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('wellness.pauseAfter')}</label>
+                  <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('wellness.pauseAfter')}</label>
                   <input type="number" value={serviceForm.pauseAfter} onChange={(e) => setServiceForm({ ...serviceForm, pauseAfter: parseInt(e.target.value) || 0 })}
-                    className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-700 dark:text-stone-100" />
+                    className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  " />
                 </div>
               </div>
               <div className="flex gap-6">
                 <label className="flex items-center gap-2">
                   <input type="checkbox" checked={serviceForm.needsTherapist} onChange={(e) => setServiceForm({ ...serviceForm, needsTherapist: e.target.checked })} className="rounded" />
-                  <span className="text-sm dark:text-stone-300">{t('wellness.needsTherapist')}</span>
+                  <span className="text-sm ">{t('wellness.needsTherapist')}</span>
                 </label>
                 <label className="flex items-center gap-2">
                   <input type="checkbox" checked={serviceForm.needsRoom} onChange={(e) => setServiceForm({ ...serviceForm, needsRoom: e.target.checked })} className="rounded" />
-                  <span className="text-sm dark:text-stone-300">{t('wellness.needsRoom')}</span>
+                  <span className="text-sm ">{t('wellness.needsRoom')}</span>
                 </label>
               </div>
               <div className="flex gap-3 pt-4">
-                <button onClick={() => { setShowServiceModal(false); setEditingService(null); }} className="flex-1 px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:text-stone-300">{t('common.cancel')}</button>
+                <button onClick={() => { setShowServiceModal(false); setEditingService(null); }} className="flex-1 px-4 py-2 border border-[var(--card-border)] rounded-lg ">{t('common.cancel')}</button>
                 <button onClick={editingService ? handleUpdateService : handleCreateService} disabled={loading || !serviceForm.name}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50">
                   {loading ? t('common.saving') : editingService ? t('common.update') : t('common.create')}
@@ -876,28 +880,28 @@ export default function WellnessPage() {
 
       {/* Therapist Modal */}
       {showTherapistModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-stone-800 rounded-xl shadow-2xl w-full max-w-md mx-4">
-            <div className="p-6 border-b border-stone-200 dark:border-stone-700">
-              <h2 className="text-xl font-semibold dark:text-stone-100">{editingTherapist ? t('wellness.editTherapist') : t('wellness.addTherapist')}</h2>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-[var(--surface)] rounded-xl  w-full max-w-md mx-4">
+            <div className="p-6 border-b border-[var(--card-border)]">
+              <h2 className="text-xl font-semibold ">{editingTherapist ? t('wellness.editTherapist') : t('wellness.addTherapist')}</h2>
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('common.code')}</label>
+                <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('common.code')}</label>
                 <input type="text" value={therapistForm.code} onChange={(e) => setTherapistForm({ ...therapistForm, code: e.target.value })}
-                  className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-700 dark:text-stone-100" placeholder="Marina - female" />
+                  className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  " placeholder="Marina - female" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('common.name')}</label>
+                <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('common.name')}</label>
                 <input type="text" value={therapistForm.name} onChange={(e) => setTherapistForm({ ...therapistForm, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-700 dark:text-stone-100" placeholder="Marina Kovalenko" />
+                  className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  " placeholder="Marina Kovalenko" />
               </div>
               <label className="flex items-center gap-2">
                 <input type="checkbox" checked={therapistForm.isVirtual} onChange={(e) => setTherapistForm({ ...therapistForm, isVirtual: e.target.checked })} className="rounded" />
-                <span className="text-sm dark:text-stone-300">{t('wellness.virtualTherapist')}</span>
+                <span className="text-sm ">{t('wellness.virtualTherapist')}</span>
               </label>
               <div className="flex gap-3 pt-4">
-                <button onClick={() => { setShowTherapistModal(false); setEditingTherapist(null); }} className="flex-1 px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:text-stone-300">{t('common.cancel')}</button>
+                <button onClick={() => { setShowTherapistModal(false); setEditingTherapist(null); }} className="flex-1 px-4 py-2 border border-[var(--card-border)] rounded-lg ">{t('common.cancel')}</button>
                 <button onClick={editingTherapist ? handleUpdateTherapist : handleCreateTherapist} disabled={loading || !therapistForm.code || !therapistForm.name}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50">
                   {loading ? t('common.saving') : editingTherapist ? t('common.update') : t('common.create')}
@@ -910,31 +914,31 @@ export default function WellnessPage() {
 
       {/* Room Modal */}
       {showRoomModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-stone-800 rounded-xl shadow-2xl w-full max-w-md mx-4">
-            <div className="p-6 border-b border-stone-200 dark:border-stone-700">
-              <h2 className="text-xl font-semibold dark:text-stone-100">{editingRoom ? t('wellness.editRoom') : t('wellness.addRoom')}</h2>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-[var(--surface)] rounded-xl  w-full max-w-md mx-4">
+            <div className="p-6 border-b border-[var(--card-border)]">
+              <h2 className="text-xl font-semibold ">{editingRoom ? t('wellness.editRoom') : t('wellness.addRoom')}</h2>
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('common.name')}</label>
+                <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('common.name')}</label>
                 <input type="text" value={roomForm.name} onChange={(e) => setRoomForm({ ...roomForm, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-700 dark:text-stone-100" placeholder="Room A" />
+                  className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  " placeholder="Room A" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('wellness.bit')}</label>
+                  <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('wellness.bit')}</label>
                   <input type="number" value={roomForm.bit} onChange={(e) => setRoomForm({ ...roomForm, bit: parseInt(e.target.value) || 0 })}
-                    className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-700 dark:text-stone-100" />
+                    className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  " />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('wellness.maskValue')}</label>
+                  <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('wellness.maskValue')}</label>
                   <input type="number" value={roomForm.maskValue} onChange={(e) => setRoomForm({ ...roomForm, maskValue: parseInt(e.target.value) || 1 })}
-                    className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-700 dark:text-stone-100" />
+                    className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  " />
                 </div>
               </div>
               <div className="flex gap-3 pt-4">
-                <button onClick={() => { setShowRoomModal(false); setEditingRoom(null); }} className="flex-1 px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:text-stone-300">{t('common.cancel')}</button>
+                <button onClick={() => { setShowRoomModal(false); setEditingRoom(null); }} className="flex-1 px-4 py-2 border border-[var(--card-border)] rounded-lg ">{t('common.cancel')}</button>
                 <button onClick={editingRoom ? handleUpdateRoom : handleCreateRoom} disabled={loading || !roomForm.name}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50">
                   {loading ? t('common.saving') : editingRoom ? t('common.update') : t('common.create')}
@@ -947,18 +951,18 @@ export default function WellnessPage() {
 
       {/* Booking Modal */}
       {showBookingModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-stone-800 rounded-xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-stone-200 dark:border-stone-700">
-              <h2 className="text-xl font-semibold dark:text-stone-100">{t('wellness.newBooking')}</h2>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-[var(--surface)] rounded-xl  w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-[var(--card-border)]">
+              <h2 className="text-xl font-semibold ">{t('wellness.newBooking')}</h2>
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('wellness.linkReservation')}</label>
+                <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('wellness.linkReservation')}</label>
                 <select value={bookingForm.reservationId} onChange={(e) => {
                   const res = reservations.find(r => r.id === e.target.value);
                   setBookingForm({ ...bookingForm, reservationId: e.target.value, guestName: res?.guestName || bookingForm.guestName });
-                }} className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-700 dark:text-stone-100">
+                }} className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  ">
                   <option value="">{t('wellness.selectGuest')}</option>
                   {reservations.map((r) => (
                     <option key={r.id} value={r.id}>{r.guestName} ({r.checkInDate} - {r.checkOutDate})</option>
@@ -966,14 +970,14 @@ export default function WellnessPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('wellness.guestName')}</label>
+                <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('wellness.guestName')}</label>
                 <input type="text" value={bookingForm.guestName} onChange={(e) => setBookingForm({ ...bookingForm, guestName: e.target.value })}
-                  className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-700 dark:text-stone-100" placeholder="Guest name" />
+                  className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  " placeholder="Guest name" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('wellness.service')}</label>
+                <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('wellness.service')}</label>
                 <select value={bookingForm.serviceId} onChange={(e) => setBookingForm({ ...bookingForm, serviceId: e.target.value })}
-                  className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-700 dark:text-stone-100">
+                  className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  ">
                   <option value="">{t('wellness.selectService')}</option>
                   {services.filter(s => s.isActive).map((s) => (
                     <option key={s.id} value={s.id}>{s.name} ({s.duration}min - {s.priceNormal} CZK)</option>
@@ -982,20 +986,20 @@ export default function WellnessPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('wellness.date')}</label>
+                  <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('wellness.date')}</label>
                   <input type="date" value={bookingForm.scheduledDate} onChange={(e) => setBookingForm({ ...bookingForm, scheduledDate: e.target.value })}
-                    className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-700 dark:text-stone-100" />
+                    className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  " />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('wellness.time')}</label>
+                  <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('wellness.time')}</label>
                   <input type="time" value={bookingForm.scheduledTime} onChange={(e) => setBookingForm({ ...bookingForm, scheduledTime: e.target.value })}
-                    className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-700 dark:text-stone-100" />
+                    className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  " />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('wellness.therapist')}</label>
+                <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('wellness.therapist')}</label>
                 <select value={bookingForm.therapistId} onChange={(e) => setBookingForm({ ...bookingForm, therapistId: e.target.value })}
-                  className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-700 dark:text-stone-100">
+                  className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  ">
                   <option value="">{t('wellness.selectTherapist')}</option>
                   {therapists.filter(t => t.isActive).map((t) => (
                     <option key={t.id} value={t.id}>{t.name}</option>
@@ -1003,9 +1007,9 @@ export default function WellnessPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('wellness.room')}</label>
+                <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('wellness.room')}</label>
                 <select value={bookingForm.roomTypeId} onChange={(e) => setBookingForm({ ...bookingForm, roomTypeId: e.target.value })}
-                  className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-700 dark:text-stone-100">
+                  className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  ">
                   <option value="">{t('wellness.selectRoom')}</option>
                   {roomTypes.filter(r => r.isActive).map((r) => (
                     <option key={r.id} value={r.id}>{r.name}</option>
@@ -1013,12 +1017,12 @@ export default function WellnessPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t('wellness.notes')}</label>
+                <label style={{ color: "var(--text-muted)" }} className="block text-[10px] font-semibold tracking-[0.15em] uppercase mb-1.5">{t('wellness.notes')}</label>
                 <textarea value={bookingForm.notes} onChange={(e) => setBookingForm({ ...bookingForm, notes: e.target.value })}
-                  className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:bg-stone-700 dark:text-stone-100" rows={2} placeholder="Additional notes..." />
+                  className="w-full px-4 py-2 border border-[var(--card-border)] rounded-lg  " rows={2} placeholder="Additional notes..." />
               </div>
               <div className="flex gap-3 pt-4">
-                <button onClick={() => setShowBookingModal(false)} className="flex-1 px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg dark:text-stone-300">{t('common.cancel')}</button>
+                <button onClick={() => setShowBookingModal(false)} className="flex-1 px-4 py-2 border border-[var(--card-border)] rounded-lg ">{t('common.cancel')}</button>
                 <button onClick={handleCreateBooking} disabled={loading || !bookingForm.guestName || !bookingForm.serviceId}
                   className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg disabled:opacity-50">
                   {loading ? t('common.creating') : t('wellness.createBooking')}

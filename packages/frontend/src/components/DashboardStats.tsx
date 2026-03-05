@@ -135,7 +135,7 @@ export default function DashboardStats() {
             {/* Value */}
             <p
               className="text-[1.75rem] font-bold leading-none mb-2 tracking-tight"
-              style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
+              style={{ color: 'var(--text-primary)' }}
             >
               {card.value}
             </p>

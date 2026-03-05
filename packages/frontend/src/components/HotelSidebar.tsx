@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLocale } from '../context/LocaleContext';
+import { useCommandPalette } from '../context/CommandPaletteContext';
 import type { TranslationKey } from '../locales';
 
 /* ─── types ─────────────────────────────────────────────────────────────── */
@@ -24,6 +25,7 @@ interface NavSection {
 const I: Record<string, string> = {
   dashboard:   'M3 3h7v7H3V3zm11 0h7v7h-7V3zM3 14h7v7H3v-7zm11 0h7v7h-7v-7z',
   reception:   'M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 3a4 4 0 100 8 4 4 0 000-8z',
+  predictions: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
   calendar:    'M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z',
   bookings:    'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 8h6m-6 4h4',
   accounts:    'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
@@ -49,7 +51,8 @@ const sections: NavSection[] = [
     label: 'Overview',
     items: [
       { nameKey: 'nav.dashboard', href: '/hotel-cms',           icon: I.dashboard },
-      { nameKey: 'nav.reception', href: '/hotel-cms/reception', icon: I.reception, roles: ['ADMIN', 'USER'] },
+      { nameKey: 'nav.reception',    href: '/hotel-cms/reception',    icon: I.reception,    roles: ['ADMIN', 'USER'] },
+      { nameKey: 'nav.predictions',  href: '/hotel-cms/predictions',  icon: I.predictions,  roles: ['ADMIN', 'USER'] },
     ],
   },
   {
@@ -121,6 +124,7 @@ export default function HotelSidebar() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { locale, setLocale, t } = useLocale();
+  const { open: openPalette } = useCommandPalette();
 
   useEffect(() => {
     document.documentElement.style.setProperty(
@@ -174,7 +178,7 @@ export default function HotelSidebar() {
           >
             <span
               className="text-[#0D0E14] text-[13px] font-bold leading-none"
-              style={{ fontFamily: 'var(--font-display)' }}
+              style={{  }}
             >
               M
             </span>
@@ -183,7 +187,7 @@ export default function HotelSidebar() {
             <div className="min-w-0">
               <div
                 className="text-[13px] font-semibold leading-none tracking-tight truncate"
-                style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
+                style={{ color: 'var(--text-primary)' }}
               >
                 Manatee
               </div>
@@ -232,6 +236,45 @@ export default function HotelSidebar() {
           </svg>
         </button>
       )}
+
+      {/* ── Search trigger ───────────────────────────────────────────── */}
+      <div style={{ padding: isCollapsed ? '8px 10px' : '8px 10px', borderBottom: '1px solid var(--sidebar-border)' }}>
+        <button
+          onClick={openPalette}
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: isCollapsed ? '7px' : '7px 10px',
+            borderRadius: 8,
+            border: '1px solid var(--card-border)',
+            background: 'transparent',
+            cursor: 'pointer',
+            transition: 'background 0.15s',
+            justifyContent: isCollapsed ? 'center' : 'flex-start',
+          }}
+          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'var(--surface-hover)')}
+          onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
+          title="Search (⌘K)"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+          </svg>
+          {!isCollapsed && (
+            <>
+              <span style={{ color: 'var(--text-muted)', fontSize: 12, flex: 1, textAlign: 'left' }}>Search…</span>
+              <kbd style={{
+                background: 'var(--surface-hover)', color: 'var(--text-muted)',
+                border: '1px solid var(--card-border)', borderRadius: 4,
+                padding: '1px 5px', fontSize: 10, fontFamily: 'monospace', flexShrink: 0,
+              }}>
+                ⌘K
+              </kbd>
+            </>
+          )}
+        </button>
+      </div>
 
       {/* ── Navigation ───────────────────────────────────────────────── */}
       <nav className="flex-1 overflow-y-auto" style={{ padding: isCollapsed ? '12px 10px' : '12px 10px' }}>

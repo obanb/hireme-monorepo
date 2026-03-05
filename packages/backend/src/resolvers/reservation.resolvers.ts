@@ -6,6 +6,7 @@ import {
   accountRepository,
   getPool,
 } from "../event-sourcing";
+import { activityRepository } from "../event-sourcing/activity-repository";
 import { requireAuth, AuthContext } from "../auth";
 import { formatReservation } from "../formatters/reservation.formatter";
 import { formatStoredEvent } from "../formatters/event.formatter";
@@ -50,6 +51,14 @@ export const reservationResolvers = {
     reservationEventHistory: async (_: unknown, args: { id: string }) => {
       const events = await reservationRepository.getEventHistory(args.id);
       return events.map(formatStoredEvent);
+    },
+
+    recentActivity: async (_: unknown, args: { limit?: number }) => {
+      return activityRepository.getRecentActivity(args.limit ?? 30);
+    },
+
+    guestActivity: async (_: unknown, args: { email: string; limit?: number }) => {
+      return activityRepository.getGuestActivity(args.email, args.limit ?? 50);
     },
   },
 

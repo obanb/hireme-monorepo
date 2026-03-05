@@ -2,9 +2,12 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import HotelSidebar from '@/components/HotelSidebar';
 import ComposeEmailModal from '@/components/ComposeEmailModal';
+import CheckInWizard from '@/components/CheckInWizard';
 import { useLocale } from '@/context/LocaleContext';
+import { useToast } from '@/context/ToastContext';
 
 interface GuestTier {
   tier: { name: string; color: string } | null;
@@ -27,18 +30,6 @@ interface Reservation {
   createdAt: string;
 }
 
-function TierBadge({ tier }: { tier: GuestTier['tier'] }) {
-  if (!tier) return null;
-  return (
-    <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold text-white shadow-sm"
-      style={{ backgroundColor: tier.color }}
-    >
-      ★ {tier.name}
-    </span>
-  );
-}
-
 interface Room {
   id: string;
   name: string;
@@ -54,665 +45,382 @@ type StatusFilter = 'all' | 'PENDING' | 'CONFIRMED';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:4001/graphql';
 
-// Helper functions for date calculations
-function formatDate(date: Date): string {
-  return date.toISOString().split('T')[0];
-}
-
-function getToday(): string {
-  return formatDate(new Date());
-}
-
-function getTomorrow(): string {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return formatDate(tomorrow);
-}
-
-function getWeekEnd(): string {
-  const weekEnd = new Date();
-  weekEnd.setDate(weekEnd.getDate() + 7);
-  return formatDate(weekEnd);
-}
-
+function formatDate(date: Date): string { return date.toISOString().split('T')[0]; }
+function getToday(): string { return formatDate(new Date()); }
+function getTomorrow(): string { const t = new Date(); t.setDate(t.getDate() + 1); return formatDate(t); }
+function getWeekEnd(): string { const t = new Date(); t.setDate(t.getDate() + 7); return formatDate(t); }
 function formatDisplayDate(dateStr: string): string {
-  const date = new Date(dateStr + 'T00:00:00');
-  return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+function getDaysDiff(d1: string, d2: string): number {
+  return Math.ceil((new Date(d2).getTime() - new Date(d1).getTime()) / (1000 * 60 * 60 * 24));
 }
 
-function getDaysDiff(date1: string, date2: string): number {
-  const d1 = new Date(date1);
-  const d2 = new Date(date2);
-  const diffTime = d2.getTime() - d1.getTime();
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-}
+const inputStyle = { background: 'var(--surface)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' };
 
 export default function ReceptionPage() {
   const { t } = useLocale();
   const router = useRouter();
+  const toast = useToast();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [guestTierMap, setGuestTierMap] = useState<Map<string, GuestTier>>(new Map());
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [emailTarget, setEmailTarget] = useState<{ to: string; toName: string } | null>(null);
-
-  // Filters
+  const [wizardReservation, setWizardReservation] = useState<Reservation | null>(null);
+  const [selectedIdx, setSelectedIdx] = useState(-1);
   const [dateFilter, setDateFilter] = useState<DateFilter>('today');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [customDateFrom, setCustomDateFrom] = useState(getToday());
   const [customDateTo, setCustomDateTo] = useState(getToday());
 
-  // Calculate date range based on filter
   const dateRange = useMemo(() => {
     switch (dateFilter) {
-      case 'today':
-        return { from: getToday(), to: getToday() };
-      case 'tomorrow':
-        return { from: getTomorrow(), to: getTomorrow() };
-      case 'week':
-        return { from: getToday(), to: getWeekEnd() };
-      case 'custom':
-        return { from: customDateFrom, to: customDateTo };
+      case 'today': return { from: getToday(), to: getToday() };
+      case 'tomorrow': return { from: getTomorrow(), to: getTomorrow() };
+      case 'week': return { from: getToday(), to: getWeekEnd() };
+      case 'custom': return { from: customDateFrom, to: customDateTo };
     }
   }, [dateFilter, customDateFrom, customDateTo]);
 
   const fetchRooms = useCallback(async () => {
     try {
-      const response = await fetch(GRAPHQL_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          query: `
-            query ListRooms {
-              rooms {
-                id
-                name
-                roomNumber
-                type
-                capacity
-                status
-                color
-              }
-            }
-          `,
-        }),
+      const res = await fetch(GRAPHQL_ENDPOINT, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({ query: `{ rooms { id name roomNumber type capacity status color } }` }),
       });
-
-      const result = await response.json();
-      if (!result.errors) {
-        setRooms(result.data?.rooms ?? []);
-      }
-    } catch {
-      // Silently fail rooms fetch
-    }
+      const json = await res.json();
+      if (!json.errors) setRooms(json.data?.rooms ?? []);
+    } catch { /* silent */ }
   }, []);
 
   const fetchReservations = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(GRAPHQL_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+      const res = await fetch(GRAPHQL_ENDPOINT, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
         body: JSON.stringify({
-          query: `
-            query ListReservations($filter: ReservationFilterInput) {
-              reservations(filter: $filter) {
-                id
-                originId
-                guestName
-                status
-                checkInDate
-                checkOutDate
-                guestEmail
-                totalPrice
-                currency
-                roomIds
-                version
-                createdAt
-              }
-            }
-          `,
-          variables: {
-            filter: {
-              checkInFrom: dateRange.from,
-              checkInTo: dateRange.to,
-            },
-          },
+          query: `query($filter: ReservationFilterInput) { reservations(filter: $filter) { id originId guestName status checkInDate checkOutDate guestEmail totalPrice currency roomIds version createdAt } }`,
+          variables: { filter: { checkInFrom: dateRange.from, checkInTo: dateRange.to } },
         }),
       });
-
-      const result = await response.json();
-
-      if (result.errors) {
-        throw new Error(result.errors[0]?.message ?? 'Failed to fetch reservations');
-      }
-
-      setReservations(result.data?.reservations ?? []);
-      setError(null);
+      const json = await res.json();
+      if (json.errors) throw new Error(json.errors[0]?.message);
+      setReservations(json.data?.reservations ?? []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch reservations');
-    } finally {
-      setLoading(false);
-    }
-  }, [dateRange]);
+      toast.error(err instanceof Error ? err.message : 'Failed to fetch reservations');
+    } finally { setLoading(false); }
+  }, [dateRange, toast]);
 
-  useEffect(() => {
-    fetchReservations();
-    fetchRooms();
-  }, [fetchReservations, fetchRooms]);
+  useEffect(() => { fetchReservations(); fetchRooms(); }, [fetchReservations, fetchRooms]);
 
-  // Batch-fetch tier infos for all unique guest emails after reservations load
   useEffect(() => {
     const emails = [...new Set(reservations.map((r) => r.guestEmail).filter(Boolean) as string[])];
-    if (emails.length === 0) return;
-
-    Promise.all(
-      emails.map((email) =>
-        fetch(GRAPHQL_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            query: `query($email: String!) { guestTierInfo(email: $email) { tier { name color } reservationCount totalSpend } }`,
-            variables: { email },
-          }),
-        })
-          .then((r) => r.json())
-          .then((json) => ({ email, data: json.data?.guestTierInfo ?? null }))
-          .catch(() => ({ email, data: null }))
-      )
-    ).then((results) => {
+    if (!emails.length) return;
+    Promise.all(emails.map((email) =>
+      fetch(GRAPHQL_ENDPOINT, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({ query: `query($email:String!){guestTierInfo(email:$email){tier{name color}reservationCount totalSpend}}`, variables: { email } }),
+      }).then(r => r.json()).then(j => ({ email, data: j.data?.guestTierInfo ?? null })).catch(() => ({ email, data: null }))
+    )).then(results => {
       const map = new Map<string, GuestTier>();
       results.forEach(({ email, data }) => { if (data) map.set(email, data); });
       setGuestTierMap(map);
     });
   }, [reservations]);
 
-  // Clear success message after 3 seconds
-  useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage]);
+  const filteredReservations = useMemo(() => reservations
+    .filter(r => {
+      if (r.status === 'CANCELLED') return false;
+      if (statusFilter !== 'all' && r.status !== statusFilter) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        return r.guestName?.toLowerCase().includes(q) || r.originId?.toLowerCase().includes(q) || r.id.toLowerCase().includes(q);
+      }
+      return true;
+    })
+    .sort((a, b) => a.checkInDate.localeCompare(b.checkInDate) || (a.status === 'PENDING' ? -1 : 1)),
+  [reservations, statusFilter, searchQuery]);
 
-  // Filter reservations
-  const filteredReservations = useMemo(() => {
-    return reservations
-      .filter((r) => {
-        // Exclude cancelled reservations
-        if (r.status === 'CANCELLED') return false;
-        // Status filter
-        if (statusFilter !== 'all' && r.status !== statusFilter) return false;
-        // Search filter
-        if (searchQuery) {
-          const query = searchQuery.toLowerCase();
-          return (
-            r.guestName?.toLowerCase().includes(query) ||
-            r.originId?.toLowerCase().includes(query) ||
-            r.id.toLowerCase().includes(query)
-          );
-        }
-        return true;
-      })
-      .sort((a, b) => {
-        // Sort by check-in date, then by status (PENDING first)
-        if (a.checkInDate !== b.checkInDate) {
-          return a.checkInDate.localeCompare(b.checkInDate);
-        }
-        if (a.status === 'PENDING' && b.status !== 'PENDING') return -1;
-        if (a.status !== 'PENDING' && b.status === 'PENDING') return 1;
-        return 0;
-      });
-  }, [reservations, statusFilter, searchQuery]);
-
-  // Group reservations by date
   const groupedReservations = useMemo(() => {
     const groups: Record<string, Reservation[]> = {};
-    filteredReservations.forEach((r) => {
-      const date = r.checkInDate;
-      if (!groups[date]) groups[date] = [];
-      groups[date].push(r);
-    });
+    filteredReservations.forEach(r => { (groups[r.checkInDate] ??= []).push(r); });
     return groups;
   }, [filteredReservations]);
 
-  // Statistics
-  const stats = useMemo(() => {
-    const pending = filteredReservations.filter((r) => r.status === 'PENDING').length;
-    const confirmed = filteredReservations.filter((r) => r.status === 'CONFIRMED').length;
-    const noRoom = filteredReservations.filter((r) => r.roomIds.length === 0).length;
-    return { total: filteredReservations.length, pending, confirmed, noRoom };
-  }, [filteredReservations]);
-
-  const handleConfirmReservation = async (reservation: Reservation) => {
-    setActionLoading(reservation.id);
-    try {
-      const response = await fetch(GRAPHQL_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          query: `
-            mutation ConfirmReservation($input: ConfirmReservationInput!) {
-              confirmReservation(input: $input) {
-                reservation {
-                  id
-                  status
-                }
-              }
-            }
-          `,
-          variables: {
-            input: {
-              reservationId: reservation.id,
-              confirmedBy: 'Reception',
-            },
-          },
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.errors) {
-        throw new Error(result.errors[0]?.message ?? 'Failed to confirm reservation');
+  // Keyboard navigation on arrivals list (↑↓ to move, Enter to open wizard)
+  useEffect(() => {
+    if (wizardReservation) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedIdx(i => Math.min(i + 1, filteredReservations.length - 1));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedIdx(i => Math.max(i - 1, 0));
+      } else if (e.key === 'Enter' && selectedIdx >= 0) {
+        e.preventDefault();
+        const res = filteredReservations[selectedIdx];
+        if (res) setWizardReservation(res);
       }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [wizardReservation, selectedIdx, filteredReservations]);
 
-      setSuccessMessage(`Guest ${reservation.guestName} checked in successfully!`);
-      fetchReservations();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to confirm reservation');
-    } finally {
-      setActionLoading(null);
-    }
-  };
+  const stats = useMemo(() => ({
+    total: filteredReservations.length,
+    pending: filteredReservations.filter(r => r.status === 'PENDING').length,
+    confirmed: filteredReservations.filter(r => r.status === 'CONFIRMED').length,
+    noRoom: filteredReservations.filter(r => r.roomIds.length === 0).length,
+  }), [filteredReservations]);
 
-  const getRoom = (roomIds: string[]) => {
-    if (!roomIds || roomIds.length === 0) return null;
-    return rooms.find((r) => r.id === roomIds[0]) ?? null;
-  };
+  const getRoom = (roomIds: string[]) => roomIds.length ? rooms.find(r => r.id === roomIds[0]) ?? null : null;
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'CONFIRMED':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-            <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-            Checked In
-          </span>
-        );
-      case 'PENDING':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full">
-            <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span>
-            Awaiting
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 text-xs font-semibold rounded-full">
-            {status}
-          </span>
-        );
-    }
-  };
+  const getDateLabel = (d: string) => d === getToday() ? 'Today' : d === getTomorrow() ? 'Tomorrow' : formatDisplayDate(d);
 
-  const getDateLabel = (dateStr: string): string => {
-    const today = getToday();
-    const tomorrow = getTomorrow();
-    if (dateStr === today) return 'Today';
-    if (dateStr === tomorrow) return 'Tomorrow';
-    return formatDisplayDate(dateStr);
-  };
+  const mainStyle = { marginLeft: 'var(--sidebar-width, 280px)', transition: 'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)' };
+
+  const statCards = [
+    { label: t('reception.todayArrivals'), value: stats.total, color: '#60B8D4' },
+    { label: t('filters.pending'), value: stats.pending, color: '#FBBF24' },
+    { label: t('reception.inHouse'), value: stats.confirmed, color: '#4ADE80' },
+    { label: 'No Room Assigned', value: stats.noRoom, color: '#FB7185' },
+  ];
 
   return (
-    <div className="flex min-h-screen bg-stone-50 dark:bg-stone-900">
+    <div className="flex min-h-screen" style={{ background: 'var(--background)' }}>
       <HotelSidebar />
-      <main className="flex-1 ml-72 p-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Page Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-4xl font-bold text-stone-800 dark:text-stone-100 mb-2">{t('reception.title')}</h1>
-                <p className="text-stone-600 dark:text-stone-300">
-                  {t('reception.subtitle')}
-                </p>
-              </div>
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => window.dispatchEvent(new CustomEvent('chat:open-voice'))}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-stone-900 dark:bg-stone-700 text-white rounded-xl hover:bg-stone-800 dark:hover:bg-stone-600 transition-colors shadow-sm"
-                >
-                  <span>🎤</span>
-                  <span className="font-medium text-sm">{t('reception.voiceAssistant')}</span>
-                </button>
-                <div className="text-right">
-                  <div className="text-sm text-stone-500 dark:text-stone-400">Current Date</div>
-                  <div className="text-2xl font-bold text-stone-800 dark:text-stone-100">
-                    {formatDisplayDate(getToday())}
-                  </div>
-                </div>
+      <main className="flex-1 px-8 py-8" style={mainStyle}>
+        <div className="max-w-[1380px] mx-auto">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-8">
+            <div>
+              <h1 style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }} className="text-[2.75rem] font-bold tracking-tight mb-1">
+                {t('reception.title')}
+              </h1>
+              <p style={{ color: 'var(--text-muted)' }} className="text-[11px]">{t('reception.subtitle')}</p>
+            </div>
+            <div className="flex flex-col items-end gap-2">
+              <Link
+                href="/hotel-cms/predictions"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                style={{ background: 'var(--surface)', border: '1px solid var(--card-border)', color: 'var(--text-muted)' }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-3.5 h-3.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Predictions
+              </Link>
+              <div className="text-right">
+                <p style={{ color: 'var(--text-muted)' }} className="text-[10px] font-semibold tracking-[0.15em] uppercase mb-1">Current Date</p>
+                <p style={{ color: 'var(--text-primary)' }} className="text-[1.4rem] font-bold">{formatDisplayDate(getToday())}</p>
               </div>
             </div>
           </div>
 
-          {/* Success Message */}
-          {successMessage && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 flex items-center gap-3">
-              <span className="text-xl">&#10003;</span>
-              <span className="flex-1">{successMessage}</span>
-              <button onClick={() => setSuccessMessage(null)} className="text-green-500 hover:text-green-700 text-xl">
-                &times;
-              </button>
-            </div>
-          )}
-
-          {/* Error Message */}
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 flex items-center gap-3">
-              <span className="text-xl">!</span>
-              <span className="flex-1">{error}</span>
-              <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700 text-xl">
-                &times;
-              </button>
-            </div>
-          )}
-
-          {/* Stats Cards */}
+          {/* Stats */}
           <div className="grid grid-cols-4 gap-4 mb-8">
-            <div className="bg-white dark:bg-stone-800 rounded-xl p-5 shadow-sm border border-stone-200 dark:border-stone-700">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm text-stone-500 dark:text-stone-400 font-medium">{t('reception.todayArrivals')}</div>
-                  <div className="text-3xl font-bold text-stone-800 dark:text-stone-100 mt-1">{stats.total}</div>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-2xl">
-                  &#128100;
-                </div>
+            {statCards.map(({ label, value, color }) => (
+              <div key={label} style={{ background: 'var(--surface)', border: '1px solid var(--card-border)' }} className="rounded-xl p-5">
+                <p style={{ color: 'var(--text-muted)' }} className="text-[9px] font-semibold tracking-[0.2em] uppercase mb-2">{label}</p>
+                <p style={{ color,  }} className="text-[2rem] font-bold tabular-nums">{value}</p>
               </div>
-            </div>
-            <div className="bg-white dark:bg-stone-800 rounded-xl p-5 shadow-sm border border-stone-200 dark:border-stone-700">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm text-stone-500 dark:text-stone-400 font-medium">{t('filters.pending')}</div>
-                  <div className="text-3xl font-bold text-amber-600 mt-1">{stats.pending}</div>
-                </div>
-                <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center text-2xl">
-                  &#9201;
-                </div>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-stone-800 rounded-xl p-5 shadow-sm border border-stone-200 dark:border-stone-700">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm text-stone-500 dark:text-stone-400 font-medium">{t('reception.inHouse')}</div>
-                  <div className="text-3xl font-bold text-green-600 mt-1">{stats.confirmed}</div>
-                </div>
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-2xl">
-                  &#10003;
-                </div>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-stone-800 rounded-xl p-5 shadow-sm border border-stone-200 dark:border-stone-700">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm text-stone-500 dark:text-stone-400 font-medium">No Room Assigned</div>
-                  <div className="text-3xl font-bold text-red-600 mt-1">{stats.noRoom}</div>
-                </div>
-                <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-2xl">
-                  &#9888;
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
 
           {/* Filters */}
-          <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 p-4 mb-6">
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--card-border)' }} className="rounded-xl p-4 mb-6">
             <div className="flex flex-wrap items-center gap-4">
-              {/* Date Filter Tabs */}
-              <div className="flex bg-stone-100 dark:bg-stone-700 rounded-lg p-1">
-                {(['today', 'tomorrow', 'week', 'custom'] as DateFilter[]).map((filter) => (
-                  <button
-                    key={filter}
-                    onClick={() => setDateFilter(filter)}
-                    className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                      dateFilter === filter
-                        ? 'bg-white dark:bg-stone-800 text-blue-600 shadow-sm'
-                        : 'text-stone-600 dark:text-stone-300 hover:text-stone-800 dark:hover:text-stone-100'
-                    }`}
+              {/* Date tabs */}
+              <div className="flex gap-1 p-1 rounded-lg" style={{ background: 'var(--background)' }}>
+                {(['today', 'tomorrow', 'week', 'custom'] as DateFilter[]).map((f) => (
+                  <button key={f} onClick={() => setDateFilter(f)}
+                    style={dateFilter === f
+                      ? { background: 'var(--gold)', color: 'var(--background)' }
+                      : { color: 'var(--text-secondary)', background: 'transparent' }}
+                    className="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all capitalize"
                   >
-                    {filter === 'today' && 'Today'}
-                    {filter === 'tomorrow' && 'Tomorrow'}
-                    {filter === 'week' && 'This Week'}
-                    {filter === 'custom' && 'Custom'}
+                    {f === 'today' ? 'Today' : f === 'tomorrow' ? 'Tomorrow' : f === 'week' ? 'This Week' : 'Custom'}
                   </button>
                 ))}
               </div>
 
-              {/* Custom Date Range */}
               {dateFilter === 'custom' && (
                 <div className="flex items-center gap-2">
-                  <input
-                    type="date"
-                    value={customDateFrom}
-                    onChange={(e) => setCustomDateFrom(e.target.value)}
-                    className="px-3 py-2 border border-stone-200 dark:border-stone-700 rounded-lg text-sm dark:bg-stone-800 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <span className="text-stone-400">to</span>
-                  <input
-                    type="date"
-                    value={customDateTo}
-                    onChange={(e) => setCustomDateTo(e.target.value)}
-                    className="px-3 py-2 border border-stone-200 dark:border-stone-700 rounded-lg text-sm dark:bg-stone-800 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <input type="date" value={customDateFrom} onChange={e => setCustomDateFrom(e.target.value)}
+                    className="px-3 py-1.5 rounded-md text-[12px] outline-none focus:ring-1 focus:ring-[#C9A96E]" style={inputStyle} />
+                  <span style={{ color: 'var(--text-muted)' }}>—</span>
+                  <input type="date" value={customDateTo} onChange={e => setCustomDateTo(e.target.value)}
+                    className="px-3 py-1.5 rounded-md text-[12px] outline-none focus:ring-1 focus:ring-[#C9A96E]" style={inputStyle} />
                 </div>
               )}
 
-              {/* Divider */}
-              <div className="h-8 w-px bg-stone-200 dark:bg-stone-700" />
+              <div style={{ width: 1, height: 24, background: 'var(--card-border)' }} />
 
-              {/* Status Filter */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-stone-500 dark:text-stone-400">Status:</span>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-                  className="px-3 py-2 border border-stone-200 dark:border-stone-700 rounded-lg text-sm dark:bg-stone-800 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All</option>
-                  <option value="PENDING">{t('filters.pending')}</option>
-                  <option value="CONFIRMED">{t('filters.confirmed')}</option>
-                </select>
-              </div>
+              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as StatusFilter)}
+                className="px-3 py-1.5 rounded-md text-[12px] outline-none focus:ring-1 focus:ring-[#C9A96E]" style={inputStyle}>
+                <option value="all">{t('common.all')}</option>
+                <option value="PENDING">{t('filters.pending')}</option>
+                <option value="CONFIRMED">{t('filters.confirmed')}</option>
+              </select>
 
-              {/* Divider */}
-              <div className="h-8 w-px bg-stone-200 dark:bg-stone-700" />
+              <input type="text" placeholder={t('reception.searchGuest')} value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                className="flex-1 min-w-[200px] px-3 py-1.5 rounded-md text-[12px] outline-none focus:ring-1 focus:ring-[#C9A96E]" style={inputStyle} />
 
-              {/* Search */}
-              <div className="flex-1 min-w-[200px]">
-                <input
-                  type="text"
-                  placeholder={t('reception.searchGuest')}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-lg text-sm dark:bg-stone-800 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* Refresh */}
-              <button
-                onClick={() => fetchReservations()}
-                disabled={loading}
-                className="px-4 py-2 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg transition-colors flex items-center gap-2"
-              >
-                <span className={loading ? 'animate-spin' : ''}>&#x21bb;</span>
+              <button onClick={fetchReservations} disabled={loading}
+                style={{ color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }}
+                className="px-3 py-1.5 rounded-md text-[12px] font-medium hover:opacity-80 disabled:opacity-50 flex items-center gap-1.5">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={loading ? 'animate-spin' : ''}>
+                  <path d="M23 4v6h-6M1 20v-6h6" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
                 {t('common.refresh')}
               </button>
             </div>
           </div>
 
-          {/* Arrivals List */}
+          {/* Arrivals list */}
           {loading ? (
-            <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 p-12 text-center">
-              <div className="animate-pulse text-stone-500 dark:text-stone-400">{t('common.loading')}</div>
+            <div className="flex items-center justify-center h-48">
+              <div className="animate-spin w-8 h-8 rounded-full border-2" style={{ borderColor: 'var(--card-border)', borderTopColor: 'var(--gold)' }} />
             </div>
           ) : filteredReservations.length === 0 ? (
-            <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 p-12 text-center">
-              <div className="text-5xl mb-4">&#128716;</div>
-              <p className="text-xl font-medium text-stone-700 dark:text-stone-300">{t('reception.noArrivals')}</p>
-              <p className="text-stone-500 dark:text-stone-400 mt-2">
-                {dateFilter === 'today'
-                  ? t('reception.noArrivals')
-                  : dateFilter === 'tomorrow'
-                  ? t('reception.noDepartures')
-                  : t('reception.noArrivals')}
-              </p>
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--card-border)' }} className="rounded-xl p-16 text-center">
+              <p style={{ color: 'var(--text-primary)' }} className="text-[18px] font-semibold mb-2">{t('reception.noArrivals')}</p>
+              <p style={{ color: 'var(--text-muted)' }} className="text-[13px]">No arrivals match the current filter.</p>
             </div>
           ) : (
             <div className="space-y-6">
-              {Object.entries(groupedReservations).map(([date, dayReservations]) => (
+              {Object.entries(groupedReservations).map(([date, dayRes]) => (
                 <div key={date}>
-                  {/* Date Header */}
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="flex items-center gap-2 px-4 py-2 bg-stone-800 dark:bg-stone-700 text-white rounded-lg">
-                      <span className="text-lg">&#128197;</span>
-                      <span className="font-semibold">{getDateLabel(date)}</span>
+                    <div style={{ background: 'var(--surface)', border: '1px solid var(--card-border)' }} className="flex items-center gap-2 px-4 py-1.5 rounded-md">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--gold)' }}>
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <line x1="16" y1="2" x2="16" y2="6" strokeLinecap="round" />
+                        <line x1="8" y1="2" x2="8" y2="6" strokeLinecap="round" />
+                        <line x1="3" y1="10" x2="21" y2="10" strokeLinecap="round" />
+                      </svg>
+                      <span style={{ color: 'var(--text-primary)' }} className="text-[12.5px] font-semibold">{getDateLabel(date)}</span>
                     </div>
-                    <div className="text-sm text-stone-500 dark:text-stone-400">
-                      {dayReservations.length} arrival{dayReservations.length !== 1 ? 's' : ''}
-                    </div>
-                    <div className="flex-1 h-px bg-stone-200 dark:bg-stone-700" />
+                    <span style={{ color: 'var(--text-muted)' }} className="text-[11px]">{dayRes.length} arrival{dayRes.length !== 1 ? 's' : ''}</span>
+                    <div className="flex-1 h-px" style={{ background: 'var(--card-border)' }} />
                   </div>
 
-                  {/* Reservation Cards */}
-                  <div className="grid gap-4">
-                    {dayReservations.map((reservation) => {
-                      const room = getRoom(reservation.roomIds);
-                      const nights = getDaysDiff(reservation.checkInDate, reservation.checkOutDate);
+                  <div className="space-y-3">
+                    {dayRes.map((res) => {
+                      const globalIdx = filteredReservations.indexOf(res);
+                      const room = getRoom(res.roomIds);
+                      const nights = getDaysDiff(res.checkInDate, res.checkOutDate);
+                      const isPending = res.status === 'PENDING';
+                      const tierInfo = res.guestEmail ? guestTierMap.get(res.guestEmail) : null;
+                      const initials = (res.guestName || '?').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+                      const isSelected = globalIdx === selectedIdx;
 
                       return (
-                        <div
-                          key={reservation.id}
-                          className={`bg-white dark:bg-stone-800 rounded-xl shadow-sm border-2 transition-all hover:shadow-md ${
-                            reservation.status === 'PENDING'
-                              ? 'border-amber-200 hover:border-amber-300'
-                              : 'border-stone-200 dark:border-stone-700 hover:border-stone-300'
-                          }`}
-                        >
-                          <div className="p-5">
-                            <div className="flex items-start gap-4">
-                              {/* Guest Avatar */}
-                              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
-                                {reservation.guestName?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '?'}
-                              </div>
+                        <div key={res.id}
+                          onClick={() => setSelectedIdx(globalIdx)}
+                          style={{
+                            background: 'var(--surface)',
+                            border: isSelected
+                              ? '1px solid var(--gold)'
+                              : `1px solid ${isPending ? 'rgba(251,191,36,0.3)' : 'var(--card-border)'}`,
+                            outline: isSelected ? '2px solid rgba(168,120,58,0.2)' : 'none',
+                            cursor: 'pointer',
+                          }}
+                          className="rounded-xl p-5 transition-all">
+                          <div className="flex items-center gap-4">
+                            {/* Avatar */}
+                            <div className="w-11 h-11 rounded-full flex items-center justify-center text-[13px] font-bold flex-shrink-0"
+                              style={{ background: 'var(--gold)', color: 'var(--background)' }}>
+                              {initials}
+                            </div>
 
-                              {/* Guest Info */}
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-3 mb-1">
-                                  <h3 className="text-lg font-bold text-stone-800 dark:text-stone-100 truncate">
-                                    {reservation.guestName || 'Unknown Guest'}
-                                  </h3>
-                                  {getStatusBadge(reservation.status)}
-                                  {reservation.guestEmail && guestTierMap.has(reservation.guestEmail) && (
-                                    <TierBadge tier={guestTierMap.get(reservation.guestEmail)!.tier} />
-                                  )}
-                                </div>
-                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-stone-500 dark:text-stone-400">
-                                  <span className="font-mono">#{reservation.originId || reservation.id.slice(0, 8)}</span>
-                                  <span>&#8226;</span>
-                                  <span>{nights} night{nights !== 1 ? 's' : ''}</span>
-                                  <span>&#8226;</span>
-                                  <span>
-                                    {t('reception.checkOut')}: {formatDisplayDate(reservation.checkOutDate)}
+                            {/* Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-3 mb-1">
+                                <h3 style={{ color: 'var(--text-primary)' }} className="text-[15px] font-semibold truncate">{res.guestName}</h3>
+                                <span style={{ color: isPending ? '#FBBF24' : '#4ADE80', background: (isPending ? '#FBBF24' : '#4ADE80') + '1A' }}
+                                  className="text-[10px] font-semibold uppercase tracking-[0.1em] px-2 py-0.5 rounded-md flex items-center gap-1">
+                                  <span className={`w-1.5 h-1.5 rounded-full inline-block ${isPending ? 'animate-pulse' : ''}`}
+                                    style={{ background: isPending ? '#FBBF24' : '#4ADE80' }} />
+                                  {isPending ? 'Awaiting' : 'Confirmed'}
+                                </span>
+                                {tierInfo?.tier && (
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: tierInfo.tier.color }}>
+                                    ★ {tierInfo.tier.name}
                                   </span>
+                                )}
+                              </div>
+                              <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                                <span style={{ color: 'var(--text-muted)' }} className="font-mono text-[11px]">#{res.originId || res.id.slice(0, 8)}</span>
+                                <span style={{ color: 'var(--card-border)' }}>·</span>
+                                <span style={{ color: 'var(--text-muted)' }} className="text-[11px]">{nights} night{nights !== 1 ? 's' : ''}</span>
+                                <span style={{ color: 'var(--card-border)' }}>·</span>
+                                <span style={{ color: 'var(--text-muted)' }} className="text-[11px]">Out: {formatDisplayDate(res.checkOutDate)}</span>
+                              </div>
+                            </div>
+
+                            {/* Room */}
+                            <div className="flex-shrink-0 text-right px-4" style={{ borderLeft: '1px solid var(--card-border)' }}>
+                              {room ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-3 h-3 rounded-full" style={{ background: room.color }} />
+                                  <div>
+                                    <p style={{ color: 'var(--text-primary)' }} className="text-[13px] font-semibold">Room #{room.roomNumber}</p>
+                                    <p style={{ color: 'var(--text-muted)' }} className="text-[11px]">{room.type}</p>
+                                  </div>
                                 </div>
-                              </div>
+                              ) : (
+                                <span style={{ color: '#FB7185', background: 'rgba(251,113,133,0.1)' }} className="text-[11px] font-semibold px-2 py-1 rounded-md">No Room</span>
+                              )}
+                            </div>
 
-                              {/* Room Info */}
-                              <div className="flex-shrink-0 text-right">
-                                {room ? (
-                                  <div className="flex items-center gap-2">
-                                    <div
-                                      className="w-4 h-4 rounded-full"
-                                      style={{ backgroundColor: room.color }}
-                                    />
-                                    <div>
-                                      <div className="font-bold text-stone-800 dark:text-stone-100">Room #{room.roomNumber}</div>
-                                      <div className="text-sm text-stone-500 dark:text-stone-400">{room.type}</div>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-sm font-medium">
-                                    No Room Assigned
-                                  </div>
-                                )}
-                              </div>
+                            {/* Amount */}
+                            <div className="flex-shrink-0 text-right px-4" style={{ borderLeft: '1px solid var(--card-border)' }}>
+                              <p style={{ color: 'var(--text-muted)' }} className="text-[9px] uppercase tracking-[0.15em] mb-0.5">Total</p>
+                              <p style={{ color: 'var(--text-primary)',  }} className="text-[15px] font-bold tabular-nums">
+                                {res.totalPrice?.toLocaleString('en-US', { style: 'currency', currency: res.currency || 'EUR', maximumFractionDigits: 0 }) || '—'}
+                              </p>
+                            </div>
 
-                              {/* Amount */}
-                              <div className="flex-shrink-0 text-right px-4 border-l border-stone-100 dark:border-stone-700">
-                                <div className="text-xs text-stone-400 uppercase">Total</div>
-                                <div className="text-lg font-bold text-stone-800 dark:text-stone-100">
-                                  {reservation.totalPrice?.toLocaleString('en-US', {
-                                    style: 'currency',
-                                    currency: reservation.currency || 'USD',
-                                  }) || '-'}
-                                </div>
-                              </div>
-
-                              {/* Actions */}
-                              <div className="flex-shrink-0 flex items-center gap-2 pl-4 border-l border-stone-100 dark:border-stone-700">
-                                {reservation.status === 'PENDING' ? (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleConfirmReservation(reservation);
-                                    }}
-                                    disabled={actionLoading === reservation.id}
-                                    className="px-5 py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all disabled:opacity-50"
-                                  >
-                                    {actionLoading === reservation.id ? (
-                                      <span className="flex items-center gap-2">
-                                        <span className="animate-spin">&#8987;</span>
-                                        Processing...
-                                      </span>
-                                    ) : (
-                                      <span className="flex items-center gap-2">
-                                        <span>&#10003;</span>
-                                        {t('reception.checkIn')}
-                                      </span>
-                                    )}
-                                  </button>
-                                ) : (
-                                  <div className="px-5 py-2.5 bg-green-100 text-green-700 font-semibold rounded-lg">
-                                    &#10003; Checked In
-                                  </div>
-                                )}
-                                {reservation.guestEmail && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setEmailTarget({ to: reservation.guestEmail!, toName: reservation.guestName });
-                                    }}
-                                    className="px-4 py-2.5 border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 font-medium rounded-lg hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors flex items-center gap-1.5"
-                                    title={t('email.sendEmail')}
-                                  >
-                                    <span>✉</span>
-                                  </button>
-                                )}
-                                <button
-                                  onClick={() => router.push(`/hotel-cms/bookings/${reservation.id}`)}
-                                  className="px-4 py-2.5 border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 font-medium rounded-lg hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors"
-                                >
-                                  {t('common.view')}
+                            {/* Actions */}
+                            <div className="flex-shrink-0 flex items-center gap-2 pl-4" style={{ borderLeft: '1px solid var(--card-border)' }}>
+                              {isPending ? (
+                                <button onClick={e => { e.stopPropagation(); setWizardReservation(res); }}
+                                  style={{ background: 'var(--gold)', color: 'var(--background)' }}
+                                  className="px-4 py-2 text-[12.5px] font-semibold rounded-md hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5">
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" strokeLinecap="round" strokeLinejoin="round" />
+                                    <polyline points="10 17 15 12 10 7" strokeLinecap="round" strokeLinejoin="round" />
+                                    <line x1="15" y1="12" x2="3" y2="12" strokeLinecap="round" />
+                                  </svg>
+                                  Quick Check-In
                                 </button>
-                              </div>
+                              ) : (
+                                <span style={{ color: '#4ADE80', background: 'rgba(74,222,128,0.1)' }} className="px-3 py-2 text-[12px] font-semibold rounded-md flex items-center gap-1">
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                  Checked In
+                                </span>
+                              )}
+                              {res.guestEmail && (
+                                <button onClick={e => { e.stopPropagation(); setEmailTarget({ to: res.guestEmail!, toName: res.guestName }); }}
+                                  style={{ color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }}
+                                  className="p-2 rounded-md hover:opacity-80">
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                    <polyline points="22,6 12,13 2,6" />
+                                  </svg>
+                                </button>
+                              )}
+                              <button onClick={() => router.push(`/hotel-cms/bookings/${res.id}`)}
+                                style={{ color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }}
+                                className="px-3 py-2 text-[12px] font-medium rounded-md hover:opacity-80">
+                                {t('common.view')}
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -727,10 +435,16 @@ export default function ReceptionPage() {
       </main>
 
       {emailTarget && (
-        <ComposeEmailModal
-          to={emailTarget.to}
-          toName={emailTarget.toName}
-          onClose={() => setEmailTarget(null)}
+        <ComposeEmailModal to={emailTarget.to} toName={emailTarget.toName} onClose={() => setEmailTarget(null)} />
+      )}
+
+      {wizardReservation && (
+        <CheckInWizard
+          reservation={wizardReservation}
+          rooms={rooms}
+          tierInfo={wizardReservation.guestEmail ? guestTierMap.get(wizardReservation.guestEmail) ?? null : null}
+          onComplete={() => { fetchReservations(); setSelectedIdx(-1); }}
+          onClose={() => setWizardReservation(null)}
         />
       )}
     </div>

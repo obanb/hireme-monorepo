@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import HotelSidebar from '@/components/HotelSidebar';
 import { useLocale } from '@/context/LocaleContext';
+import { useToast } from '@/context/ToastContext';
+import { useConfirm } from '@/context/ConfirmContext';
 
 interface ParkingOccupancy {
   id: string;
@@ -41,14 +43,7 @@ const SPACE_FIELDS = `id number label type isActive currentOccupancy {
   id spaceId ownerName ownerEmail licensePlate from to notes createdAt isActive
 }`;
 
-const emptyForm = {
-  ownerName: '',
-  ownerEmail: '',
-  licensePlate: '',
-  from: '',
-  to: '',
-  notes: '',
-};
+const emptyForm = { ownerName: '', ownerEmail: '', licensePlate: '', from: '', to: '', notes: '' };
 
 function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return '—';
@@ -64,83 +59,81 @@ function nowLocalDatetime(): string {
   return now.toISOString().slice(0, 16);
 }
 
-// ─── Space Card ──────────────────────────────────────────────────────────────
+// Space type colors (for the parking map — kept vivid for visual clarity)
+const SPACE_COLORS = {
+  free:     { bg: '#22c55e', border: '#16a34a', strip: '#15803d' },
+  vip:      { bg: '#f59e0b', border: '#d97706', strip: '#b45309' },
+  disabled: { bg: '#3b82f6', border: '#2563eb', strip: '#1d4ed8' },
+  occupied: { bg: '#ef4444', border: '#dc2626', strip: '#b91c1c' },
+  highlight:{ bg: '#eab308', border: '#ca8a04', strip: '#a16207' },
+};
 
-function SpaceCard({
-  space,
-  highlight,
-  onClick,
-}: {
-  space: ParkingSpace;
-  highlight: boolean;
-  onClick: (s: ParkingSpace) => void;
-}) {
+function SpaceCard({ space, highlight, onClick }: { space: ParkingSpace; highlight: boolean; onClick: (s: ParkingSpace) => void }) {
+  const [hov, setHov] = useState(false);
   const occ = space.currentOccupancy;
   const isVip = space.type === 'VIP';
   const isDisabled = space.type === 'DISABLED';
 
-  let bg = occ
-    ? 'bg-red-500 hover:bg-red-400 border-red-700'
-    : isVip
-    ? 'bg-amber-400 hover:bg-amber-300 border-amber-600'
-    : isDisabled
-    ? 'bg-blue-400 hover:bg-blue-300 border-blue-600'
-    : 'bg-emerald-500 hover:bg-emerald-400 border-emerald-700';
-
-  if (highlight) bg = 'bg-yellow-400 hover:bg-yellow-300 border-yellow-600 ring-4 ring-yellow-300';
+  const colors = highlight ? SPACE_COLORS.highlight
+    : occ ? SPACE_COLORS.occupied
+    : isVip ? SPACE_COLORS.vip
+    : isDisabled ? SPACE_COLORS.disabled
+    : SPACE_COLORS.free;
 
   return (
     <div
       onClick={() => onClick(space)}
-      className={`relative cursor-pointer rounded-t-xl border-2 border-b-4 transition-all hover:scale-105 hover:-translate-y-0.5 hover:shadow-xl select-none ${bg}`}
-      style={{ width: 88, height: 110 }}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
       title={occ ? `${occ.licensePlate} — ${occ.ownerName}` : `Space ${space.label} (free)`}
+      style={{
+        position: 'relative', cursor: 'pointer', width: 88, height: 110,
+        borderRadius: '10px 10px 4px 4px',
+        background: colors.bg,
+        border: `2px solid ${colors.border}`,
+        borderBottom: `4px solid ${colors.border}`,
+        transform: hov ? 'scale(1.05) translateY(-2px)' : 'scale(1)',
+        boxShadow: hov ? '0 8px 20px rgba(0,0,0,0.3)' : '0 2px 6px rgba(0,0,0,0.15)',
+        transition: 'all 0.15s ease',
+        userSelect: 'none',
+        outline: highlight ? '3px solid rgba(234,179,8,0.6)' : 'none',
+        outlineOffset: 2,
+      }}
     >
-      {/* Space label */}
-      <div className="absolute top-1.5 left-2 text-[10px] font-black text-white/70 leading-none">
+      <div style={{ position: 'absolute', top: 5, left: 7, fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.65)', lineHeight: 1 }}>
         {space.label}
       </div>
-
-      {/* Type badge */}
       {(isVip || isDisabled) && !occ && (
-        <div className="absolute top-1.5 right-1.5 text-[9px] font-black text-white/70">
+        <div style={{ position: 'absolute', top: 5, right: 6, fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.65)' }}>
           {isVip ? 'VIP' : '♿'}
         </div>
       )}
-
-      {/* Content */}
-      <div className="flex flex-col items-center justify-center h-full pt-3 px-1 gap-0.5">
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', paddingTop: 12, gap: 3 }}>
         {occ ? (
           <>
-            <div className="text-xs font-black text-white text-center leading-tight break-all">
+            <div style={{ fontSize: 11, fontWeight: 800, color: '#fff', textAlign: 'center', lineHeight: 1.2, wordBreak: 'break-all', padding: '0 4px' }}>
               {occ.licensePlate}
             </div>
-            <div className="text-[10px] text-white/80 text-center leading-tight truncate w-full text-center px-1 mt-0.5">
+            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.75)', textAlign: 'center', lineHeight: 1.2, padding: '0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>
               {occ.ownerName}
             </div>
             {occ.to && (
-              <div className="text-[9px] text-white/60 text-center mt-0.5 leading-tight">
+              <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
                 until {new Date(occ.to).toLocaleDateString('cs-CZ', { day: '2-digit', month: '2-digit' })}
               </div>
             )}
           </>
         ) : (
           <>
-            <div className="text-white/40 text-3xl font-black leading-none">P</div>
-            <div className="text-[9px] text-white/50 mt-0.5">free</div>
+            <div style={{ fontSize: 28, fontWeight: 900, color: 'rgba(255,255,255,0.35)', lineHeight: 1 }}>P</div>
+            <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>free</div>
           </>
         )}
       </div>
-
-      {/* Bottom indicator strip */}
-      <div className={`absolute bottom-0 left-0 right-0 h-1.5 rounded-b-lg ${occ ? 'bg-red-800' : isVip ? 'bg-amber-600' : isDisabled ? 'bg-blue-600' : 'bg-emerald-700'}`} />
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 5, borderRadius: '0 0 3px 3px', background: colors.strip }} />
     </div>
   );
 }
-
-// ─── Parking Layout ──────────────────────────────────────────────────────────
-// 30 spaces: rows of 6 with lane dividers
-// Row A (1–6), Row B (7–12), [LANE], Row C (13–18), Row D (19–24), [LANE], Row E (25–30)
 
 const ROWS = [
   { label: 'A', spaces: [1, 2, 3, 4, 5, 6] },
@@ -152,10 +145,16 @@ const ROWS = [
   { label: 'E', spaces: [25, 26, 27, 28, 29, 30] },
 ] as const;
 
-// ─── Main Page ───────────────────────────────────────────────────────────────
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '9px 12px', borderRadius: 9, fontSize: 13,
+  outline: 'none', boxSizing: 'border-box',
+  background: 'var(--surface)', border: '1px solid var(--card-border)', color: 'var(--text-primary)',
+};
 
 export default function ParkingPage() {
   const { t } = useLocale();
+  const toast = useToast();
+  const confirm = useConfirm();
   const [spaces, setSpaces] = useState<ParkingSpace[]>([]);
   const [stats, setStats] = useState<ParkingStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -163,17 +162,17 @@ export default function ParkingPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // modals
   const [selectedSpace, setSelectedSpace] = useState<ParkingSpace | null>(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [form, setForm] = useState({ ...emptyForm });
   const [saving, setSaving] = useState(false);
+  const [hoveredRow, setHoveredRow] = useState<string | null>(null);
 
   useEffect(() => {
     if (success) {
-      const t = setTimeout(() => setSuccess(null), 3000);
-      return () => clearTimeout(t);
+      const timer = setTimeout(() => setSuccess(null), 3000);
+      return () => clearTimeout(timer);
     }
   }, [success]);
 
@@ -181,15 +180,8 @@ export default function ParkingPage() {
     setLoading(true);
     try {
       const res = await fetch(GRAPHQL_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          query: `{
-            parkingSpaces { ${SPACE_FIELDS} }
-            parkingStats { total occupied available occupancyRate todayArrivals todayDepartures }
-          }`,
-        }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({ query: `{ parkingSpaces { ${SPACE_FIELDS} } parkingStats { total occupied available occupancyRate todayArrivals todayDepartures } }` }),
       });
       const json = await res.json();
       if (json.errors) throw new Error(json.errors[0]?.message);
@@ -222,24 +214,10 @@ export default function ParkingPage() {
     setSaving(true);
     try {
       const res = await fetch(GRAPHQL_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
         body: JSON.stringify({
-          query: `mutation($input: AssignParkingInput!) {
-            assignParking(input: $input) { id licensePlate ownerName }
-          }`,
-          variables: {
-            input: {
-              spaceId: selectedSpace.id,
-              ownerName: form.ownerName,
-              ownerEmail: form.ownerEmail || null,
-              licensePlate: form.licensePlate,
-              from: form.from,
-              to: form.to || null,
-              notes: form.notes || null,
-            },
-          },
+          query: `mutation($input: AssignParkingInput!) { assignParking(input: $input) { id licensePlate ownerName } }`,
+          variables: { input: { spaceId: selectedSpace.id, ownerName: form.ownerName, ownerEmail: form.ownerEmail || null, licensePlate: form.licensePlate, from: form.from, to: form.to || null, notes: form.notes || null } },
         }),
       });
       const json = await res.json();
@@ -255,39 +233,29 @@ export default function ParkingPage() {
   };
 
   const handleRelease = async (space: ParkingSpace) => {
-    if (!confirm(`Release parking space ${space.label}?`)) return;
+    if (!(await confirm({ message: `Release parking space ${space.label}?`, confirmLabel: 'Release', danger: true }))) return;
     try {
       const res = await fetch(GRAPHQL_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          query: `mutation($spaceId: ID!) { releaseParking(spaceId: $spaceId) }`,
-          variables: { spaceId: space.id },
-        }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({ query: `mutation($spaceId: ID!) { releaseParking(spaceId: $spaceId) }`, variables: { spaceId: space.id } }),
       });
       const json = await res.json();
       if (json.errors) throw new Error(json.errors[0]?.message);
-      setSuccess(`Space ${space.label} released`);
+      toast.success(`Space ${space.label} released.`);
       setShowDetailModal(false);
       fetchAll();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to release space');
+      toast.error(err instanceof Error ? err.message : 'Failed to release space');
     }
   };
 
-  // highlight spaces matching search
   const matchingNumbers = new Set<number>();
   if (searchQuery.trim()) {
     const q = searchQuery.toLowerCase();
     spaces.forEach((s) => {
       if (s.currentOccupancy) {
         const occ = s.currentOccupancy;
-        if (
-          occ.licensePlate.toLowerCase().includes(q) ||
-          occ.ownerName.toLowerCase().includes(q) ||
-          (occ.ownerEmail ?? '').toLowerCase().includes(q)
-        ) {
+        if (occ.licensePlate.toLowerCase().includes(q) || occ.ownerName.toLowerCase().includes(q) || (occ.ownerEmail ?? '').toLowerCase().includes(q)) {
           matchingNumbers.add(s.number);
         }
       }
@@ -296,130 +264,151 @@ export default function ParkingPage() {
 
   const occupiedSpaces = spaces.filter((s) => s.currentOccupancy);
 
+  const thStyle: React.CSSProperties = {
+    color: 'var(--text-muted)', fontSize: '9px', fontWeight: 600,
+    letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px 16px', textAlign: 'left',
+  };
+  const tdStyle: React.CSSProperties = {
+    padding: '12px 16px', borderTop: '1px solid var(--card-border)',
+    color: 'var(--text-secondary)', fontSize: '13px',
+  };
+
   return (
-    <div className="flex min-h-screen bg-stone-50 dark:bg-stone-900">
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--background)' }}>
       <HotelSidebar />
-      <main className="flex-1 ml-72 p-8">
-        <div className="max-w-6xl mx-auto">
+      <main style={{ flex: 1, marginLeft: 'var(--sidebar-width, 280px)', padding: '32px', transition: 'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+
           {/* Header */}
-          <div className="mb-8 flex items-start justify-between">
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 32 }}>
             <div>
-              <h1 className="text-4xl font-black text-stone-900 dark:text-stone-100 mb-2">{t('parking.title')}</h1>
-              <p className="text-stone-500 dark:text-stone-400">{t('parking.subtitle')}</p>
+              <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
+                {t('parking.title')}
+              </h1>
+              <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>{t('parking.subtitle')}</p>
             </div>
             <button
               onClick={fetchAll}
               disabled={loading}
-              className="px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-xl text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors flex items-center gap-2"
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', borderRadius: 10, border: '1px solid var(--card-border)', background: 'transparent', color: 'var(--text-secondary)', fontSize: 13, cursor: 'pointer' }}
             >
-              <span className={loading ? 'animate-spin' : ''}>↺</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }}>
+                <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+              </svg>
               {t('common.refresh')}
             </button>
           </div>
 
-          {/* Alerts */}
           {success && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 flex items-center justify-between">
+            <div style={{ marginBottom: 16, padding: '12px 16px', borderRadius: 10, background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.3)', color: '#4ADE80', fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
               <span>✓ {success}</span>
-              <button onClick={() => setSuccess(null)}>&times;</button>
+              <button onClick={() => setSuccess(null)} style={{ background: 'none', border: 'none', color: '#4ADE80', cursor: 'pointer' }}>×</button>
             </div>
           )}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 flex items-center justify-between">
+            <div style={{ marginBottom: 16, padding: '12px 16px', borderRadius: 10, background: 'rgba(251,113,133,0.08)', border: '1px solid rgba(251,113,133,0.3)', color: '#FB7185', fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
               <span>{error}</span>
-              <button onClick={() => setError(null)}>&times;</button>
+              <button onClick={() => setError(null)} style={{ background: 'none', border: 'none', color: '#FB7185', cursor: 'pointer' }}>×</button>
             </div>
           )}
 
           {/* Stats */}
           {stats && (
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
-              <div className="col-span-2 md:col-span-2 bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 shadow-sm">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="text-sm font-semibold text-stone-500 dark:text-stone-400">Occupancy</div>
-                  <div className="text-2xl font-black text-stone-900 dark:text-stone-100">{stats.occupancyRate}%</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr', gap: 12, marginBottom: 28 }}>
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--card-border)', borderRadius: 12, padding: 18 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Occupancy</span>
+                  <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)' }}>{stats.occupancyRate}%</span>
                 </div>
-                <div className="w-full bg-stone-100 dark:bg-stone-700 rounded-full h-3">
-                  <div
-                    className={`h-3 rounded-full transition-all ${
-                      stats.occupancyRate >= 80 ? 'bg-red-500' :
-                      stats.occupancyRate >= 50 ? 'bg-amber-500' : 'bg-emerald-500'
-                    }`}
-                    style={{ width: `${stats.occupancyRate}%` }}
-                  />
+                <div style={{ width: '100%', background: 'var(--background)', borderRadius: 6, height: 8 }}>
+                  <div style={{
+                    height: 8, borderRadius: 6, transition: 'width 0.3s',
+                    background: stats.occupancyRate >= 80 ? '#ef4444' : stats.occupancyRate >= 50 ? '#f59e0b' : '#22c55e',
+                    width: `${stats.occupancyRate}%`,
+                  }} />
                 </div>
-                <div className="flex justify-between text-xs text-stone-400 mt-1">
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text-muted)', marginTop: 5 }}>
                   <span>{stats.occupied} occupied</span>
                   <span>{stats.available} free</span>
                 </div>
               </div>
               {[
-                { label: 'Total Spaces', value: stats.total, color: 'text-stone-700 dark:text-stone-200' },
-                { label: 'Occupied', value: stats.occupied, color: 'text-red-600' },
-                { label: 'Available', value: stats.available, color: 'text-emerald-600' },
-                { label: "Today's In", value: stats.todayArrivals, color: 'text-blue-600' },
-                { label: "Today's Out", value: stats.todayDepartures, color: 'text-purple-600' },
+                { label: 'Total', value: stats.total, color: 'var(--text-primary)' },
+                { label: 'Occupied', value: stats.occupied, color: '#FB7185' },
+                { label: 'Available', value: stats.available, color: '#4ADE80' },
+                { label: "Today In", value: stats.todayArrivals, color: '#60B8D4' },
+                { label: "Today Out", value: stats.todayDepartures, color: '#A78BFA' },
               ].map(({ label, value, color }) => (
-                <div key={label} className="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-4 shadow-sm flex flex-col justify-between">
-                  <div className="text-xs text-stone-500 dark:text-stone-400 font-medium">{label}</div>
-                  <div className={`text-3xl font-black mt-1 ${color}`}>{value}</div>
+                <div key={label} style={{ background: 'var(--surface)', border: '1px solid var(--card-border)', borderRadius: 12, padding: 18, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+                  <span style={{ fontSize: 28, fontWeight: 700, color, marginTop: 6 }}>{value}</span>
                 </div>
               ))}
             </div>
           )}
 
           {/* Search + Legend */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by plate, name or email..."
-              className="px-4 py-2 border border-stone-200 dark:border-stone-700 rounded-xl text-sm w-72 focus:outline-none focus:ring-2 focus:ring-stone-900 dark:bg-stone-800 dark:text-stone-100"
-            />
-            <div className="flex items-center gap-4 text-xs text-stone-500 dark:text-stone-400">
-              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-emerald-500 inline-block" /> Free</span>
-              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-red-500 inline-block" /> Occupied</span>
-              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-amber-400 inline-block" /> VIP</span>
-              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-blue-400 inline-block" /> Disabled</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+            <div style={{ position: 'relative' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by plate, name or email..."
+                style={{ padding: '9px 12px 9px 36px', border: '1px solid var(--card-border)', borderRadius: 10, fontSize: 13, background: 'var(--surface)', color: 'var(--text-primary)', outline: 'none', width: 260 }}
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 11, color: 'var(--text-muted)' }}>
+              {[
+                { label: 'Free', color: '#22c55e' },
+                { label: 'Occupied', color: '#ef4444' },
+                { label: 'VIP', color: '#f59e0b' },
+                { label: 'Disabled', color: '#3b82f6' },
+              ].map(({ label, color }) => (
+                <span key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <span style={{ width: 10, height: 10, borderRadius: 2, background: color, display: 'inline-block' }} />
+                  {label}
+                </span>
+              ))}
             </div>
           </div>
 
           {/* Parking Map */}
-          <div className="bg-stone-700 dark:bg-stone-900 rounded-3xl p-6 shadow-xl border border-stone-600 dark:border-stone-800 mb-8">
-            {/* Entrance */}
-            <div className="flex items-center gap-3 mb-5">
-              <div className="h-px flex-1 bg-stone-500" />
-              <div className="text-stone-400 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                <span>↓</span> ENTRANCE / EXIT <span>↓</span>
-              </div>
-              <div className="h-px flex-1 bg-stone-500" />
+          <div style={{ background: '#1e1e1a', borderRadius: 20, padding: 24, border: '1px solid #3a3a2e', marginBottom: 28 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+              <div style={{ flex: 1, height: 1, background: '#3a3a2e' }} />
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#6b6b5a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                ↓ ENTRANCE / EXIT ↓
+              </span>
+              <div style={{ flex: 1, height: 1, background: '#3a3a2e' }} />
             </div>
 
             {loading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="animate-spin w-10 h-10 border-4 border-white border-t-transparent rounded-full" />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 0' }}>
+                <div style={{ width: 36, height: 36, border: '3px solid rgba(255,255,255,0.15)', borderTop: '3px solid #C9A96E', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
               </div>
             ) : (
-              <div className="space-y-3">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {ROWS.map((row, rowIdx) => {
                   if ('lane' in row && row.lane) {
                     return (
-                      <div key={`lane-${rowIdx}`} className="flex items-center gap-2 py-2">
-                        <div className="h-0.5 flex-1 border-t-2 border-dashed border-stone-500" />
-                        <div className="text-stone-500 text-xs font-bold uppercase tracking-widest flex items-center gap-2 px-3">
-                          <span>←</span> DRIVING LANE <span>→</span>
-                        </div>
-                        <div className="h-0.5 flex-1 border-t-2 border-dashed border-stone-500" />
+                      <div key={`lane-${rowIdx}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '6px 0' }}>
+                        <div style={{ flex: 1, borderTop: '2px dashed #3a3a2e' }} />
+                        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#4a4a3a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          ← DRIVING LANE →
+                        </span>
+                        <div style={{ flex: 1, borderTop: '2px dashed #3a3a2e' }} />
                       </div>
                     );
                   }
-
                   const spaceRow = row as { label: string; spaces: readonly number[] };
                   return (
-                    <div key={spaceRow.label} className="flex items-center gap-3">
-                      <div className="text-stone-400 text-xs font-black w-4 text-center">{spaceRow.label}</div>
-                      <div className="flex gap-2 flex-wrap">
+                    <div key={spaceRow.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: 10, fontWeight: 800, color: '#4a4a3a', width: 14, textAlign: 'center' }}>{spaceRow.label}</span>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                         {spaceRow.spaces.map((num) => {
                           const space = spaceMap.get(num);
                           if (!space) return null;
@@ -442,47 +431,53 @@ export default function ParkingPage() {
 
           {/* Currently Parked List */}
           {occupiedSpaces.length > 0 && (
-            <div className="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-stone-100 dark:border-stone-700">
-                <h2 className="text-lg font-black text-stone-900 dark:text-stone-100">
-                  Currently Parked <span className="text-stone-400 font-normal text-base">({occupiedSpaces.length})</span>
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--card-border)', borderRadius: 14, overflow: 'hidden' }}>
+              <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--card-border)' }}>
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
+                  Currently Parked <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 14 }}>({occupiedSpaces.length})</span>
                 </h2>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-stone-50 dark:bg-stone-900">
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
                     <tr>
-                      {['Space', 'Plate (SPZ)', 'Owner', 'Email', 'Since', 'Until', 'Actions'].map((h) => (
-                        <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">{h}</th>
+                      {['Space', 'Plate', 'Owner', 'Email', 'Since', 'Until', 'Actions'].map((h) => (
+                        <th key={h} style={thStyle}>{h}</th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-stone-100 dark:divide-stone-700">
+                  <tbody>
                     {occupiedSpaces.map((space) => {
                       const occ = space.currentOccupancy!;
+                      const isHov = hoveredRow === space.id;
                       return (
-                        <tr key={space.id} className="hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors">
-                          <td className="px-4 py-3">
-                            <span className="px-2 py-0.5 bg-stone-900 dark:bg-stone-600 text-white rounded font-mono font-bold text-xs">
+                        <tr
+                          key={space.id}
+                          onMouseEnter={() => setHoveredRow(space.id)}
+                          onMouseLeave={() => setHoveredRow(null)}
+                          style={{ background: isHov ? 'var(--surface-hover)' : 'transparent', transition: 'background 0.15s' }}
+                        >
+                          <td style={tdStyle}>
+                            <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 5, background: 'var(--background)', border: '1px solid var(--card-border)', fontFamily: 'monospace', fontWeight: 700, fontSize: 12, color: 'var(--text-primary)' }}>
                               {space.label}
                             </span>
                           </td>
-                          <td className="px-4 py-3 font-mono font-bold text-stone-900 dark:text-stone-100">{occ.licensePlate}</td>
-                          <td className="px-4 py-3 text-stone-700 dark:text-stone-300">{occ.ownerName}</td>
-                          <td className="px-4 py-3 text-stone-500 dark:text-stone-400">{occ.ownerEmail ?? '—'}</td>
-                          <td className="px-4 py-3 text-stone-600 dark:text-stone-400 whitespace-nowrap">{formatDateTime(occ.from)}</td>
-                          <td className="px-4 py-3 text-stone-600 dark:text-stone-400 whitespace-nowrap">{formatDateTime(occ.to)}</td>
-                          <td className="px-4 py-3">
-                            <div className="flex gap-2">
+                          <td style={{ ...tdStyle, fontFamily: 'monospace', fontWeight: 700, color: 'var(--text-primary)' }}>{occ.licensePlate}</td>
+                          <td style={tdStyle}>{occ.ownerName}</td>
+                          <td style={{ ...tdStyle, color: 'var(--text-muted)' }}>{occ.ownerEmail ?? '—'}</td>
+                          <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{formatDateTime(occ.from)}</td>
+                          <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{formatDateTime(occ.to)}</td>
+                          <td style={tdStyle}>
+                            <div style={{ display: 'flex', gap: 6 }}>
                               <button
                                 onClick={() => { setSelectedSpace(space); setShowDetailModal(true); }}
-                                className="px-2 py-1 text-xs text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-600 rounded-lg transition-colors"
+                                style={{ padding: '4px 10px', fontSize: 11, fontWeight: 500, borderRadius: 7, border: '1px solid var(--card-border)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer' }}
                               >
                                 View
                               </button>
                               <button
                                 onClick={() => handleRelease(space)}
-                                className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                                style={{ padding: '4px 10px', fontSize: 11, fontWeight: 600, borderRadius: 7, border: 'none', background: 'rgba(251,113,133,0.08)', color: '#FB7185', cursor: 'pointer' }}
                               >
                                 Release
                               </button>
@@ -501,94 +496,55 @@ export default function ParkingPage() {
 
       {/* Assign Modal */}
       {showAssignModal && selectedSpace && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-stone-800 rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="p-6 border-b border-stone-200 dark:border-stone-700">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center text-white font-black text-xl">
-                  {selectedSpace.label}
-                </div>
-                <div>
-                  <h2 className="text-xl font-black text-stone-900 dark:text-stone-100">Assign Parking</h2>
-                  <p className="text-sm text-stone-500 dark:text-stone-400">Space {selectedSpace.label} · {selectedSpace.type}</p>
-                </div>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}>
+          <div style={{ background: 'var(--sidebar-bg)', borderRadius: 16, width: '100%', maxWidth: 440, border: '1px solid var(--card-border)' }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--card-border)', display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 10, background: '#22c55e', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 16 }}>
+                {selectedSpace.label}
+              </div>
+              <div>
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>Assign Parking</h2>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>Space {selectedSpace.label} · {selectedSpace.type}</p>
               </div>
             </div>
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label className="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1">Owner Name *</label>
-                  <input
-                    type="text"
-                    value={form.ownerName}
-                    onChange={(e) => setForm({ ...form, ownerName: e.target.value })}
-                    placeholder="Jan Novák"
-                    className="w-full px-3 py-2 border border-stone-200 dark:border-stone-700 rounded-xl text-sm dark:bg-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-stone-900"
-                  />
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 5 }}>Owner Name *</label>
+                  <input type="text" value={form.ownerName} onChange={(e) => setForm({ ...form, ownerName: e.target.value })} placeholder="Jan Novák" style={inputStyle} />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1">License Plate (SPZ) *</label>
-                  <input
-                    type="text"
-                    value={form.licensePlate}
-                    onChange={(e) => setForm({ ...form, licensePlate: e.target.value.toUpperCase() })}
-                    placeholder="1AB 2345"
-                    className="w-full px-3 py-2 border border-stone-200 dark:border-stone-700 rounded-xl text-sm font-mono uppercase dark:bg-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-stone-900"
-                  />
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 5 }}>License Plate *</label>
+                  <input type="text" value={form.licensePlate} onChange={(e) => setForm({ ...form, licensePlate: e.target.value.toUpperCase() })} placeholder="1AB 2345" style={{ ...inputStyle, fontFamily: 'monospace', textTransform: 'uppercase' }} />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1">Email</label>
-                <input
-                  type="email"
-                  value={form.ownerEmail}
-                  onChange={(e) => setForm({ ...form, ownerEmail: e.target.value })}
-                  placeholder="guest@hotel.com"
-                  className="w-full px-3 py-2 border border-stone-200 dark:border-stone-700 rounded-xl text-sm dark:bg-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-stone-900"
-                />
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 5 }}>Email</label>
+                <input type="email" value={form.ownerEmail} onChange={(e) => setForm({ ...form, ownerEmail: e.target.value })} placeholder="guest@hotel.com" style={inputStyle} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label className="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1">From *</label>
-                  <input
-                    type="datetime-local"
-                    value={form.from}
-                    onChange={(e) => setForm({ ...form, from: e.target.value })}
-                    className="w-full px-3 py-2 border border-stone-200 dark:border-stone-700 rounded-xl text-sm dark:bg-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-stone-900"
-                  />
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 5 }}>From *</label>
+                  <input type="datetime-local" value={form.from} onChange={(e) => setForm({ ...form, from: e.target.value })} style={inputStyle} />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1">Until</label>
-                  <input
-                    type="datetime-local"
-                    value={form.to}
-                    onChange={(e) => setForm({ ...form, to: e.target.value })}
-                    className="w-full px-3 py-2 border border-stone-200 dark:border-stone-700 rounded-xl text-sm dark:bg-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-stone-900"
-                  />
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 5 }}>Until</label>
+                  <input type="datetime-local" value={form.to} onChange={(e) => setForm({ ...form, to: e.target.value })} style={inputStyle} />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1">Notes</label>
-                <input
-                  type="text"
-                  value={form.notes}
-                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                  placeholder="e.g. VIP guest, oversized vehicle..."
-                  className="w-full px-3 py-2 border border-stone-200 dark:border-stone-700 rounded-xl text-sm dark:bg-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-stone-900"
-                />
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 5 }}>Notes</label>
+                <input type="text" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="e.g. VIP guest, oversized vehicle..." style={inputStyle} />
               </div>
             </div>
-            <div className="p-6 pt-0 flex gap-3">
-              <button
-                onClick={() => setShowAssignModal(false)}
-                className="flex-1 px-4 py-2.5 border border-stone-200 dark:border-stone-700 rounded-xl text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-700 font-medium transition-colors"
-              >
+            <div style={{ padding: '0 24px 24px', display: 'flex', gap: 10 }}>
+              <button onClick={() => setShowAssignModal(false)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid var(--card-border)', background: 'transparent', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
                 Cancel
               </button>
               <button
                 onClick={handleAssign}
                 disabled={saving || !form.ownerName || !form.licensePlate || !form.from}
-                className="flex-1 px-4 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 disabled:opacity-50 font-semibold transition-colors"
+                style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: '#22c55e', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: (saving || !form.ownerName || !form.licensePlate || !form.from) ? 0.5 : 1 }}
               >
                 {saving ? 'Saving...' : 'Assign Space'}
               </button>
@@ -599,20 +555,18 @@ export default function ParkingPage() {
 
       {/* Detail Modal */}
       {showDetailModal && selectedSpace?.currentOccupancy && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-stone-800 rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="p-6 border-b border-stone-200 dark:border-stone-700">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-red-500 flex items-center justify-center text-white font-black text-xl">
-                  {selectedSpace.label}
-                </div>
-                <div>
-                  <h2 className="text-xl font-black text-stone-900 dark:text-stone-100">Space {selectedSpace.label}</h2>
-                  <div className="text-sm font-mono font-bold text-red-600">{selectedSpace.currentOccupancy.licensePlate}</div>
-                </div>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}>
+          <div style={{ background: 'var(--sidebar-bg)', borderRadius: 16, width: '100%', maxWidth: 420, border: '1px solid var(--card-border)' }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--card-border)', display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 10, background: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 16 }}>
+                {selectedSpace.label}
+              </div>
+              <div>
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>Space {selectedSpace.label}</h2>
+                <div style={{ fontSize: 13, fontFamily: 'monospace', fontWeight: 700, color: '#FB7185', marginTop: 2 }}>{selectedSpace.currentOccupancy.licensePlate}</div>
               </div>
             </div>
-            <div className="p-6 space-y-4">
+            <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
                 { label: 'Owner', value: selectedSpace.currentOccupancy.ownerName },
                 { label: 'Email', value: selectedSpace.currentOccupancy.ownerEmail ?? '—' },
@@ -621,35 +575,31 @@ export default function ParkingPage() {
                 { label: 'Expected Until', value: formatDateTime(selectedSpace.currentOccupancy.to) },
                 { label: 'Registered', value: formatDateTime(selectedSpace.currentOccupancy.createdAt) },
               ].map(({ label, value, mono }) => (
-                <div key={label} className="flex justify-between items-start">
-                  <span className="text-sm text-stone-500 dark:text-stone-400">{label}</span>
-                  <span className={`text-sm font-semibold text-stone-900 dark:text-stone-100 text-right ${mono ? 'font-mono' : ''}`}>{value}</span>
+                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', textAlign: 'right', fontFamily: mono ? 'monospace' : 'inherit' }}>{value}</span>
                 </div>
               ))}
               {selectedSpace.currentOccupancy.notes && (
-                <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl text-sm text-stone-700 dark:text-stone-300 border border-amber-200 dark:border-amber-800">
-                  <span className="font-semibold text-amber-700 dark:text-amber-400">Notes: </span>
-                  {selectedSpace.currentOccupancy.notes}
+                <div style={{ padding: 12, borderRadius: 9, background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)' }}>
+                  <span style={{ fontWeight: 600, color: '#FBBF24', fontSize: 12 }}>Notes: </span>
+                  <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{selectedSpace.currentOccupancy.notes}</span>
                 </div>
               )}
             </div>
-            <div className="p-6 pt-0 flex gap-3">
-              <button
-                onClick={() => setShowDetailModal(false)}
-                className="flex-1 px-4 py-2.5 border border-stone-200 dark:border-stone-700 rounded-xl text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-700 font-medium transition-colors"
-              >
+            <div style={{ padding: '0 24px 24px', display: 'flex', gap: 10 }}>
+              <button onClick={() => setShowDetailModal(false)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid var(--card-border)', background: 'transparent', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
                 Close
               </button>
-              <button
-                onClick={() => handleRelease(selectedSpace)}
-                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 font-semibold transition-colors"
-              >
-                🚗 Release Space
+              <button onClick={() => handleRelease(selectedSpace)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: '#ef4444', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                Release Space
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

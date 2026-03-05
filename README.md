@@ -98,6 +98,27 @@ Full-stack hotel management system built with GraphQL Federation, Event Sourcing
 - Multi-select and bulk status update for floor-wide or whole-hotel resets
 - Stats bar doubles as a filter: click a status count to filter the board to that status only
 
+### Arrival Intelligence (Predictions)
+- Receptionist-facing forecast page (`/hotel-cms/predictions`) showing expected arrivals and departures for the next 1–3 days
+- Hourly bar chart built from an industry-standard check-in/check-out distribution model applied to daily reservation totals (actual timestamps not stored, see [`docs/predictions-feature.md`](docs/predictions-feature.md))
+- Peak time callouts per day: "arrival peak 15:00 / departure peak 11:00"
+- Intensity classification: Quiet / Moderate / Busy / Peak based on total guest movement
+- Guest roster tabs (arrivals / departures) with direct links to booking detail
+- 1D / 2D / 3D selector, live clock, currently in-house count
+- Linked from Reception page and sidebar
+
+### Activity Feed & Audit Trail
+- Human-readable event timeline on every booking detail page — maps raw event-sourced events to labelled entries with icons, actor names, and relative timestamps ("Room assigned · 14:32 · by Jana")
+- Global Recent Activity panel on the bookings list page shows the last 30 events across all reservations
+- Events covered: reservation created, confirmed, cancelled, rooms assigned, account opened
+- Backed by `recentActivity` and `guestActivity` GraphQL queries joining the event store with guest data
+
+### Statistics & Analytics
+- Revenue by room type: horizontal bar chart with booking count and average stay length per type
+- Occupancy rate over time: line chart using `generate_series` to compute daily occupancy across selected date range
+- KPI cards: Total Revenue, ADR (Average Daily Rate), RevPAR, Cancellation Rate %, Average Stay, Occupancy Rate
+- All queries filter by `check_in_date` (not `created_at`) for accurate date-range results
+
 ### AI Chat Assistant
 - OpenAI SDK with streaming responses (requesty.ai compatible)
 - MCP (Model Context Protocol) tool calling over stdio transport
@@ -134,7 +155,10 @@ Full-stack hotel management system built with GraphQL Federation, Event Sourcing
 - Dark mode across all pages (Tailwind CSS `dark:` classes)
 - i18n: English + Czech (~540 translation keys)
 - Framer Motion animations
-- Statistics dashboards with revenue timeline and occupancy analytics
+- Statistics dashboards with revenue timeline, occupancy analytics, ADR, RevPAR
+- Arrival Intelligence page with hourly forecast charts and guest rosters
+- Booking detail event timeline with human-readable audit trail
+- Reception page: keyboard navigation (↑↓/Enter), Check-In Wizard, Predictions shortcut
 - Reusable `ComposeEmailModal` component wired into guest detail and reception cards
 
 ---
@@ -254,6 +278,7 @@ Schema-first approach. Source of truth lives in `packages/shared-schema/schema/*
 | `tiers.graphql` | Loyalty tiers, guest tier evaluation |
 | `parking.graphql` | Parking spaces and vehicle occupancies |
 | `maintenance.graphql` | Room housekeeping status |
+| `forecast.graphql` | Arrival intelligence — daily forecast with hourly guest distribution |
 
 Run `cd packages/shared-schema && npm run codegen` to regenerate TypeScript types.
 
@@ -269,6 +294,60 @@ Run `cd packages/shared-schema && npm run codegen` to regenerate TypeScript type
 | Webhooks Docs | `http://localhost:4002/api/docs` | OpenAPI/Swagger UI |
 | LLM Chat | `ws://localhost:4010` | Socket.IO streaming chat |
 | Health | `http://localhost:4002/health` | Webhook service health |
+
+---
+
+## Developer Tools
+
+### RabbitMQ Management UI
+
+Built into the Docker image (`rabbitmq:3-management-alpine`) — no extra install required.
+
+**Open in browser:** [`http://localhost:15672`](http://localhost:15672)
+
+```
+Username: guest
+Password: guest
+```
+
+What you can do there:
+- **Queues** — see all queues, message counts, consumer counts, memory usage
+- **Exchanges** — inspect the `domain_events` topic exchange and its bindings
+- **Messages** — publish test messages manually, or peek at queued messages without consuming them (Get Messages button)
+- **Connections / Channels** — see which services are connected and their channel states
+- **Overview** — global throughput charts (publish rate, deliver rate, ack rate)
+
+> The project uses a `domain_events` topic exchange. Reservation events are routed with keys like `reservation.created`, `reservation.confirmed`, `reservation.cancelled`, `reservation.room_assigned`.
+
+---
+
+### GraphQL Sandbox (Apollo)
+
+Apollo Server 4 ships with Apollo Sandbox in development mode. Open the backend subgraph directly in a browser:
+
+**Open in browser:** [`http://localhost:4001/graphql`](http://localhost:4001/graphql)
+
+You get a full schema explorer, query builder, and response inspector — no install needed.
+
+---
+
+### PostgreSQL
+
+The easiest cross-platform option is **TablePlus** (free tier available) or **DBeaver** (fully free). Connect with:
+
+```
+Host:     localhost
+Port:     5432
+Database: postgres
+User:     postgres
+Password: postgres
+```
+
+Alternatively, run queries directly via Docker:
+
+```bash
+docker exec -it hireme-postgres psql -U postgres -d postgres
+```
 
 ---
 

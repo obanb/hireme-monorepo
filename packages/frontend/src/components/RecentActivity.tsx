@@ -68,7 +68,7 @@ export default function RecentActivity() {
       >
         <h2
           className="text-[15px] font-semibold"
-          style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
+          style={{ color: 'var(--text-primary)' }}
         >
           {t('activity.title')}
         </h2>

@@ -1,0 +1,20 @@
+type ForecastGuest {
+  id: ID!
+  guestName: String
+  guestEmail: String
+  roomIds: [ID!]!
+  status: String!
+}
+
+type DayForecast {
+  date: String!
+  checkIns: Int!
+  checkOuts: Int!
+  inHouseGuests: Int!
+  arrivals: [ForecastGuest!]!
+  departures: [ForecastGuest!]!
+}
+
+extend type Query {
+  receptionForecast(days: Int): [DayForecast!]!
+}

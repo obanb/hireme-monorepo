@@ -63,6 +63,7 @@ const en = {
   'nav.hotelCms': 'Hotel CMS',
   'nav.rentals': 'Rentals',
   'nav.logout': 'Logout',
+  'nav.predictions': 'Predictions',
 
   // Dashboard
   'dashboard.title': 'Dashboard',
