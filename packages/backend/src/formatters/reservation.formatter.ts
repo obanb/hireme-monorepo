@@ -1,3 +1,10 @@
+function formatDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 export function formatReservation(reservation: {
   id: string;
   originId: string | null;
@@ -23,8 +30,8 @@ export function formatReservation(reservation: {
     guestEmail: reservation.guestEmail || null,
     guestId: reservation.guestId || null,
     status: reservation.status,
-    checkInDate: reservation.checkInDate?.toISOString().split('T')[0] || null,
-    checkOutDate: reservation.checkOutDate?.toISOString().split('T')[0] || null,
+    checkInDate: reservation.checkInDate ? formatDate(reservation.checkInDate) : null,
+    checkOutDate: reservation.checkOutDate ? formatDate(reservation.checkOutDate) : null,
     totalPrice: reservation.totalPrice,
     payedPrice: reservation.payedPrice,
     currency: reservation.currency,

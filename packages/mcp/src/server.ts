@@ -144,11 +144,12 @@ export function createMcpServer(): McpServer {
       guestEmail: z.string().optional().describe('Guest email address'),
       checkInDate: z.string().describe('Check-in date (ISO date string)'),
       checkOutDate: z.string().describe('Check-out date (ISO date string)'),
-      roomId: z.string().optional().describe('Room ID to assign'),
-      totalAmount: z.number().optional().describe('Total reservation amount'),
+      roomIds: z.array(z.string()).optional().describe('Room IDs to assign'),
+      totalPrice: z.number().optional().describe('Total reservation price'),
       currency: z.string().optional().describe('Currency code (e.g. EUR, USD)'),
     },
-    async ({ guestFirstName, guestLastName, guestEmail, checkInDate, checkOutDate, roomId, totalAmount, currency }) => {
+    // @ts-expect-error TS2589
+    async ({ guestFirstName, guestLastName, guestEmail, checkInDate, checkOutDate, roomIds, totalPrice, currency }: { guestFirstName: string; guestLastName: string; guestEmail?: string; checkInDate: string; checkOutDate: string; roomIds?: string[]; totalPrice?: number; currency?: string }) => {
       try {
         const input: Record<string, any> = {
           guestFirstName,
@@ -157,8 +158,8 @@ export function createMcpServer(): McpServer {
           checkOutDate,
         };
         if (guestEmail) input.guestEmail = guestEmail;
-        if (roomId) input.roomId = roomId;
-        if (totalAmount !== undefined) input.totalAmount = totalAmount;
+        if (roomIds?.length) input.roomIds = roomIds;
+        if (totalPrice !== undefined) input.totalPrice = totalPrice;
         if (currency) input.currency = currency;
 
         const data = await graphqlQuery<any>(CREATE_RESERVATION, { input });

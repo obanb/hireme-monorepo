@@ -18,9 +18,9 @@ async function fetchAllEntities(): Promise<EmbeddingDocument[]> {
   try {
     const { rows } = await pool.query(`
       SELECT r.id, r.guest_name, r.status, r.check_in_date, r.check_out_date,
-             r.total_amount, r.currency, rm.room_number
+             r.total_price, r.currency,
+             (SELECT room_number FROM rooms WHERE id = ANY(r.room_ids) LIMIT 1) AS room_number
       FROM reservations r
-      LEFT JOIN rooms rm ON r.room_id = rm.id
       ORDER BY r.created_at DESC
       LIMIT 500
     `);
@@ -30,7 +30,7 @@ async function fetchAllEntities(): Promise<EmbeddingDocument[]> {
       status: r.status,
       checkInDate: r.check_in_date ? new Date(r.check_in_date).toISOString().split('T')[0] : null,
       checkOutDate: r.check_out_date ? new Date(r.check_out_date).toISOString().split('T')[0] : null,
-      totalAmount: r.total_amount != null ? parseFloat(r.total_amount) : null,
+      totalAmount: r.total_price != null ? parseFloat(r.total_price) : null,
       currency: r.currency,
       room: r.room_number ? { roomNumber: r.room_number } : null,
     })));

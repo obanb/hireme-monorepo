@@ -7,9 +7,9 @@ export const GET_RESERVATIONS = `
       status
       checkInDate
       checkOutDate
-      totalAmount
+      totalPrice
       currency
-      roomId
+      roomIds
       version
       createdAt
     }
@@ -25,10 +25,10 @@ export const GET_RESERVATION_BY_ID = `
       status
       checkInDate
       checkOutDate
-      totalAmount
+      totalPrice
       currency
-      roomId
-      room {
+      roomIds
+      rooms {
         id
         name
         roomNumber
@@ -88,13 +88,13 @@ export const CREATE_RESERVATION = `
       reservation {
         id
         guestName
-      guestEmail
+        guestEmail
         status
         checkInDate
         checkOutDate
-        totalAmount
+        totalPrice
         currency
-        roomId
+        roomIds
         version
         createdAt
       }
@@ -108,7 +108,7 @@ export const CONFIRM_RESERVATION = `
       reservation {
         id
         guestName
-      guestEmail
+        guestEmail
         status
         version
       }
@@ -122,7 +122,7 @@ export const CANCEL_RESERVATION = `
       reservation {
         id
         guestName
-      guestEmail
+        guestEmail
         status
         version
       }
@@ -172,7 +172,7 @@ export const GET_GUEST_BY_ID = `
         status
         checkInDate
         checkOutDate
-        totalAmount
+        totalPrice
         currency
       }
     }
@@ -205,7 +205,7 @@ export const GET_GUEST_BY_EMAIL = `
         status
         checkInDate
         checkOutDate
-        totalAmount
+        totalPrice
         currency
       }
     }
