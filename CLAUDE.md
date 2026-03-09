@@ -32,6 +32,12 @@ cd packages/api && npm run build && npm start
 
 # Event sourcing gateway (requires PostgreSQL + RabbitMQ)
 cd packages/gateway && npm run dev
+
+# Reception service - http://localhost:4002 (requires MongoDB + Redis)
+cd packages/reception && npm run dev
+
+# Reception Frontend - http://localhost:3002
+cd packages/frontend-reception && npm run dev
 ```
 
 ## Linting
@@ -88,3 +94,8 @@ GraphQL schemas in `schema/*.graphql` are the source of truth. Run `npm run code
 | API Gateway | 8080 |
 | PostgreSQL | 5432 |
 | RabbitMQ | 5672, 15672 (mgmt) |
+| Reception | 4002 |
+| Reception Frontend | 3002 |
+| MongoDB | 27017 |
+| Mongo Express (UI) | 8081 |
+| Redis | 6379 |

@@ -4,238 +4,697 @@
   "pathMappings": {},
   "nxJsonPlugins": [],
   "fileMap": {
-    "nonProjectFiles": [
-      {
-        "file": "README.md",
-        "hash": "9477950248571813154"
-      },
-      {
-        "file": "docs/request-lifecycle-update.md",
-        "hash": "6422895339762543678"
-      },
-      {
-        "file": ".modelfile",
-        "hash": "15970662635096675284"
-      },
-      {
-        "file": ".helm/hireme/charts/llm/Chart.yaml",
-        "hash": "6840170690200994781"
-      },
-      {
-        "file": "docs/channel-manager-plan.md",
-        "hash": "5508278168501048538"
-      },
-      {
-        "file": ".helm/hireme/charts/frontend/Chart.yaml",
-        "hash": "1343225409887802358"
-      },
-      {
-        "file": "docs/local-dev-setup.md",
-        "hash": "7235121699759901764"
-      },
-      {
-        "file": ".helm/hireme/charts/frontend/templates/deployment.yaml",
-        "hash": "9497792898241117715"
-      },
-      {
-        "file": "package.json",
-        "hash": "13538092262847923842"
-      },
-      {
-        "file": "docs/ai-assistant-proposal.md",
-        "hash": "5009459835405194306"
-      },
-      {
-        "file": "docs/event-sourcing-implementation.md",
-        "hash": "5156250740489328353"
-      },
-      {
-        "file": "docs/DOCUMENTATION_GUIDE.md",
-        "hash": "16113222908099116357"
-      },
-      {
-        "file": "docs/rabbitmq-event-relayer.md",
-        "hash": "14675126558072790485"
-      },
-      {
-        "file": "docs/llm-architecture.md",
-        "hash": "17595408210356290712"
-      },
-      {
-        "file": "docs/llm-local-dev-setup.md",
-        "hash": "10348010667386038163"
-      },
-      {
-        "file": ".github/workflows/build.yml",
-        "hash": "5274105492588655244"
-      },
-      {
-        "file": ".helm/hireme/Chart.yaml",
-        "hash": "16097259628781862923"
-      },
-      {
-        "file": ".helm/hireme/charts/frontend/templates/service.yaml",
-        "hash": "2924549744881311385"
-      },
-      {
-        "file": ".helm/hireme/charts/api/Chart.yaml",
-        "hash": "10664066977391376717"
-      },
-      {
-        "file": "docs/optimistic-concurrency-explained.md",
-        "hash": "9554645766404126932"
-      },
-      {
-        "file": ".helm/hireme/charts/api/templates/service.yaml",
-        "hash": "9163540145955059801"
-      },
-      {
-        "file": ".helm/hireme/charts/api/templates/deployment.yaml",
-        "hash": "6339115225031968573"
-      },
-      {
-        "file": ".helm/hireme/charts/api/values.yaml",
-        "hash": "8058094042502705954"
-      },
-      {
-        "file": ".helm/hireme/charts/llm/templates/deployment.yaml",
-        "hash": "6339115225031968573"
-      },
-      {
-        "file": ".helm/hireme/charts/llm/templates/service.yaml",
-        "hash": "3985730742563740231"
-      },
-      {
-        "file": "docs/postgres-vs-mongo-optimistic-locking.md",
-        "hash": "10993354545775304155"
-      },
-      {
-        "file": "docs/request-lifecycle-example.md",
-        "hash": "2139065561250805077"
-      },
-      {
-        "file": "docs/snapshots-explained.md",
-        "hash": "12991477819952184029"
-      },
-      {
-        "file": "lerna.json",
-        "hash": "9665198490292609539"
-      },
-      {
-        "file": "yarn.lock",
-        "hash": "240134526277908119"
-      },
-      {
-        "file": "docs/auth-implementation-plan.md",
-        "hash": "3148160801715294755"
-      },
-      {
-        "file": "nx.json",
-        "hash": "13096541334647236566"
-      },
-      {
-        "file": "docs/CONTEXT_TEMPLATE.md",
-        "hash": "11848469193793330142"
-      },
-      {
-        "file": ".helm/hireme/charts/frontend/values.yaml",
-        "hash": "8511772502979899956"
-      },
-      {
-        "file": "CLAUDE.md",
-        "hash": "8167979231382045219"
-      },
-      {
-        "file": "docs/webhooks.md",
-        "hash": "2659141743283305047"
-      },
-      {
-        "file": "docs/event-sourcing-architecture.md",
-        "hash": "1727224147270840348"
-      },
-      {
-        "file": "CHANGELOG.md",
-        "hash": "12534670830540637902"
-      },
-      {
-        "file": ".helm/hireme/charts/llm/values.yaml",
-        "hash": "12907457759661692071"
-      },
-      {
-        "file": "docs/AI_ASSISTANT_IMPLEMENTATION_PLAN.md",
-        "hash": "5963323830038913791"
-      },
-      {
-        "file": ".gitignore",
-        "hash": "1284336496676286418"
-      },
-      {
-        "file": "docs/email-campaigns-implementation-plan.md",
-        "hash": "15147129378939497218"
-      },
-      {
-        "file": "TODO.md",
-        "hash": "10420639044426698397"
-      }
-    ],
     "projectFileMap": {
-      "common": [
+      "mcp": [
         {
-          "file": "packages/common/CHANGELOG.md",
-          "hash": "12826855143380886420"
-        },
-        {
-          "file": "packages/common/README.md",
-          "hash": "1115945535360825404"
-        },
-        {
-          "file": "packages/common/package.json",
-          "hash": "14835215009720542934",
+          "file": "packages/mcp/package.json",
+          "hash": "7712626927287515664",
           "deps": [
-            "npm:express",
-            "npm:winston",
+            "npm:@types/node",
+            "npm:typescript",
+            "npm:@modelcontextprotocol/sdk",
+            "npm:@tavily/core",
+            "npm:dotenv",
             "npm:zod"
           ]
         },
         {
-          "file": "packages/common/src/asyncLocalStorage/asyncLocalStorage.ts",
-          "hash": "12592321028940228332"
+          "file": "packages/mcp/src/graphql-client.ts",
+          "hash": "5622704120369653003"
         },
         {
-          "file": "packages/common/src/asyncLocalStorage/index.ts",
-          "hash": "17862752530853463146"
+          "file": "packages/mcp/src/index.ts",
+          "hash": "10643061867463487221"
         },
         {
-          "file": "packages/common/src/common.ts",
-          "hash": "7196071153314525702"
+          "file": "packages/mcp/src/queries.ts",
+          "hash": "5137770184720718104"
         },
         {
-          "file": "packages/common/src/logging/index.ts",
-          "hash": "5887290674789689246"
+          "file": "packages/mcp/src/server.ts",
+          "hash": "962869736905798510"
         },
         {
-          "file": "packages/common/src/logging/logger.ts",
-          "hash": "12333072345097728333"
+          "file": "packages/mcp/tsconfig.json",
+          "hash": "16652124931369622955"
+        }
+      ],
+      "api": [
+        {
+          "file": "packages/api/.gitignore",
+          "hash": "11053275306421914406"
         },
         {
-          "file": "packages/common/src/utils/export-test.ts",
-          "hash": "4438609823104731435"
+          "file": "packages/api/CHANGELOG.md",
+          "hash": "13476589862458238014"
         },
         {
-          "file": "packages/common/src/utils/index.ts",
-          "hash": "12579977546160050648"
+          "file": "packages/api/Dockerfile",
+          "hash": "581610828898500851"
         },
         {
-          "file": "packages/common/src/utils/uuid.ts",
-          "hash": "5894271224882090181"
+          "file": "packages/api/README.md",
+          "hash": "2210008865342336203"
         },
         {
-          "file": "packages/common/tsconfig.json",
-          "hash": "3174921603891561405"
+          "file": "packages/api/docs/ARCHITECTURE.md",
+          "hash": "9642545323438388588"
         },
         {
-          "file": "packages/common/yarn.lock",
-          "hash": "14953481567476914638"
+          "file": "packages/api/docs/GOALS.md",
+          "hash": "10667423451071747814"
+        },
+        {
+          "file": "packages/api/docs/steps/STEP1.MD",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/api/package.json",
+          "hash": "5614882549277190963",
+          "deps": [
+            "npm:@types/express",
+            "npm:@types/node",
+            "npm:ts-node",
+            "npm:typescript",
+            "npm:@apollo/gateway",
+            "npm:@apollo/server",
+            "npm:body-parser",
+            "npm:cors",
+            "npm:dotenv@16.0.3",
+            "npm:express",
+            "npm:graphql",
+            "common",
+            "telemetry"
+          ]
+        },
+        {
+          "file": "packages/api/src/index.ts",
+          "hash": "17238080095268142203"
+        },
+        {
+          "file": "packages/api/tsconfig.json",
+          "hash": "16715011573561789016"
+        }
+      ],
+      "backend": [
+        {
+          "file": "packages/backend/CHANGELOG.md",
+          "hash": "14069653417323330868"
+        },
+        {
+          "file": "packages/backend/README.md",
+          "hash": "5241733300379469828"
+        },
+        {
+          "file": "packages/backend/docs/GOALS.md",
+          "hash": "10781731772392460310"
+        },
+        {
+          "file": "packages/backend/docs/SCHEMAS.md",
+          "hash": "14226512234661949344"
+        },
+        {
+          "file": "packages/backend/jest.config.js",
+          "hash": "10000206683338842657"
+        },
+        {
+          "file": "packages/backend/jest.globalSetup.ts",
+          "hash": "3101314281973439157"
+        },
+        {
+          "file": "packages/backend/jest.setup.ts",
+          "hash": "2895025387401319904"
+        },
+        {
+          "file": "packages/backend/package.json",
+          "hash": "13611106310056325369",
+          "deps": [
+            "npm:@types/amqplib",
+            "npm:@types/bcryptjs",
+            "npm:@types/body-parser@1.19.6",
+            "npm:@types/cookie-parser",
+            "npm:@types/cors",
+            "npm:@types/express",
+            "npm:@types/jest",
+            "npm:@types/jsonwebtoken",
+            "npm:@types/node",
+            "npm:@types/pg",
+            "npm:@types/uuid",
+            "npm:jest",
+            "npm:ts-jest",
+            "npm:ts-node-dev",
+            "npm:typescript",
+            "npm:@apollo/server",
+            "npm:@apollo/subgraph",
+            "npm:@apollo/utils.printwithreducedwhitespace",
+            "npm:@types/pdfkit",
+            "npm:amqplib",
+            "npm:bcryptjs",
+            "npm:body-parser",
+            "npm:cookie-parser",
+            "npm:cors",
+            "npm:dotenv@17.2.4",
+            "npm:express",
+            "npm:graphql",
+            "npm:graphql-tag",
+            "npm:jsonwebtoken",
+            "npm:pdfkit",
+            "npm:pg",
+            "npm:resend",
+            "shared-schema",
+            "npm:uuid@13.0.0",
+            "npm:zod@4.3.5"
+          ]
+        },
+        {
+          "file": "packages/backend/src/auth/config.ts",
+          "hash": "4664653000842644752"
+        },
+        {
+          "file": "packages/backend/src/auth/database.ts",
+          "hash": "14210955542683626073"
+        },
+        {
+          "file": "packages/backend/src/auth/email-service.ts",
+          "hash": "12484861505560452595"
+        },
+        {
+          "file": "packages/backend/src/auth/guards.ts",
+          "hash": "16023610984366132761"
+        },
+        {
+          "file": "packages/backend/src/auth/index.ts",
+          "hash": "3187246007629201757"
+        },
+        {
+          "file": "packages/backend/src/auth/middleware.ts",
+          "hash": "12396645799667330915"
+        },
+        {
+          "file": "packages/backend/src/auth/refresh-token-repository.ts",
+          "hash": "7019501092345817249"
+        },
+        {
+          "file": "packages/backend/src/auth/seed-admin.ts",
+          "hash": "2216568533257140864"
+        },
+        {
+          "file": "packages/backend/src/auth/token-service.ts",
+          "hash": "4232723268686856059"
+        },
+        {
+          "file": "packages/backend/src/auth/user-repository.ts",
+          "hash": "16360243322302616783"
+        },
+        {
+          "file": "packages/backend/src/campaigns/campaign-repository.ts",
+          "hash": "8615128493673643097"
+        },
+        {
+          "file": "packages/backend/src/campaigns/config.ts",
+          "hash": "1029242375321949517"
+        },
+        {
+          "file": "packages/backend/src/campaigns/database.ts",
+          "hash": "8396237541564664357"
+        },
+        {
+          "file": "packages/backend/src/campaigns/index.ts",
+          "hash": "29037269136337547"
+        },
+        {
+          "file": "packages/backend/src/campaigns/seed-templates.ts",
+          "hash": "6631723469156328554"
+        },
+        {
+          "file": "packages/backend/src/campaigns/send-repository.ts",
+          "hash": "11175679341474092812"
+        },
+        {
+          "file": "packages/backend/src/campaigns/sender.ts",
+          "hash": "939978262997566538"
+        },
+        {
+          "file": "packages/backend/src/campaigns/targeting.ts",
+          "hash": "12386005867870519364"
+        },
+        {
+          "file": "packages/backend/src/campaigns/template-repository.ts",
+          "hash": "6004597526144179791"
+        },
+        {
+          "file": "packages/backend/src/campaigns/tracking.ts",
+          "hash": "9896556667422254448"
+        },
+        {
+          "file": "packages/backend/src/data/hotels.ts",
+          "hash": "16282959472961436187"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/account-aggregate.ts",
+          "hash": "13561831871406185029"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/account-projections.ts",
+          "hash": "1053959954554444209"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/account-repository.ts",
+          "hash": "11785119344525682805"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/activity-repository.ts",
+          "hash": "11443089730930314261"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/aggregate.ts",
+          "hash": "14494190731745708601"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/config.ts",
+          "hash": "9416726112252196834"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/database.ts",
+          "hash": "10881289963677405908"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/event-relayer.ts",
+          "hash": "5822269575598856025"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/event-sourcing.integration.test.ts",
+          "hash": "5250349042084398258"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/event-store.ts",
+          "hash": "6605362036673794479"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/forecast-repository.ts",
+          "hash": "2406448920885344735"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/guest-aggregate.ts",
+          "hash": "14769232090327953916"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/guest-projections.ts",
+          "hash": "9280229306645632634"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/guest-repository.ts",
+          "hash": "9677200802004952115"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/index.ts",
+          "hash": "7850752890667872575"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/projections.ts",
+          "hash": "13090602878538762520"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/rate-code-aggregate.ts",
+          "hash": "15709592332036002594"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/rate-code-projections.ts",
+          "hash": "1418661091034169509"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/rate-code-repository.ts",
+          "hash": "16815439146371377118"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/repository.ts",
+          "hash": "1009879214904523124"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/room-aggregate.ts",
+          "hash": "11575072563396296726"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/room-projections.ts",
+          "hash": "8174574783207914906"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/room-repository.ts",
+          "hash": "17235528197369616232"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/room-type-aggregate.ts",
+          "hash": "9231099125454694210"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/room-type-projections.ts",
+          "hash": "15366382119528390014"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/room-type-repository.ts",
+          "hash": "13192339823202441514"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/seed-data.ts",
+          "hash": "14760974535792807011"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/statistics-repository.ts",
+          "hash": "11472582676711929303"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/voucher-aggregate.ts",
+          "hash": "9639384931340760057"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/voucher-projections.ts",
+          "hash": "11003388706012539797"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/voucher-repository.ts",
+          "hash": "2350078631312280413"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/wellness-booking-aggregate.ts",
+          "hash": "2726998271738163277"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/wellness-booking-projections.ts",
+          "hash": "7797974955661002093"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/wellness-booking-repository.ts",
+          "hash": "12165960160267394030"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/wellness-room-type-aggregate.ts",
+          "hash": "18373389343194984177"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/wellness-room-type-projections.ts",
+          "hash": "4695200220188734950"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/wellness-room-type-repository.ts",
+          "hash": "3152858706254001426"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/wellness-service-aggregate.ts",
+          "hash": "16578894724793709658"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/wellness-service-projections.ts",
+          "hash": "12733312038574425069"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/wellness-service-repository.ts",
+          "hash": "12668215659986329959"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/wellness-therapist-aggregate.ts",
+          "hash": "15155888007965594855"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/wellness-therapist-projections.ts",
+          "hash": "8516591262757782990"
+        },
+        {
+          "file": "packages/backend/src/event-sourcing/wellness-therapist-repository.ts",
+          "hash": "17776804132591186924"
+        },
+        {
+          "file": "packages/backend/src/formatters/account.formatter.ts",
+          "hash": "4480211676753995677"
+        },
+        {
+          "file": "packages/backend/src/formatters/auth.formatter.ts",
+          "hash": "2233032720628559167"
+        },
+        {
+          "file": "packages/backend/src/formatters/campaign.formatter.ts",
+          "hash": "9154712701476081065"
+        },
+        {
+          "file": "packages/backend/src/formatters/event.formatter.ts",
+          "hash": "10164963707092951379"
+        },
+        {
+          "file": "packages/backend/src/formatters/guest.formatter.ts",
+          "hash": "13004653985113754458"
+        },
+        {
+          "file": "packages/backend/src/formatters/index.ts",
+          "hash": "17971247637073661477"
+        },
+        {
+          "file": "packages/backend/src/formatters/rental.formatter.ts",
+          "hash": "14595965940012713705"
+        },
+        {
+          "file": "packages/backend/src/formatters/reservation.formatter.ts",
+          "hash": "517904409467445282"
+        },
+        {
+          "file": "packages/backend/src/formatters/room.formatter.ts",
+          "hash": "9300214472814486302"
+        },
+        {
+          "file": "packages/backend/src/formatters/voucher.formatter.ts",
+          "hash": "10030905826513365733"
+        },
+        {
+          "file": "packages/backend/src/formatters/wellness.formatter.ts",
+          "hash": "7147318561054016728"
+        },
+        {
+          "file": "packages/backend/src/index.ts",
+          "hash": "86256825408371925"
+        },
+        {
+          "file": "packages/backend/src/maintenance/maintenance.repository.ts",
+          "hash": "14436263772864798171"
+        },
+        {
+          "file": "packages/backend/src/parking/parking.repository.ts",
+          "hash": "13175558091443459011"
+        },
+        {
+          "file": "packages/backend/src/rentals/rental.repository.ts",
+          "hash": "1217594716600627508"
+        },
+        {
+          "file": "packages/backend/src/resolvers/account.resolvers.ts",
+          "hash": "9195709422186333890"
+        },
+        {
+          "file": "packages/backend/src/resolvers/auth.resolvers.ts",
+          "hash": "12610963720805497596"
+        },
+        {
+          "file": "packages/backend/src/resolvers/campaign.resolvers.ts",
+          "hash": "17309927296112695837"
+        },
+        {
+          "file": "packages/backend/src/resolvers/forecast.resolvers.ts",
+          "hash": "12846732084861881634"
+        },
+        {
+          "file": "packages/backend/src/resolvers/guest.resolvers.ts",
+          "hash": "1371521235581605363"
+        },
+        {
+          "file": "packages/backend/src/resolvers/hotel.resolvers.ts",
+          "hash": "14901601031580914749"
+        },
+        {
+          "file": "packages/backend/src/resolvers/index.ts",
+          "hash": "9186943574451858021"
+        },
+        {
+          "file": "packages/backend/src/resolvers/maintenance.resolvers.ts",
+          "hash": "751468966118603828"
+        },
+        {
+          "file": "packages/backend/src/resolvers/parking.resolvers.ts",
+          "hash": "5222650023401278436"
+        },
+        {
+          "file": "packages/backend/src/resolvers/rate-code.resolvers.ts",
+          "hash": "16604748551229343886"
+        },
+        {
+          "file": "packages/backend/src/resolvers/rental.resolvers.ts",
+          "hash": "6807000483355949118"
+        },
+        {
+          "file": "packages/backend/src/resolvers/reservation.resolvers.ts",
+          "hash": "16913003687332708088"
+        },
+        {
+          "file": "packages/backend/src/resolvers/room-type.resolvers.ts",
+          "hash": "12241546785615086785"
+        },
+        {
+          "file": "packages/backend/src/resolvers/room.resolvers.ts",
+          "hash": "1057484303445645706"
+        },
+        {
+          "file": "packages/backend/src/resolvers/statistics.resolvers.ts",
+          "hash": "1964437354753486859"
+        },
+        {
+          "file": "packages/backend/src/resolvers/system.resolvers.ts",
+          "hash": "129670264767496516"
+        },
+        {
+          "file": "packages/backend/src/resolvers/tier.resolvers.ts",
+          "hash": "10566493755985133977"
+        },
+        {
+          "file": "packages/backend/src/resolvers/voucher.resolvers.ts",
+          "hash": "17852863935141470510"
+        },
+        {
+          "file": "packages/backend/src/resolvers/wellness.resolvers.ts",
+          "hash": "5071151442837208107"
+        },
+        {
+          "file": "packages/backend/src/routes/police-report.route.ts",
+          "hash": "10957935894922418999"
+        },
+        {
+          "file": "packages/backend/src/seed.sql",
+          "hash": "16524897524112130408"
+        },
+        {
+          "file": "packages/backend/src/server.ts",
+          "hash": "17194488997088739287"
+        },
+        {
+          "file": "packages/backend/src/test-event-types.ts",
+          "hash": "11052173818942380733"
+        },
+        {
+          "file": "packages/backend/src/test-schema-usage.ts",
+          "hash": "17344719245118054623"
+        },
+        {
+          "file": "packages/backend/src/tiers/tier.repository.ts",
+          "hash": "5311095286674180730"
+        },
+        {
+          "file": "packages/backend/tsconfig.json",
+          "hash": "15316815060787685757"
+        }
+      ],
+      "telemetry": [
+        {
+          "file": "packages/telemetry/CHANGELOG.md",
+          "hash": "2679772588897591336"
+        },
+        {
+          "file": "packages/telemetry/README.md",
+          "hash": "545832542224375933"
+        },
+        {
+          "file": "packages/telemetry/package.json",
+          "hash": "8642185364288163491",
+          "deps": [
+            "npm:@types/node@20.19.25",
+            "npm:rimraf@5.0.10",
+            "npm:typescript@5.9.3",
+            "npm:@opentelemetry/api",
+            "npm:@opentelemetry/exporter-trace-otlp-http",
+            "npm:@opentelemetry/resources@1.30.1",
+            "npm:@opentelemetry/sdk-trace-node",
+            "npm:@opentelemetry/semantic-conventions@1.38.0",
+            "npm:pino",
+            "npm:pino-pretty"
+          ]
+        },
+        {
+          "file": "packages/telemetry/src/index.ts",
+          "hash": "17847799817645696313"
+        },
+        {
+          "file": "packages/telemetry/tsconfig.json",
+          "hash": "12808613823284107834"
+        }
+      ],
+      "frontend-reception": [
+        {
+          "file": "packages/frontend-reception/next.config.ts",
+          "hash": "5803674326347439835"
+        },
+        {
+          "file": "packages/frontend-reception/package.json",
+          "hash": "9452865418191569750",
+          "deps": [
+            "npm:@types/node",
+            "npm:@types/react",
+            "npm:@types/react-dom",
+            "npm:eslint",
+            "npm:eslint-config-next",
+            "npm:postcss",
+            "npm:tailwindcss",
+            "npm:typescript",
+            "npm:framer-motion",
+            "npm:next",
+            "npm:react",
+            "npm:react-dom"
+          ]
+        },
+        {
+          "file": "packages/frontend-reception/postcss.config.mjs",
+          "hash": "1050540279478882136"
+        },
+        {
+          "file": "packages/frontend-reception/src/app/globals.css",
+          "hash": "14794589861990873529"
+        },
+        {
+          "file": "packages/frontend-reception/src/app/layout.tsx",
+          "hash": "17554823560192451601"
+        },
+        {
+          "file": "packages/frontend-reception/src/app/page.tsx",
+          "hash": "8684270852948003812"
+        },
+        {
+          "file": "packages/frontend-reception/src/app/reception/layout.tsx",
+          "hash": "11751781346544707348"
+        },
+        {
+          "file": "packages/frontend-reception/src/app/reception/page.tsx",
+          "hash": "15890107820041579778"
+        },
+        {
+          "file": "packages/frontend-reception/src/app/reception/reservation-checks/[originId]/page.tsx",
+          "hash": "2070169574441337459"
+        },
+        {
+          "file": "packages/frontend-reception/src/app/reception/reservation-checks/page.tsx",
+          "hash": "38032887749501032"
+        },
+        {
+          "file": "packages/frontend-reception/src/components/Sidebar.tsx",
+          "hash": "15138573659767293141"
+        },
+        {
+          "file": "packages/frontend-reception/src/components/StatusBadge.tsx",
+          "hash": "3984134720878314977"
+        },
+        {
+          "file": "packages/frontend-reception/src/mock/reservation-checks.ts",
+          "hash": "3062123891347875143"
+        },
+        {
+          "file": "packages/frontend-reception/tailwind.config.ts",
+          "hash": "15719750130488874493"
+        },
+        {
+          "file": "packages/frontend-reception/tsconfig.json",
+          "hash": "2857206988907116058"
         }
       ],
       "frontend": [
@@ -364,7 +823,7 @@
         },
         {
           "file": "packages/frontend/src/app/globals.css",
-          "hash": "3141561524912436877"
+          "hash": "7508578162831235225"
         },
         {
           "file": "packages/frontend/src/app/hotel-cms/LiveRates.tsx",
@@ -372,87 +831,103 @@
         },
         {
           "file": "packages/frontend/src/app/hotel-cms/accounts/[id]/page.tsx",
-          "hash": "11103878960285904100"
+          "hash": "13140317932820579123"
         },
         {
           "file": "packages/frontend/src/app/hotel-cms/accounts/page.tsx",
-          "hash": "14365691910939786645"
+          "hash": "6735069705106688660"
         },
         {
           "file": "packages/frontend/src/app/hotel-cms/bookings/[id]/page.tsx",
-          "hash": "11785471778901154012"
+          "hash": "9829521082173921721"
         },
         {
           "file": "packages/frontend/src/app/hotel-cms/bookings/page.tsx",
-          "hash": "10663520324025176608"
+          "hash": "1737955177092832381"
         },
         {
           "file": "packages/frontend/src/app/hotel-cms/calendar/page.tsx",
-          "hash": "19813720214727733"
+          "hash": "4368428040900044569"
         },
         {
           "file": "packages/frontend/src/app/hotel-cms/campaigns/page.tsx",
-          "hash": "7765920202211155237"
+          "hash": "7527672323663793095"
         },
         {
           "file": "packages/frontend/src/app/hotel-cms/campaigns/templates/page.tsx",
-          "hash": "18383848883345075745"
+          "hash": "5224410043640316304"
         },
         {
           "file": "packages/frontend/src/app/hotel-cms/guests/page.tsx",
-          "hash": "17195820630975214221"
+          "hash": "500394856171915862"
+        },
+        {
+          "file": "packages/frontend/src/app/hotel-cms/maintenance/page.tsx",
+          "hash": "14929647415087798947"
         },
         {
           "file": "packages/frontend/src/app/hotel-cms/page.tsx",
-          "hash": "11221810255943199290"
+          "hash": "17516873754451535899"
+        },
+        {
+          "file": "packages/frontend/src/app/hotel-cms/parking/page.tsx",
+          "hash": "3273976488587039217"
+        },
+        {
+          "file": "packages/frontend/src/app/hotel-cms/predictions/page.tsx",
+          "hash": "12841893108919104590"
         },
         {
           "file": "packages/frontend/src/app/hotel-cms/rate-codes/page.tsx",
-          "hash": "3443932228962245285"
+          "hash": "988554892854174381"
         },
         {
           "file": "packages/frontend/src/app/hotel-cms/reception/page.tsx",
-          "hash": "4608902744849458731"
+          "hash": "1226305894225701793"
         },
         {
           "file": "packages/frontend/src/app/hotel-cms/rentals/page.tsx",
-          "hash": "409782054332824622"
+          "hash": "9155390994545397259"
         },
         {
           "file": "packages/frontend/src/app/hotel-cms/reports/page.tsx",
-          "hash": "12576373271695417271"
+          "hash": "9161795700847940536"
         },
         {
           "file": "packages/frontend/src/app/hotel-cms/room-types/page.tsx",
-          "hash": "8711964119310441326"
+          "hash": "12153882039848387684"
         },
         {
           "file": "packages/frontend/src/app/hotel-cms/rooms/page.tsx",
-          "hash": "16246140525651593123"
+          "hash": "8315887710445826507"
         },
         {
           "file": "packages/frontend/src/app/hotel-cms/settings/page.tsx",
-          "hash": "4627072814956363634"
+          "hash": "8239259663242213251"
         },
         {
           "file": "packages/frontend/src/app/hotel-cms/statistics/page.tsx",
-          "hash": "12383848142231163656"
+          "hash": "11944815529181896096"
+        },
+        {
+          "file": "packages/frontend/src/app/hotel-cms/tiers/page.tsx",
+          "hash": "9970373157430839276"
         },
         {
           "file": "packages/frontend/src/app/hotel-cms/users/page.tsx",
-          "hash": "1516659841186345333"
+          "hash": "1456865352205981928"
         },
         {
           "file": "packages/frontend/src/app/hotel-cms/vouchers/page.tsx",
-          "hash": "6853539761322934327"
+          "hash": "17055475524088603457"
         },
         {
           "file": "packages/frontend/src/app/hotel-cms/wellness/page.tsx",
-          "hash": "5954098719882756728"
+          "hash": "9203293491403580599"
         },
         {
           "file": "packages/frontend/src/app/layout.tsx",
-          "hash": "3277088197832332029"
+          "hash": "14189141860308222714"
         },
         {
           "file": "packages/frontend/src/app/login/page.tsx",
@@ -475,24 +950,40 @@
           "hash": "459761616674467045"
         },
         {
+          "file": "packages/frontend/src/components/CheckInWizard.tsx",
+          "hash": "15606250157849908419"
+        },
+        {
           "file": "packages/frontend/src/components/ClientProviders.tsx",
-          "hash": "16316899738729019393"
+          "hash": "16253773599822045133"
+        },
+        {
+          "file": "packages/frontend/src/components/CommandPalette.tsx",
+          "hash": "6308210752482801902"
+        },
+        {
+          "file": "packages/frontend/src/components/ComposeEmailModal.tsx",
+          "hash": "14681174029235334970"
         },
         {
           "file": "packages/frontend/src/components/DashboardStats.tsx",
-          "hash": "14588038210874673915"
+          "hash": "5286932305949955969"
+        },
+        {
+          "file": "packages/frontend/src/components/HotelLiveStatus.tsx",
+          "hash": "7860814797662733366"
         },
         {
           "file": "packages/frontend/src/components/HotelSidebar.tsx",
-          "hash": "17289389285455555148"
+          "hash": "13904209613456555943"
         },
         {
           "file": "packages/frontend/src/components/RecentActivity.tsx",
-          "hash": "4888960636141718298"
+          "hash": "7168855049172555061"
         },
         {
           "file": "packages/frontend/src/components/RoomCalendar.tsx",
-          "hash": "6587652940827276805"
+          "hash": "6576976463294605548"
         },
         {
           "file": "packages/frontend/src/components/ScreenRecorder.tsx",
@@ -515,12 +1006,24 @@
           "hash": "8770682286517095154"
         },
         {
+          "file": "packages/frontend/src/context/CommandPaletteContext.tsx",
+          "hash": "17087158813092444508"
+        },
+        {
+          "file": "packages/frontend/src/context/ConfirmContext.tsx",
+          "hash": "4637279506632037990"
+        },
+        {
           "file": "packages/frontend/src/context/LocaleContext.tsx",
           "hash": "16751268404254497460"
         },
         {
           "file": "packages/frontend/src/context/ThemeContext.tsx",
           "hash": "12081668345146297175"
+        },
+        {
+          "file": "packages/frontend/src/context/ToastContext.tsx",
+          "hash": "15791586170549124354"
         },
         {
           "file": "packages/frontend/src/hooks/useCharacters.ts",
@@ -544,11 +1047,11 @@
         },
         {
           "file": "packages/frontend/src/locales/cs.ts",
-          "hash": "4393722135002694761"
+          "hash": "10016647231104840875"
         },
         {
           "file": "packages/frontend/src/locales/en.ts",
-          "hash": "7538788451560558496"
+          "hash": "18057726212979272981"
         },
         {
           "file": "packages/frontend/src/locales/index.ts",
@@ -561,6 +1064,221 @@
         {
           "file": "packages/frontend/tsconfig.json",
           "hash": "10198612799611492853"
+        }
+      ],
+      "llm": [
+        {
+          "file": "packages/llm/Dockerfile",
+          "hash": "13431577809865089968"
+        },
+        {
+          "file": "packages/llm/README.md",
+          "hash": "12793896410993987779"
+        },
+        {
+          "file": "packages/llm/__tests__/llm.test.js",
+          "hash": "15237116888317581482"
+        },
+        {
+          "file": "packages/llm/package.json",
+          "hash": "4262382300050758593",
+          "deps": [
+            "npm:@types/express",
+            "npm:@types/pg",
+            "npm:@types/node",
+            "npm:@types/uuid",
+            "npm:ts-node",
+            "npm:typescript",
+            "npm:dotenv@16.0.3",
+            "npm:express@5.1.0",
+            "npm:mongodb",
+            "npm:socket.io",
+            "npm:openai",
+            "npm:ollama",
+            "npm:@modelcontextprotocol/sdk",
+            "common",
+            "npm:uuid@11.1.0",
+            "npm:langchain",
+            "npm:autoevals",
+            "npm:pg"
+          ]
+        },
+        {
+          "file": "packages/llm/src/chat/prompts.ts",
+          "hash": "7781617068889453909"
+        },
+        {
+          "file": "packages/llm/src/chat/service.ts",
+          "hash": "15403217172956175539"
+        },
+        {
+          "file": "packages/llm/src/chat/transcription.ts",
+          "hash": "9939385398243268022"
+        },
+        {
+          "file": "packages/llm/src/chat/types.ts",
+          "hash": "16183928566881527773"
+        },
+        {
+          "file": "packages/llm/src/index.ts",
+          "hash": "12884162759203917631"
+        },
+        {
+          "file": "packages/llm/src/mcp/mcp-client.ts",
+          "hash": "6434337047023312870"
+        },
+        {
+          "file": "packages/llm/src/openai/index.ts",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/llm/src/openai/openaiClient.ts",
+          "hash": "9709071041800562004"
+        },
+        {
+          "file": "packages/llm/src/rag/database.ts",
+          "hash": "2479621512022205696"
+        },
+        {
+          "file": "packages/llm/src/rag/embeddings.ts",
+          "hash": "6366625953996984348"
+        },
+        {
+          "file": "packages/llm/src/rag/index.ts",
+          "hash": "2890881814347511734"
+        },
+        {
+          "file": "packages/llm/src/rag/indexer.ts",
+          "hash": "1840361733705685971"
+        },
+        {
+          "file": "packages/llm/src/rag/search.ts",
+          "hash": "9461084106582803477"
+        },
+        {
+          "file": "packages/llm/src/rag/text-builder.ts",
+          "hash": "6291281938959046222"
+        },
+        {
+          "file": "packages/llm/src/server/server.ts",
+          "hash": "2660907136986307523"
+        },
+        {
+          "file": "packages/llm/src/ws/service.ts",
+          "hash": "13361087327359426591"
+        },
+        {
+          "file": "packages/llm/src/ws/types.ts",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/llm/tsconfig.json",
+          "hash": "16715011573561789016"
+        }
+      ],
+      "reception": [
+        {
+          "file": "packages/reception/.env.example",
+          "hash": "15812144145741355000"
+        },
+        {
+          "file": "packages/reception/package.json",
+          "hash": "2132585959573068072",
+          "deps": [
+            "npm:@types/body-parser@1.19.6",
+            "npm:@types/cookie-parser",
+            "npm:@types/cors",
+            "npm:@types/express",
+            "npm:@types/node",
+            "npm:@types/swagger-ui-express",
+            "npm:@types/uuid",
+            "npm:ts-node-dev",
+            "npm:typescript",
+            "npm:@apollo/server",
+            "npm:@apollo/subgraph",
+            "npm:body-parser",
+            "npm:cookie-parser",
+            "npm:cors",
+            "npm:dotenv@17.2.4",
+            "npm:express",
+            "npm:graphql",
+            "npm:graphql-tag",
+            "npm:swagger-ui-express",
+            "npm:uuid@13.0.0",
+            "npm:zod"
+          ]
+        },
+        {
+          "file": "packages/reception/src/db.ts",
+          "hash": "14339420484698610744"
+        },
+        {
+          "file": "packages/reception/src/frontdesk/mq.ts",
+          "hash": "7936480348479386622"
+        },
+        {
+          "file": "packages/reception/src/frontdesk/repo.ts",
+          "hash": "390665118312349394"
+        },
+        {
+          "file": "packages/reception/src/frontdesk/res.ts",
+          "hash": "10330648870737375890"
+        },
+        {
+          "file": "packages/reception/src/frontdesk/routes.ts",
+          "hash": "2056414555902840080"
+        },
+        {
+          "file": "packages/reception/src/frontdesk/schemas.ts",
+          "hash": "16768875427468255530"
+        },
+        {
+          "file": "packages/reception/src/frontdesk/service.ts",
+          "hash": "16947099748785285801"
+        },
+        {
+          "file": "packages/reception/src/frontdesk/utils.ts",
+          "hash": "3662879304816609948"
+        },
+        {
+          "file": "packages/reception/src/index.ts",
+          "hash": "2774164167042307535"
+        },
+        {
+          "file": "packages/reception/src/queue.ts",
+          "hash": "8955878986028397020"
+        },
+        {
+          "file": "packages/reception/src/reservation-check/repo.ts",
+          "hash": "14111192206695282489"
+        },
+        {
+          "file": "packages/reception/src/reservation-check/res.ts",
+          "hash": "18259409268093623581"
+        },
+        {
+          "file": "packages/reception/src/reservation-check/schemas.ts",
+          "hash": "3401921866177399677"
+        },
+        {
+          "file": "packages/reception/src/resolvers/index.ts",
+          "hash": "5687824403364644942"
+        },
+        {
+          "file": "packages/reception/src/schema.graphql",
+          "hash": "8231116551851113041"
+        },
+        {
+          "file": "packages/reception/src/server.ts",
+          "hash": "1425952024123670051"
+        },
+        {
+          "file": "packages/reception/src/swagger.ts",
+          "hash": "2602528672511078568"
+        },
+        {
+          "file": "packages/reception/tsconfig.json",
+          "hash": "1655559245956984181"
         }
       ],
       "webhooks": [
@@ -648,695 +1366,6 @@
           "hash": "3020736074774769691"
         }
       ],
-      "backend": [
-        {
-          "file": "packages/backend/CHANGELOG.md",
-          "hash": "14069653417323330868"
-        },
-        {
-          "file": "packages/backend/README.md",
-          "hash": "5241733300379469828"
-        },
-        {
-          "file": "packages/backend/docs/GOALS.md",
-          "hash": "10781731772392460310"
-        },
-        {
-          "file": "packages/backend/docs/SCHEMAS.md",
-          "hash": "14226512234661949344"
-        },
-        {
-          "file": "packages/backend/jest.config.js",
-          "hash": "10000206683338842657"
-        },
-        {
-          "file": "packages/backend/jest.globalSetup.ts",
-          "hash": "3101314281973439157"
-        },
-        {
-          "file": "packages/backend/jest.setup.ts",
-          "hash": "2895025387401319904"
-        },
-        {
-          "file": "packages/backend/package.json",
-          "hash": "13611106310056325369",
-          "deps": [
-            "npm:@types/amqplib",
-            "npm:@types/bcryptjs",
-            "npm:@types/body-parser@1.19.6",
-            "npm:@types/cookie-parser",
-            "npm:@types/cors",
-            "npm:@types/express",
-            "npm:@types/jest",
-            "npm:@types/jsonwebtoken",
-            "npm:@types/node",
-            "npm:@types/pg",
-            "npm:@types/uuid",
-            "npm:jest",
-            "npm:ts-jest",
-            "npm:ts-node-dev",
-            "npm:typescript",
-            "npm:@apollo/server",
-            "npm:@apollo/subgraph",
-            "npm:@apollo/utils.printwithreducedwhitespace",
-            "npm:@types/pdfkit",
-            "npm:amqplib",
-            "npm:bcryptjs",
-            "npm:body-parser",
-            "npm:cookie-parser",
-            "npm:cors",
-            "npm:dotenv@17.2.4",
-            "npm:express",
-            "npm:graphql",
-            "npm:graphql-tag",
-            "npm:jsonwebtoken",
-            "npm:pdfkit",
-            "npm:pg",
-            "npm:resend",
-            "shared-schema",
-            "npm:uuid@13.0.0",
-            "npm:zod@4.3.5"
-          ]
-        },
-        {
-          "file": "packages/backend/src/auth/config.ts",
-          "hash": "4664653000842644752"
-        },
-        {
-          "file": "packages/backend/src/auth/database.ts",
-          "hash": "14210955542683626073"
-        },
-        {
-          "file": "packages/backend/src/auth/email-service.ts",
-          "hash": "7970753946787602550"
-        },
-        {
-          "file": "packages/backend/src/auth/guards.ts",
-          "hash": "16023610984366132761"
-        },
-        {
-          "file": "packages/backend/src/auth/index.ts",
-          "hash": "3187246007629201757"
-        },
-        {
-          "file": "packages/backend/src/auth/middleware.ts",
-          "hash": "12396645799667330915"
-        },
-        {
-          "file": "packages/backend/src/auth/refresh-token-repository.ts",
-          "hash": "7019501092345817249"
-        },
-        {
-          "file": "packages/backend/src/auth/seed-admin.ts",
-          "hash": "2216568533257140864"
-        },
-        {
-          "file": "packages/backend/src/auth/token-service.ts",
-          "hash": "4232723268686856059"
-        },
-        {
-          "file": "packages/backend/src/auth/user-repository.ts",
-          "hash": "16360243322302616783"
-        },
-        {
-          "file": "packages/backend/src/campaigns/campaign-repository.ts",
-          "hash": "8615128493673643097"
-        },
-        {
-          "file": "packages/backend/src/campaigns/config.ts",
-          "hash": "1029242375321949517"
-        },
-        {
-          "file": "packages/backend/src/campaigns/database.ts",
-          "hash": "8396237541564664357"
-        },
-        {
-          "file": "packages/backend/src/campaigns/index.ts",
-          "hash": "29037269136337547"
-        },
-        {
-          "file": "packages/backend/src/campaigns/seed-templates.ts",
-          "hash": "6631723469156328554"
-        },
-        {
-          "file": "packages/backend/src/campaigns/send-repository.ts",
-          "hash": "11175679341474092812"
-        },
-        {
-          "file": "packages/backend/src/campaigns/sender.ts",
-          "hash": "939978262997566538"
-        },
-        {
-          "file": "packages/backend/src/campaigns/targeting.ts",
-          "hash": "8073462566266182158"
-        },
-        {
-          "file": "packages/backend/src/campaigns/template-repository.ts",
-          "hash": "6004597526144179791"
-        },
-        {
-          "file": "packages/backend/src/campaigns/tracking.ts",
-          "hash": "9896556667422254448"
-        },
-        {
-          "file": "packages/backend/src/data/hotels.ts",
-          "hash": "16282959472961436187"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/account-aggregate.ts",
-          "hash": "13561831871406185029"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/account-projections.ts",
-          "hash": "1053959954554444209"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/account-repository.ts",
-          "hash": "11785119344525682805"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/aggregate.ts",
-          "hash": "14494190731745708601"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/config.ts",
-          "hash": "9416726112252196834"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/database.ts",
-          "hash": "16445410642169793717"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/event-relayer.ts",
-          "hash": "5822269575598856025"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/event-sourcing.integration.test.ts",
-          "hash": "5250349042084398258"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/event-store.ts",
-          "hash": "6605362036673794479"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/guest-aggregate.ts",
-          "hash": "14769232090327953916"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/guest-projections.ts",
-          "hash": "9280229306645632634"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/guest-repository.ts",
-          "hash": "9677200802004952115"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/index.ts",
-          "hash": "7850752890667872575"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/projections.ts",
-          "hash": "13090602878538762520"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/rate-code-aggregate.ts",
-          "hash": "15709592332036002594"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/rate-code-projections.ts",
-          "hash": "1418661091034169509"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/rate-code-repository.ts",
-          "hash": "16815439146371377118"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/repository.ts",
-          "hash": "1009879214904523124"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/room-aggregate.ts",
-          "hash": "11575072563396296726"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/room-projections.ts",
-          "hash": "8174574783207914906"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/room-repository.ts",
-          "hash": "17235528197369616232"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/room-type-aggregate.ts",
-          "hash": "9231099125454694210"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/room-type-projections.ts",
-          "hash": "15366382119528390014"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/room-type-repository.ts",
-          "hash": "13192339823202441514"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/seed-data.ts",
-          "hash": "14760974535792807011"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/statistics-repository.ts",
-          "hash": "16704472439470464237"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/voucher-aggregate.ts",
-          "hash": "9639384931340760057"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/voucher-projections.ts",
-          "hash": "11003388706012539797"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/voucher-repository.ts",
-          "hash": "2350078631312280413"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/wellness-booking-aggregate.ts",
-          "hash": "2726998271738163277"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/wellness-booking-projections.ts",
-          "hash": "7797974955661002093"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/wellness-booking-repository.ts",
-          "hash": "12165960160267394030"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/wellness-room-type-aggregate.ts",
-          "hash": "18373389343194984177"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/wellness-room-type-projections.ts",
-          "hash": "4695200220188734950"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/wellness-room-type-repository.ts",
-          "hash": "3152858706254001426"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/wellness-service-aggregate.ts",
-          "hash": "16578894724793709658"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/wellness-service-projections.ts",
-          "hash": "12733312038574425069"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/wellness-service-repository.ts",
-          "hash": "12668215659986329959"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/wellness-therapist-aggregate.ts",
-          "hash": "15155888007965594855"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/wellness-therapist-projections.ts",
-          "hash": "8516591262757782990"
-        },
-        {
-          "file": "packages/backend/src/event-sourcing/wellness-therapist-repository.ts",
-          "hash": "17776804132591186924"
-        },
-        {
-          "file": "packages/backend/src/formatters/account.formatter.ts",
-          "hash": "4480211676753995677"
-        },
-        {
-          "file": "packages/backend/src/formatters/auth.formatter.ts",
-          "hash": "2233032720628559167"
-        },
-        {
-          "file": "packages/backend/src/formatters/campaign.formatter.ts",
-          "hash": "9154712701476081065"
-        },
-        {
-          "file": "packages/backend/src/formatters/event.formatter.ts",
-          "hash": "10164963707092951379"
-        },
-        {
-          "file": "packages/backend/src/formatters/guest.formatter.ts",
-          "hash": "13004653985113754458"
-        },
-        {
-          "file": "packages/backend/src/formatters/index.ts",
-          "hash": "17971247637073661477"
-        },
-        {
-          "file": "packages/backend/src/formatters/rental.formatter.ts",
-          "hash": "14595965940012713705"
-        },
-        {
-          "file": "packages/backend/src/formatters/reservation.formatter.ts",
-          "hash": "15073654585319856957"
-        },
-        {
-          "file": "packages/backend/src/formatters/room.formatter.ts",
-          "hash": "9300214472814486302"
-        },
-        {
-          "file": "packages/backend/src/formatters/voucher.formatter.ts",
-          "hash": "10030905826513365733"
-        },
-        {
-          "file": "packages/backend/src/formatters/wellness.formatter.ts",
-          "hash": "7147318561054016728"
-        },
-        {
-          "file": "packages/backend/src/index.ts",
-          "hash": "86256825408371925"
-        },
-        {
-          "file": "packages/backend/src/rentals/rental.repository.ts",
-          "hash": "1217594716600627508"
-        },
-        {
-          "file": "packages/backend/src/resolvers/account.resolvers.ts",
-          "hash": "9195709422186333890"
-        },
-        {
-          "file": "packages/backend/src/resolvers/auth.resolvers.ts",
-          "hash": "12610963720805497596"
-        },
-        {
-          "file": "packages/backend/src/resolvers/campaign.resolvers.ts",
-          "hash": "17309927296112695837"
-        },
-        {
-          "file": "packages/backend/src/resolvers/guest.resolvers.ts",
-          "hash": "344278563049947223"
-        },
-        {
-          "file": "packages/backend/src/resolvers/hotel.resolvers.ts",
-          "hash": "14901601031580914749"
-        },
-        {
-          "file": "packages/backend/src/resolvers/index.ts",
-          "hash": "12632398152235082456"
-        },
-        {
-          "file": "packages/backend/src/resolvers/rate-code.resolvers.ts",
-          "hash": "16604748551229343886"
-        },
-        {
-          "file": "packages/backend/src/resolvers/rental.resolvers.ts",
-          "hash": "6807000483355949118"
-        },
-        {
-          "file": "packages/backend/src/resolvers/reservation.resolvers.ts",
-          "hash": "1798223946482769268"
-        },
-        {
-          "file": "packages/backend/src/resolvers/room-type.resolvers.ts",
-          "hash": "12241546785615086785"
-        },
-        {
-          "file": "packages/backend/src/resolvers/room.resolvers.ts",
-          "hash": "1057484303445645706"
-        },
-        {
-          "file": "packages/backend/src/resolvers/statistics.resolvers.ts",
-          "hash": "7258774034914364340"
-        },
-        {
-          "file": "packages/backend/src/resolvers/system.resolvers.ts",
-          "hash": "129670264767496516"
-        },
-        {
-          "file": "packages/backend/src/resolvers/voucher.resolvers.ts",
-          "hash": "17852863935141470510"
-        },
-        {
-          "file": "packages/backend/src/resolvers/wellness.resolvers.ts",
-          "hash": "5071151442837208107"
-        },
-        {
-          "file": "packages/backend/src/routes/police-report.route.ts",
-          "hash": "10957935894922418999"
-        },
-        {
-          "file": "packages/backend/src/server.ts",
-          "hash": "17194488997088739287"
-        },
-        {
-          "file": "packages/backend/src/test-event-types.ts",
-          "hash": "11052173818942380733"
-        },
-        {
-          "file": "packages/backend/src/test-schema-usage.ts",
-          "hash": "17344719245118054623"
-        },
-        {
-          "file": "packages/backend/tsconfig.json",
-          "hash": "15316815060787685757"
-        }
-      ],
-      "llm": [
-        {
-          "file": "packages/llm/Dockerfile",
-          "hash": "13431577809865089968"
-        },
-        {
-          "file": "packages/llm/README.md",
-          "hash": "12793896410993987779"
-        },
-        {
-          "file": "packages/llm/__tests__/llm.test.js",
-          "hash": "15237116888317581482"
-        },
-        {
-          "file": "packages/llm/package.json",
-          "hash": "4262382300050758593",
-          "deps": [
-            "npm:@types/express",
-            "npm:@types/pg",
-            "npm:@types/node",
-            "npm:@types/uuid",
-            "npm:ts-node",
-            "npm:typescript",
-            "npm:dotenv@16.0.3",
-            "npm:express@5.1.0",
-            "npm:mongodb",
-            "npm:socket.io",
-            "npm:openai",
-            "npm:ollama",
-            "npm:@modelcontextprotocol/sdk",
-            "common",
-            "npm:uuid@11.1.0",
-            "npm:langchain",
-            "npm:autoevals",
-            "npm:pg"
-          ]
-        },
-        {
-          "file": "packages/llm/src/chat/prompts.ts",
-          "hash": "12146945010827948214"
-        },
-        {
-          "file": "packages/llm/src/chat/service.ts",
-          "hash": "15403217172956175539"
-        },
-        {
-          "file": "packages/llm/src/chat/transcription.ts",
-          "hash": "9939385398243268022"
-        },
-        {
-          "file": "packages/llm/src/chat/types.ts",
-          "hash": "16183928566881527773"
-        },
-        {
-          "file": "packages/llm/src/index.ts",
-          "hash": "12884162759203917631"
-        },
-        {
-          "file": "packages/llm/src/mcp/mcp-client.ts",
-          "hash": "6434337047023312870"
-        },
-        {
-          "file": "packages/llm/src/ollama/gemma.ts",
-          "hash": "3244421341483603138"
-        },
-        {
-          "file": "packages/llm/src/openai/index.ts",
-          "hash": "3244421341483603138"
-        },
-        {
-          "file": "packages/llm/src/openai/openaiClient.ts",
-          "hash": "9709071041800562004"
-        },
-        {
-          "file": "packages/llm/src/rag/database.ts",
-          "hash": "2479621512022205696"
-        },
-        {
-          "file": "packages/llm/src/rag/embeddings.ts",
-          "hash": "6366625953996984348"
-        },
-        {
-          "file": "packages/llm/src/rag/index.ts",
-          "hash": "2890881814347511734"
-        },
-        {
-          "file": "packages/llm/src/rag/indexer.ts",
-          "hash": "6074280098619479186"
-        },
-        {
-          "file": "packages/llm/src/rag/search.ts",
-          "hash": "9461084106582803477"
-        },
-        {
-          "file": "packages/llm/src/rag/text-builder.ts",
-          "hash": "6291281938959046222"
-        },
-        {
-          "file": "packages/llm/src/server/server.ts",
-          "hash": "2660907136986307523"
-        },
-        {
-          "file": "packages/llm/src/ws/service.ts",
-          "hash": "13361087327359426591"
-        },
-        {
-          "file": "packages/llm/src/ws/types.ts",
-          "hash": "3244421341483603138"
-        },
-        {
-          "file": "packages/llm/tsconfig.json",
-          "hash": "16715011573561789016"
-        }
-      ],
-      "mcp": [
-        {
-          "file": "packages/mcp/package.json",
-          "hash": "2130899140784488846",
-          "deps": [
-            "npm:@types/node",
-            "npm:typescript",
-            "npm:@modelcontextprotocol/sdk",
-            "npm:zod",
-            "npm:dotenv@16.0.3"
-          ]
-        },
-        {
-          "file": "packages/mcp/src/graphql-client.ts",
-          "hash": "5622704120369653003"
-        },
-        {
-          "file": "packages/mcp/src/index.ts",
-          "hash": "10643061867463487221"
-        },
-        {
-          "file": "packages/mcp/src/queries.ts",
-          "hash": "8171621899202841210"
-        },
-        {
-          "file": "packages/mcp/src/server.ts",
-          "hash": "12503266707828820839"
-        },
-        {
-          "file": "packages/mcp/tsconfig.json",
-          "hash": "16652124931369622955"
-        }
-      ],
-      "telemetry": [
-        {
-          "file": "packages/telemetry/CHANGELOG.md",
-          "hash": "2679772588897591336"
-        },
-        {
-          "file": "packages/telemetry/README.md",
-          "hash": "545832542224375933"
-        },
-        {
-          "file": "packages/telemetry/package.json",
-          "hash": "8642185364288163491",
-          "deps": [
-            "npm:@types/node@20.19.25",
-            "npm:rimraf@5.0.10",
-            "npm:typescript@5.9.3",
-            "npm:@opentelemetry/api",
-            "npm:@opentelemetry/exporter-trace-otlp-http",
-            "npm:@opentelemetry/resources@1.30.1",
-            "npm:@opentelemetry/sdk-trace-node",
-            "npm:@opentelemetry/semantic-conventions@1.38.0",
-            "npm:pino",
-            "npm:pino-pretty"
-          ]
-        },
-        {
-          "file": "packages/telemetry/src/index.ts",
-          "hash": "17847799817645696313"
-        },
-        {
-          "file": "packages/telemetry/tsconfig.json",
-          "hash": "12808613823284107834"
-        }
-      ],
-      "api": [
-        {
-          "file": "packages/api/.gitignore",
-          "hash": "11053275306421914406"
-        },
-        {
-          "file": "packages/api/CHANGELOG.md",
-          "hash": "13476589862458238014"
-        },
-        {
-          "file": "packages/api/Dockerfile",
-          "hash": "581610828898500851"
-        },
-        {
-          "file": "packages/api/README.md",
-          "hash": "2210008865342336203"
-        },
-        {
-          "file": "packages/api/docs/ARCHITECTURE.md",
-          "hash": "9642545323438388588"
-        },
-        {
-          "file": "packages/api/docs/GOALS.md",
-          "hash": "10667423451071747814"
-        },
-        {
-          "file": "packages/api/docs/steps/STEP1.MD",
-          "hash": "3244421341483603138"
-        },
-        {
-          "file": "packages/api/package.json",
-          "hash": "5614882549277190963",
-          "deps": [
-            "npm:@types/express",
-            "npm:@types/node",
-            "npm:ts-node",
-            "npm:typescript",
-            "npm:@apollo/gateway",
-            "npm:@apollo/server",
-            "npm:body-parser",
-            "npm:cors",
-            "npm:dotenv@16.0.3",
-            "npm:express",
-            "npm:graphql",
-            "common",
-            "telemetry"
-          ]
-        },
-        {
-          "file": "packages/api/src/index.ts",
-          "hash": "17238080095268142203"
-        },
-        {
-          "file": "packages/api/tsconfig.json",
-          "hash": "16715011573561789016"
-        }
-      ],
       "shared-schema": [
         {
           "file": "packages/shared-schema/.gitignore",
@@ -1395,12 +1424,24 @@
           "hash": "5504174623620048262"
         },
         {
+          "file": "packages/shared-schema/schema/forecast.graphql",
+          "hash": "4422524955709483695"
+        },
+        {
           "file": "packages/shared-schema/schema/guest.graphql",
-          "hash": "11007075294630659947"
+          "hash": "9461318925727554209"
         },
         {
           "file": "packages/shared-schema/schema/hotel.graphql",
           "hash": "9652343876261013065"
+        },
+        {
+          "file": "packages/shared-schema/schema/maintenance.graphql",
+          "hash": "12091760009898363285"
+        },
+        {
+          "file": "packages/shared-schema/schema/parking.graphql",
+          "hash": "11259974116059126852"
         },
         {
           "file": "packages/shared-schema/schema/rate-code.graphql",
@@ -1412,7 +1453,7 @@
         },
         {
           "file": "packages/shared-schema/schema/reservation.graphql",
-          "hash": "15089896645309567235"
+          "hash": "15132562509834125838"
         },
         {
           "file": "packages/shared-schema/schema/room-type.graphql",
@@ -1424,7 +1465,11 @@
         },
         {
           "file": "packages/shared-schema/schema/statistics.graphql",
-          "hash": "1906660379457676412"
+          "hash": "15793743533786852606"
+        },
+        {
+          "file": "packages/shared-schema/schema/tiers.graphql",
+          "hash": "10905149431396225842"
         },
         {
           "file": "packages/shared-schema/schema/voucher.graphql",
@@ -1460,7 +1505,7 @@
         },
         {
           "file": "packages/shared-schema/src/index.ts",
-          "hash": "14626954128804496446"
+          "hash": "10906734943036725600"
         },
         {
           "file": "packages/shared-schema/src/types.ts",
@@ -1469,6 +1514,65 @@
         {
           "file": "packages/shared-schema/tsconfig.json",
           "hash": "2657349303259599889"
+        }
+      ],
+      "common": [
+        {
+          "file": "packages/common/CHANGELOG.md",
+          "hash": "12826855143380886420"
+        },
+        {
+          "file": "packages/common/README.md",
+          "hash": "1115945535360825404"
+        },
+        {
+          "file": "packages/common/package.json",
+          "hash": "14835215009720542934",
+          "deps": [
+            "npm:express",
+            "npm:winston",
+            "npm:zod"
+          ]
+        },
+        {
+          "file": "packages/common/src/asyncLocalStorage/asyncLocalStorage.ts",
+          "hash": "12592321028940228332"
+        },
+        {
+          "file": "packages/common/src/asyncLocalStorage/index.ts",
+          "hash": "17862752530853463146"
+        },
+        {
+          "file": "packages/common/src/common.ts",
+          "hash": "7196071153314525702"
+        },
+        {
+          "file": "packages/common/src/logging/index.ts",
+          "hash": "5887290674789689246"
+        },
+        {
+          "file": "packages/common/src/logging/logger.ts",
+          "hash": "12333072345097728333"
+        },
+        {
+          "file": "packages/common/src/utils/export-test.ts",
+          "hash": "4438609823104731435"
+        },
+        {
+          "file": "packages/common/src/utils/index.ts",
+          "hash": "12579977546160050648"
+        },
+        {
+          "file": "packages/common/src/utils/uuid.ts",
+          "hash": "5894271224882090181"
+        },
+        {
+          "file": "packages/common/tsconfig.json",
+          "hash": "3174921603891561405"
+        },
+        {
+          "file": "packages/common/yarn.lock",
+          "hash": "14953481567476914638"
         }
       ],
       "gateway": [
@@ -1571,6 +1675,216 @@
           "hash": "10593033163259005595"
         }
       ]
-    }
+    },
+    "nonProjectFiles": [
+      {
+        "file": ".claude/skills/codegen/SKILL.md",
+        "hash": "7188005666683353835"
+      },
+      {
+        "file": ".claude/skills/frontend-design/SKILL.md",
+        "hash": "14104202645837902313"
+      },
+      {
+        "file": ".claude/skills/lint/SKILL.md",
+        "hash": "924608751465389944"
+      },
+      {
+        "file": ".claude/skills/new-feature/SKILL.md",
+        "hash": "8570393343734396859"
+      },
+      {
+        "file": ".github/workflows/build.yml",
+        "hash": "5274105492588655244"
+      },
+      {
+        "file": ".gitignore",
+        "hash": "1284336496676286418"
+      },
+      {
+        "file": ".helm/hireme/Chart.yaml",
+        "hash": "16097259628781862923"
+      },
+      {
+        "file": ".helm/hireme/charts/api/Chart.yaml",
+        "hash": "10664066977391376717"
+      },
+      {
+        "file": ".helm/hireme/charts/api/templates/deployment.yaml",
+        "hash": "6339115225031968573"
+      },
+      {
+        "file": ".helm/hireme/charts/api/templates/service.yaml",
+        "hash": "9163540145955059801"
+      },
+      {
+        "file": ".helm/hireme/charts/api/values.yaml",
+        "hash": "8058094042502705954"
+      },
+      {
+        "file": ".helm/hireme/charts/frontend/Chart.yaml",
+        "hash": "1343225409887802358"
+      },
+      {
+        "file": ".helm/hireme/charts/frontend/templates/deployment.yaml",
+        "hash": "9497792898241117715"
+      },
+      {
+        "file": ".helm/hireme/charts/frontend/templates/service.yaml",
+        "hash": "2924549744881311385"
+      },
+      {
+        "file": ".helm/hireme/charts/frontend/values.yaml",
+        "hash": "8511772502979899956"
+      },
+      {
+        "file": ".helm/hireme/charts/llm/Chart.yaml",
+        "hash": "6840170690200994781"
+      },
+      {
+        "file": ".helm/hireme/charts/llm/templates/deployment.yaml",
+        "hash": "6339115225031968573"
+      },
+      {
+        "file": ".helm/hireme/charts/llm/templates/service.yaml",
+        "hash": "3985730742563740231"
+      },
+      {
+        "file": ".helm/hireme/charts/llm/values.yaml",
+        "hash": "12907457759661692071"
+      },
+      {
+        "file": ".modelfile",
+        "hash": "15970662635096675284"
+      },
+      {
+        "file": "CHANGELOG.md",
+        "hash": "12534670830540637902"
+      },
+      {
+        "file": "CLAUDE.md",
+        "hash": "7314422199867698920"
+      },
+      {
+        "file": "README.md",
+        "hash": "4559407921698568312"
+      },
+      {
+        "file": "TODO.md",
+        "hash": "10420639044426698397"
+      },
+      {
+        "file": "docker-compose.yml",
+        "hash": "8211537194695270083"
+      },
+      {
+        "file": "docs/AI_ASSISTANT_IMPLEMENTATION_PLAN.md",
+        "hash": "5963323830038913791"
+      },
+      {
+        "file": "docs/CONTEXT_TEMPLATE.md",
+        "hash": "11848469193793330142"
+      },
+      {
+        "file": "docs/DOCUMENTATION_GUIDE.md",
+        "hash": "16113222908099116357"
+      },
+      {
+        "file": "docs/ai-assistant-proposal.md",
+        "hash": "5009459835405194306"
+      },
+      {
+        "file": "docs/auth-implementation-plan.md",
+        "hash": "3148160801715294755"
+      },
+      {
+        "file": "docs/channel-manager-plan.md",
+        "hash": "5508278168501048538"
+      },
+      {
+        "file": "docs/email-campaigns-implementation-plan.md",
+        "hash": "15147129378939497218"
+      },
+      {
+        "file": "docs/event-sourcing-architecture.md",
+        "hash": "1727224147270840348"
+      },
+      {
+        "file": "docs/event-sourcing-implementation.md",
+        "hash": "5156250740489328353"
+      },
+      {
+        "file": "docs/frontend-design-system.md",
+        "hash": "9010094519277231076"
+      },
+      {
+        "file": "docs/llm-architecture.md",
+        "hash": "17595408210356290712"
+      },
+      {
+        "file": "docs/llm-local-dev-setup.md",
+        "hash": "10348010667386038163"
+      },
+      {
+        "file": "docs/local-dev-setup.md",
+        "hash": "7235121699759901764"
+      },
+      {
+        "file": "docs/optimistic-concurrency-explained.md",
+        "hash": "9554645766404126932"
+      },
+      {
+        "file": "docs/postgres-vs-mongo-optimistic-locking.md",
+        "hash": "10993354545775304155"
+      },
+      {
+        "file": "docs/predictions-feature.md",
+        "hash": "10336514130027431058"
+      },
+      {
+        "file": "docs/rabbitmq-event-relayer.md",
+        "hash": "14675126558072790485"
+      },
+      {
+        "file": "docs/request-lifecycle-example.md",
+        "hash": "2139065561250805077"
+      },
+      {
+        "file": "docs/request-lifecycle-update.md",
+        "hash": "6422895339762543678"
+      },
+      {
+        "file": "docs/snapshots-explained.md",
+        "hash": "12991477819952184029"
+      },
+      {
+        "file": "docs/tavily.md",
+        "hash": "13273806743116010839"
+      },
+      {
+        "file": "docs/webhooks.md",
+        "hash": "2659141743283305047"
+      },
+      {
+        "file": "generate_registration_cards.py",
+        "hash": "9445766349892422003"
+      },
+      {
+        "file": "lerna.json",
+        "hash": "9665198490292609539"
+      },
+      {
+        "file": "nx.json",
+        "hash": "13096541334647236566"
+      },
+      {
+        "file": "package.json",
+        "hash": "13538092262847923842"
+      },
+      {
+        "file": "yarn.lock",
+        "hash": "8395283943393970722"
+      }
+    ]
   }
 }

@@ -1,0 +1,88 @@
+type CheckIn {
+  id: ID!
+  reservationId: ID!
+  guestName: String!
+  roomNumber: String!
+  status: CheckInStatus!
+  checkInAt: String
+  checkOutAt: String
+  notes: String
+  createdAt: String!
+  updatedAt: String!
+}
+
+enum CheckInStatus {
+  pending
+  checked_in
+  checked_out
+  no_show
+}
+
+input CreateCheckInInput {
+  reservationId: ID!
+  guestName: String!
+  roomNumber: String!
+  notes: String
+}
+
+input CheckOutInput {
+  id: ID!
+  notes: String
+}
+
+input ListCheckInsFilter {
+  status: CheckInStatus
+  roomNumber: String
+  date: String
+}
+
+enum CheckReservationStatus {
+  GREEN
+  YELLOW
+  RED
+  PENDING
+  NONE
+}
+
+type CheckReservationBooking {
+  originId: String!
+  hotelTimeId: Int
+  provider: String!
+  date: String!
+  adultCount: Int!
+  childCount: Int!
+  checkin: String!
+  checkout: String!
+  owner: String!
+  customerNote: String
+  notesStatus: CheckReservationStatus!
+  featuresStatus: CheckReservationStatus!
+  vouchersStatus: CheckReservationStatus!
+  paymentsStatus: CheckReservationStatus!
+  customerNoteStatus: CheckReservationStatus!
+  inventoriesStatus: CheckReservationStatus!
+  hskStatus: CheckReservationStatus!
+  status: CheckReservationStatus!
+}
+
+type CheckReservationsPage {
+  items: [CheckReservationBooking!]!
+  total: Int!
+  page: Int!
+  limit: Int!
+  totalPages: Int!
+}
+
+type Query {
+  checkIn(id: ID!): CheckIn
+  checkIns(filter: ListCheckInsFilter): [CheckIn!]!
+  checkReservations(page: Int, limit: Int): CheckReservationsPage!
+  checkReservation(originId: String!): CheckReservationBooking
+}
+
+type Mutation {
+  createCheckIn(input: CreateCheckInInput!): CheckIn!
+  performCheckIn(id: ID!): CheckIn!
+  performCheckOut(input: CheckOutInput!): CheckIn!
+  markNoShow(id: ID!): CheckIn!
+}

@@ -1,0 +1,7 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/page": "/",
+  "/reception/reservation-checks/[originId]/page": "/reception/reservation-checks/[originId]",
+  "/reception/reservation-checks/page": "/reception/reservation-checks",
+  "/reception/page": "/reception"
+}
