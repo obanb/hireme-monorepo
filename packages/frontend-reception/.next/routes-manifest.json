@@ -20,6 +20,14 @@
   },
   "dynamicRoutes": [
     {
+      "page": "/reception/registration-cards/[id]",
+      "regex": "^/reception/registration\\-cards/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/reception/registration\\-cards/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
       "page": "/reception/reservation-checks/[originId]",
       "regex": "^/reception/reservation\\-checks/([^/]+?)(?:/)?$",
       "routeKeys": {
@@ -58,6 +66,12 @@
       "regex": "^/reception/arriving\\-guests/calendar(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/reception/arriving\\-guests/calendar(?:/)?$"
+    },
+    {
+      "page": "/reception/registration-cards",
+      "regex": "^/reception/registration\\-cards(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/reception/registration\\-cards(?:/)?$"
     },
     {
       "page": "/reception/reservation-checks",

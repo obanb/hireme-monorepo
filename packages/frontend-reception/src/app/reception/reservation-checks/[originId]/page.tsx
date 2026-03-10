@@ -66,10 +66,10 @@ const CHECK_LABELS: { key: keyof ReservationCheckDetail; label: string; desc: st
 ];
 
 const checkCardBg: Record<CheckReservationStatus, string> = {
-  RED: '#FEF2F2', YELLOW: '#FEFCE8', GREEN: '#F0FDF4', PENDING: '#EEF2FF', NONE: 'var(--bg-surface)',
+  RED: 'var(--status-red-bg)', YELLOW: 'var(--status-yellow-bg)', GREEN: 'var(--status-green-bg)', PENDING: 'var(--status-pending-bg)', NONE: 'var(--bg-surface)',
 };
 const checkCardBorder: Record<CheckReservationStatus, string> = {
-  RED: '#FECACA', YELLOW: '#FDE68A', GREEN: '#BBF7D0', PENDING: '#C7D2FE', NONE: 'var(--border)',
+  RED: 'var(--status-red-border)', YELLOW: 'var(--status-yellow-border)', GREEN: 'var(--status-green-border)', PENDING: 'var(--status-pending-border)', NONE: 'var(--border)',
 };
 
 function nightsBetween(a: string, b: string) {
@@ -96,8 +96,8 @@ function SegmentErrorBadge({ errors }: { errors: string[] }) {
         style={{
           display: 'inline-flex', alignItems: 'center', gap: 4,
           padding: '2px 7px', borderRadius: 4,
-          background: '#FEF2F2', border: '1px solid #FECACA',
-          color: '#DC2626', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+          background: 'var(--status-red-bg)', border: '1px solid var(--status-red-border)',
+          color: 'var(--status-red)', fontSize: 11, fontWeight: 600, cursor: 'pointer',
         }}
       >
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -108,14 +108,14 @@ function SegmentErrorBadge({ errors }: { errors: string[] }) {
       {open && errors.length > 0 && (
         <div style={{
           position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 10,
-          background: '#1C1917', color: '#FCA5A5', fontSize: 11, lineHeight: 1.6,
+          background: '#1E293B', color: '#FCA5A5', fontSize: 11, lineHeight: 1.6,
           padding: '10px 12px', borderRadius: 7, minWidth: 280, maxWidth: 360,
           boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
         }}>
           {errors.map((e, i) => <div key={i}>{e}</div>)}
           <div style={{
             position: 'absolute', top: -4, right: 10,
-            width: 8, height: 8, background: '#1C1917',
+            width: 8, height: 8, background: '#1E293B',
             transform: 'rotate(45deg)',
           }} />
         </div>
@@ -126,12 +126,12 @@ function SegmentErrorBadge({ errors }: { errors: string[] }) {
 
 function ReprocessBadge({ available, reprocessed }: { available: boolean | null; reprocessed: boolean | null }) {
   if (reprocessed) return (
-    <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: '#EEF2FF', color: '#4338CA', fontWeight: 600, border: '1px solid #C7D2FE' }}>
+    <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: 'var(--status-pending-bg)', color: 'var(--status-pending)', fontWeight: 600, border: '1px solid var(--status-pending-border)' }}>
       Reprocessed
     </span>
   );
   if (available) return (
-    <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: '#ECFDF5', color: '#059669', fontWeight: 600, border: '1px solid #6EE7B7' }}>
+    <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: 'var(--status-green-bg)', color: 'var(--status-green)', fontWeight: 600, border: '1px solid var(--status-green-border)' }}>
       Can reprocess
     </span>
   );
@@ -171,13 +171,13 @@ function PaymentCard({ seg }: { seg: BEPaymentSegment }) {
   const color = '#2563EB';
   return (
     <div style={{
-      borderRadius: 10, border: '1px solid var(--border-strong)', background: '#fff',
-      borderLeft: `3px solid ${seg.error ? '#EF4444' : color}`,
+      borderRadius: 10, border: '1px solid var(--border-strong)', background: 'var(--bg-surface)',
+      borderLeft: `3px solid ${seg.error ? 'var(--status-red)' : color}`,
       padding: '14px 16px', display: 'flex', gap: 16, alignItems: 'flex-start',
     }}>
       <div style={{
         width: 44, height: 44, borderRadius: 10, flexShrink: 0,
-        background: color + '12', display: 'flex', alignItems: 'center',
+        background: color + '18', display: 'flex', alignItems: 'center',
         justifyContent: 'center', fontSize: 20,
       }}>
         {PAYMENT_TYPE_ICON[seg.data.paymentType] ?? '💳'}
@@ -190,7 +190,7 @@ function PaymentCard({ seg }: { seg: BEPaymentSegment }) {
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} />
             {seg.error ? <SegmentErrorBadge errors={seg.errors} /> : (
-              <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: '#F0FDF4', color: '#16A34A', fontWeight: 600, border: '1px solid #BBF7D0' }}>OK</span>
+              <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: 'var(--status-green-bg)', color: 'var(--status-green)', fontWeight: 600, border: '1px solid var(--status-green-border)' }}>OK</span>
             )}
           </div>
         </div>
@@ -205,9 +205,9 @@ function PaymentCard({ seg }: { seg: BEPaymentSegment }) {
 // ── Voucher cards ─────────────────────────────────────────────────────────────
 
 const VOUCHER_STATUS_COLOR: Record<string, { bg: string; fg: string; border: string }> = {
-  SUCCESSFUL: { bg: '#F0FDF4', fg: '#16A34A', border: '#BBF7D0' },
-  FAILED:     { bg: '#FEF2F2', fg: '#DC2626', border: '#FECACA' },
-  CREATED:    { bg: '#EEF2FF', fg: '#4338CA', border: '#C7D2FE' },
+  SUCCESSFUL: { bg: 'var(--status-green-bg)',   fg: 'var(--status-green)',   border: 'var(--status-green-border)'   },
+  FAILED:     { bg: 'var(--status-red-bg)',     fg: 'var(--status-red)',     border: 'var(--status-red-border)'     },
+  CREATED:    { bg: 'var(--status-pending-bg)', fg: 'var(--status-pending)', border: 'var(--status-pending-border)' },
 };
 
 function VoucherCard({ seg }: { seg: BEVoucherSegment }) {
@@ -215,8 +215,8 @@ function VoucherCard({ seg }: { seg: BEVoucherSegment }) {
   const sc = VOUCHER_STATUS_COLOR[seg.data.status] ?? VOUCHER_STATUS_COLOR.CREATED;
   return (
     <div style={{
-      borderRadius: 10, border: '1px solid var(--border-strong)', background: '#fff',
-      borderLeft: `3px solid ${seg.error ? '#EF4444' : color}`,
+      borderRadius: 10, border: '1px solid var(--border-strong)', background: 'var(--bg-surface)',
+      borderLeft: `3px solid ${seg.error ? 'var(--status-red)' : color}`,
       padding: '14px 16px',
     }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
@@ -242,7 +242,7 @@ function VoucherCard({ seg }: { seg: BEVoucherSegment }) {
         </span>
       </div>
       {seg.data.errorMessage && (
-        <div style={{ marginTop: 8, fontSize: 11, color: '#DC2626', fontStyle: 'italic' }}>
+        <div style={{ marginTop: 8, fontSize: 11, color: 'var(--status-red)', fontStyle: 'italic' }}>
           {seg.data.errorMessage}
         </div>
       )}
@@ -255,8 +255,8 @@ function VoucherCard({ seg }: { seg: BEVoucherSegment }) {
 function NoteCard({ seg, color }: { seg: BENoteSegment | BEHSKNoteSegment; color: string }) {
   return (
     <div style={{
-      borderRadius: 10, border: '1px solid var(--border-strong)', background: '#fff',
-      borderLeft: `3px solid ${seg.error ? '#EF4444' : color}`,
+      borderRadius: 10, border: '1px solid var(--border-strong)', background: 'var(--bg-surface)',
+      borderLeft: `3px solid ${seg.error ? 'var(--status-red)' : color}`,
       padding: '12px 16px',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
@@ -266,7 +266,7 @@ function NoteCard({ seg, color }: { seg: BENoteSegment | BEHSKNoteSegment; color
         <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
           <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} />
           {seg.error ? <SegmentErrorBadge errors={seg.errors} /> : (
-            <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: '#F0FDF4', color: '#16A34A', fontWeight: 600, border: '1px solid #BBF7D0' }}>OK</span>
+            <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: 'var(--status-green-bg)', color: 'var(--status-green)', fontWeight: 600, border: '1px solid var(--status-green-border)' }}>OK</span>
           )}
         </div>
       </div>
@@ -280,13 +280,13 @@ function RoomFeatureCard({ seg }: { seg: BERoomFeatureSegment }) {
   const color = '#059669';
   return (
     <div style={{
-      borderRadius: 10, border: '1px solid var(--border-strong)', background: '#fff',
-      borderLeft: `3px solid ${seg.error ? '#EF4444' : color}`,
+      borderRadius: 10, border: '1px solid var(--border-strong)', background: 'var(--bg-surface)',
+      borderLeft: `3px solid ${seg.error ? 'var(--status-red)' : color}`,
       padding: '14px 16px',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
         <div style={{ fontSize: 12, color: 'var(--fg-muted)' }}>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, background: 'var(--bg-surface)', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, background: 'var(--bg-elevated)', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)' }}>
             {seg.data.roomType}
           </span>
           <span style={{ marginLeft: 8, color: 'var(--fg-subtle)' }}>mask: {seg.data.featureMask}</span>
@@ -294,7 +294,7 @@ function RoomFeatureCard({ seg }: { seg: BERoomFeatureSegment }) {
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} />
           {seg.error ? <SegmentErrorBadge errors={seg.errors} /> : (
-            <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: '#F0FDF4', color: '#16A34A', fontWeight: 600, border: '1px solid #BBF7D0' }}>OK</span>
+            <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: 'var(--status-green-bg)', color: 'var(--status-green)', fontWeight: 600, border: '1px solid var(--status-green-border)' }}>OK</span>
           )}
         </div>
       </div>
@@ -302,7 +302,7 @@ function RoomFeatureCard({ seg }: { seg: BERoomFeatureSegment }) {
         {seg.data.codes.map(code => (
           <span key={code} style={{
             fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 5,
-            background: color + '14', color, border: `1px solid ${color}30`,
+            background: color + '18', color, border: `1px solid ${color}40`,
             letterSpacing: '0.04em',
           }}>
             {code}
@@ -319,18 +319,18 @@ function InventoryCard({ seg }: { seg: BEInventorySegment }) {
   const color = '#0891B2';
   return (
     <div style={{
-      borderRadius: 10, border: '1px solid var(--border-strong)', background: '#fff',
-      borderLeft: `3px solid ${seg.error ? '#EF4444' : color}`,
+      borderRadius: 10, border: '1px solid var(--border-strong)', background: 'var(--bg-surface)',
+      borderLeft: `3px solid ${seg.error ? 'var(--status-red)' : color}`,
       padding: '14px 16px',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, background: 'var(--bg-surface)', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)', color: 'var(--fg-muted)' }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, background: 'var(--bg-elevated)', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)', color: 'var(--fg-muted)' }}>
           {seg.data.roomType}
         </span>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} />
           {seg.error ? <SegmentErrorBadge errors={seg.errors} /> : (
-            <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: '#F0FDF4', color: '#16A34A', fontWeight: 600, border: '1px solid #BBF7D0' }}>OK</span>
+            <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: 'var(--status-green-bg)', color: 'var(--status-green)', fontWeight: 600, border: '1px solid var(--status-green-border)' }}>OK</span>
           )}
         </div>
       </div>
@@ -351,11 +351,11 @@ function InventoryCard({ seg }: { seg: BEInventorySegment }) {
 // ── Promo code cards ──────────────────────────────────────────────────────────
 
 function PromoCodeCard({ seg }: { seg: BEPromoCodeSegment }) {
-  const color = '#DB2777';
+  const color = '#BE185D';
   return (
     <div style={{
-      borderRadius: 10, border: '1px solid var(--border-strong)', background: '#fff',
-      borderLeft: `3px solid ${seg.error ? '#EF4444' : color}`,
+      borderRadius: 10, border: '1px solid var(--border-strong)', background: 'var(--bg-surface)',
+      borderLeft: `3px solid ${seg.error ? 'var(--status-red)' : color}`,
       padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
     }}>
       <span style={{
@@ -367,7 +367,7 @@ function PromoCodeCard({ seg }: { seg: BEPromoCodeSegment }) {
       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
         <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} />
         {seg.error ? <SegmentErrorBadge errors={seg.errors} /> : (
-          <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: '#F0FDF4', color: '#16A34A', fontWeight: 600, border: '1px solid #BBF7D0' }}>OK</span>
+          <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: 'var(--status-green-bg)', color: 'var(--status-green)', fontWeight: 600, border: '1px solid var(--status-green-border)' }}>OK</span>
         )}
       </div>
     </div>
@@ -382,8 +382,8 @@ function CompanyCard({ seg }: { seg: BECompanySegment }) {
   const address = [d.street, d.city, d.postalCode, d.country].filter(Boolean).join(', ');
   return (
     <div style={{
-      borderRadius: 10, border: '1px solid var(--border-strong)', background: '#fff',
-      borderLeft: `3px solid ${seg.error ? '#EF4444' : color}`,
+      borderRadius: 10, border: '1px solid var(--border-strong)', background: 'var(--bg-surface)',
+      borderLeft: `3px solid ${seg.error ? 'var(--status-red)' : color}`,
       padding: '14px 16px',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
@@ -394,7 +394,7 @@ function CompanyCard({ seg }: { seg: BECompanySegment }) {
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} />
           {seg.error ? <SegmentErrorBadge errors={seg.errors} /> : (
-            <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: '#F0FDF4', color: '#16A34A', fontWeight: 600, border: '1px solid #BBF7D0' }}>OK</span>
+            <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: 'var(--status-green-bg)', color: 'var(--status-green)', fontWeight: 600, border: '1px solid var(--status-green-border)' }}>OK</span>
           )}
         </div>
       </div>
@@ -477,7 +477,7 @@ export default function ReservationCheckDetailPage({ params }: { params: Promise
       <Link href="/reception/reservation-checks" style={{ fontSize: 13, color: 'var(--fg-muted)', textDecoration: 'none' }}>
         ← Reservation Checks
       </Link>
-      <div style={{ marginTop: 24, padding: '14px 18px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, color: '#DC2626', fontSize: 13 }}>
+      <div style={{ marginTop: 24, padding: '14px 18px', background: 'var(--status-red-bg)', border: '1px solid var(--status-red-border)', borderRadius: 8, color: 'var(--status-red)', fontSize: 13 }}>
         {error}
       </div>
     </div>
@@ -537,17 +537,17 @@ export default function ReservationCheckDetailPage({ params }: { params: Promise
       {issues.length > 0 && (
         <div style={{
           padding: '12px 16px', borderRadius: 8, marginBottom: 22,
-          background: r.status === 'RED' ? '#FEF2F2' : '#FEFCE8',
-          border: `1px solid ${r.status === 'RED' ? '#FECACA' : '#FDE68A'}`,
+          background: r.status === 'RED' ? 'var(--status-red-bg)' : 'var(--status-yellow-bg)',
+          border: `1px solid ${r.status === 'RED' ? 'var(--status-red-border)' : 'var(--status-yellow-border)'}`,
           display: 'flex', alignItems: 'center', gap: 10,
         }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-            stroke={r.status === 'RED' ? '#DC2626' : '#CA8A04'}
+            stroke={r.status === 'RED' ? 'var(--status-red)' : 'var(--status-yellow)'}
             strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
             <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
-          <span style={{ fontWeight: 600, fontSize: 13, color: r.status === 'RED' ? '#DC2626' : '#CA8A04' }}>
+          <span style={{ fontWeight: 600, fontSize: 13, color: r.status === 'RED' ? 'var(--status-red)' : 'var(--status-yellow)' }}>
             {issues.length} check{issues.length > 1 ? 's' : ''} require attention:&nbsp;
           </span>
           <span style={{ fontSize: 13, color: 'var(--fg-muted)' }}>
@@ -558,7 +558,7 @@ export default function ReservationCheckDetailPage({ params }: { params: Promise
 
       {/* Info + note */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
-        <div style={{ background: '#fff', border: '1px solid var(--border-strong)', borderRadius: 10, padding: '18px 20px' }}>
+        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-strong)', borderRadius: 10, padding: '18px 20px' }}>
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--fg-subtle)', marginBottom: 8 }}>
             Reservation
           </div>
@@ -572,7 +572,7 @@ export default function ReservationCheckDetailPage({ params }: { params: Promise
           <InfoItem label="Guests" value={`${r.adultCount} adult${r.adultCount !== 1 ? 's' : ''}${r.childCount > 0 ? `, ${r.childCount} child${r.childCount !== 1 ? 'ren' : ''}` : ''}`} />
         </div>
 
-        <div style={{ background: '#fff', border: '1px solid var(--border-strong)', borderRadius: 10, padding: '18px 20px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-strong)', borderRadius: 10, padding: '18px 20px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--fg-subtle)', marginBottom: 12 }}>
             Guest Note
           </div>
@@ -580,7 +580,7 @@ export default function ReservationCheckDetailPage({ params }: { params: Promise
             <>
               <div style={{
                 fontSize: 13, color: 'var(--fg)', lineHeight: 1.65, padding: '12px 14px',
-                background: 'var(--bg-surface)', borderRadius: 7, border: '1px solid var(--border)',
+                background: 'var(--bg-elevated)', borderRadius: 7, border: '1px solid var(--border)',
                 flex: 1, fontStyle: 'italic', whiteSpace: 'pre-wrap',
               }}>
                 "{r.customerNote}"
@@ -641,7 +641,7 @@ export default function ReservationCheckDetailPage({ params }: { params: Promise
               {totalSegments} total
             </span>
             {erroredSegments > 0 && (
-              <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', fontWeight: 600 }}>
+              <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: 'var(--status-red-bg)', border: '1px solid var(--status-red-border)', color: 'var(--status-red)', fontWeight: 600 }}>
                 {erroredSegments} error{erroredSegments !== 1 ? 's' : ''}
               </span>
             )}
@@ -724,7 +724,7 @@ export default function ReservationCheckDetailPage({ params }: { params: Promise
 
           {/* Promo Codes */}
           <div>
-            <SegmentHeader color="#DB2777" label="Promo Codes" count={r.promoCodes.length}
+            <SegmentHeader color="#BE185D" label="Promo Codes" count={r.promoCodes.length}
               icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>}
             />
             {r.promoCodes.length === 0 ? <EmptySegment label="promo codes" /> : (

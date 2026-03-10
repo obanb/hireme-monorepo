@@ -15,6 +15,7 @@ import { mountSwagger } from "./swagger";
 import { resolvers } from "./resolvers";
 import { frontdeskRouter } from "./frontdesk/routes";
 import { startFrontdeskWorker } from "./frontdesk/mq";
+import { pdfRouter } from "./pdf/routes";
 
 const schemaStr = readFileSync(join(__dirname, "schema.graphql"), "utf-8");
 const typeDefs = gql(schemaStr);
@@ -36,6 +37,7 @@ export async function startServer(): Promise<void> {
 
   // REST routes under /api
   app.use("/api/frontdesk", frontdeskRouter);
+  app.use("/api/pdf", pdfRouter);
 
   // Swagger UI at /docs
   mountSwagger(app);

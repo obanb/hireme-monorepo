@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 interface NavItem {
   label: string;
@@ -14,11 +15,12 @@ interface NavGroup {
   items: NavItem[];
 }
 
-function Icon({ d }: { d: string }) {
+function Icon({ d, d2 }: { d: string; d2?: string }) {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
       <path d={d} />
+      {d2 && <path d={d2} />}
     </svg>
   );
 }
@@ -30,7 +32,7 @@ const nav: NavGroup[] = [
       {
         label: 'Dashboard',
         href: '/reception',
-        icon: <Icon d="M3 3h7v7H3V3zm11 0h7v7h-7V3zM3 14h7v7H3v-7zm11 3a3 3 0 100 0.001" />,
+        icon: <Icon d="M3 3h7v7H3V3zm11 0h7v7h-7V3zM3 14h7v7H3v-7zm14 3a3 3 0 100 0.001" />,
       },
     ],
   },
@@ -47,21 +49,54 @@ const nav: NavGroup[] = [
         href: '/reception/arriving-guests',
         icon: <Icon d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />,
       },
+      {
+        label: 'Registration Cards',
+        href: '/reception/registration-cards',
+        icon: <Icon d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0" />,
+      },
     ],
   },
 ];
 
+function HotelMark() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+      {/* Building silhouette */}
+      <rect x="4" y="10" width="20" height="16" rx="1" stroke="var(--accent)" strokeWidth="1.5" fill="var(--accent-light)" />
+      {/* Roof peak */}
+      <path d="M2 11L14 3l12 8" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      {/* Door */}
+      <rect x="11" y="19" width="6" height="7" rx="0.5" stroke="var(--accent)" strokeWidth="1.2" />
+      {/* Windows row */}
+      <rect x="6" y="13" width="3" height="3" rx="0.5" fill="var(--accent)" opacity="0.6" />
+      <rect x="12.5" y="13" width="3" height="3" rx="0.5" fill="var(--accent)" opacity="0.6" />
+      <rect x="19" y="13" width="3" height="3" rx="0.5" fill="var(--accent)" opacity="0.6" />
+    </svg>
+  );
+}
+
 export default function Sidebar() {
   const pathname = usePathname();
+  const [time, setTime] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setTime(new Date());
+    const id = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const isActive = (href: string) =>
     href === '/reception' ? pathname === href : pathname.startsWith(href);
+
+  const timeStr = time
+    ? time.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    : '--:--:--';
 
   return (
     <aside style={{
       width: 'var(--sidebar-width)',
       background: 'var(--sidebar-bg)',
-      borderRight: '1px solid var(--border-strong)',
+      borderRight: '1px solid var(--border)',
       display: 'flex',
       flexDirection: 'column',
       flexShrink: 0,
@@ -70,54 +105,43 @@ export default function Sidebar() {
       top: 0,
       overflowY: 'auto',
     }}>
+
       {/* Logo */}
-      <div style={{
-        padding: '22px 20px 18px',
-        borderBottom: '1px solid var(--border)',
-      }}>
+      <div style={{ padding: '20px 18px 16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 30, height: 30, borderRadius: 6,
-            background: 'var(--accent)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0,
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white"
-              strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-              <path d="M9 22V12h6v10"/>
-            </svg>
-          </div>
+          <HotelMark />
           <div>
             <div style={{
               fontFamily: 'var(--font-display)',
-              fontWeight: 600,
-              fontSize: 15,
+              fontWeight: 700,
+              fontSize: 14,
               color: 'var(--fg)',
               letterSpacing: '-0.01em',
-              lineHeight: 1.2,
+              lineHeight: 1.1,
             }}>
               Reception
             </div>
-            <div style={{ fontSize: 11, color: 'var(--fg-subtle)', marginTop: 1, letterSpacing: '0.03em' }}>
-              Hotel Operations
+            <div style={{ fontSize: 10, color: 'var(--fg-subtle)', marginTop: 2, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+              Hotel Ops
             </div>
           </div>
         </div>
       </div>
 
+      <div style={{ height: 1, background: 'var(--border)', margin: '0 0' }} />
+
       {/* Navigation */}
-      <nav style={{ padding: '14px 10px', flex: 1 }}>
-        {nav.map((group) => (
-          <div key={group.section} style={{ marginBottom: 20 }}>
+      <nav style={{ padding: '12px 8px', flex: 1 }}>
+        {nav.map((group, gi) => (
+          <div key={group.section} style={{ marginBottom: gi < nav.length - 1 ? 16 : 0 }}>
             <div style={{
-              fontSize: 10,
-              fontWeight: 600,
-              letterSpacing: '0.09em',
+              fontSize: 9,
+              fontWeight: 700,
+              letterSpacing: '0.11em',
               textTransform: 'uppercase',
               color: 'var(--fg-subtle)',
               padding: '0 10px',
-              marginBottom: 4,
+              marginBottom: 5,
             }}>
               {group.section}
             </div>
@@ -130,27 +154,33 @@ export default function Sidebar() {
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 9,
+                    gap: 8,
                     padding: '7px 10px',
-                    borderRadius: 6,
+                    borderRadius: 7,
                     color: active ? 'var(--accent)' : 'var(--fg-muted)',
                     background: active ? 'var(--accent-light)' : 'transparent',
                     textDecoration: 'none',
                     fontSize: 13,
-                    fontWeight: active ? 500 : 400,
-                    transition: 'all 0.12s',
+                    fontWeight: active ? 600 : 400,
+                    transition: 'all 0.1s',
                     marginBottom: 1,
+                    position: 'relative',
+                    borderLeft: active ? '2.5px solid var(--accent)' : '2.5px solid transparent',
                   }}
                   onMouseEnter={e => {
-                    if (!active) (e.currentTarget as HTMLElement).style.background = 'var(--bg-elevated)';
-                    if (!active) (e.currentTarget as HTMLElement).style.color = 'var(--fg)';
+                    if (!active) {
+                      (e.currentTarget as HTMLElement).style.background = 'var(--bg-hover)';
+                      (e.currentTarget as HTMLElement).style.color = 'var(--fg)';
+                    }
                   }}
                   onMouseLeave={e => {
-                    if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent';
-                    if (!active) (e.currentTarget as HTMLElement).style.color = 'var(--fg-muted)';
+                    if (!active) {
+                      (e.currentTarget as HTMLElement).style.background = 'transparent';
+                      (e.currentTarget as HTMLElement).style.color = 'var(--fg-muted)';
+                    }
                   }}
                 >
-                  <span style={{ display: 'flex', flexShrink: 0 }}>{item.icon}</span>
+                  <span style={{ display: 'flex', flexShrink: 0, opacity: active ? 1 : 0.65 }}>{item.icon}</span>
                   {item.label}
                 </Link>
               );
@@ -159,16 +189,27 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Footer */}
+      {/* Footer with live clock */}
       <div style={{
-        padding: '12px 20px',
+        padding: '12px 18px 16px',
         borderTop: '1px solid var(--border)',
-        fontSize: 11,
-        color: 'var(--fg-subtle)',
-        letterSpacing: '0.02em',
       }}>
-        Reception v1.0
+        <div style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: 16,
+          fontWeight: 600,
+          color: 'var(--fg)',
+          letterSpacing: '0.04em',
+          lineHeight: 1,
+          marginBottom: 4,
+        }}>
+          {timeStr}
+        </div>
+        <div style={{ fontSize: 10, color: 'var(--fg-subtle)', letterSpacing: '0.03em' }}>
+          {time ? time.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }) : ''}
+        </div>
       </div>
+
     </aside>
   );
 }

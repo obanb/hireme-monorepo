@@ -74,12 +74,11 @@ const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-// Tier → bar color
 const TIER_COLORS: Record<number, { bar: string; text: string; border: string }> = {
-  1: { bar: '#F0EEE9', text: '#78716C', border: '#D6D3CE' },
-  2: { bar: '#DBEAFE', text: '#1D4ED8', border: '#BFDBFE' },
-  3: { bar: '#FEF3C7', text: '#B45309', border: '#FDE68A' },
-  4: { bar: '#EDE9FE', text: '#6D28D9', border: '#DDD6FE' },
+  1: { bar: '#F1F5F9', text: '#64748B', border: '#CBD5E1' },
+  2: { bar: '#EFF6FF', text: '#3B82F6', border: '#BFDBFE' },
+  3: { bar: '#FFFBEB', text: '#D97706', border: '#FDE68A' },
+  4: { bar: '#F5F3FF', text: '#7C3AED', border: '#DDD6FE' },
 };
 
 // ── Tooltip ────────────────────────────────────────────────────────────────────
@@ -92,8 +91,8 @@ function GuestTooltip({ guest, visible }: { guest: ArrivingGuest; visible: boole
       bottom: 'calc(100% + 8px)',
       left: '50%',
       transform: 'translateX(-50%)',
-      background: '#1C1917',
-      color: '#fff',
+      background: '#1E293B',
+      color: '#F8FAFC',
       borderRadius: 8,
       padding: '10px 14px',
       width: 220,
@@ -101,25 +100,25 @@ function GuestTooltip({ guest, visible }: { guest: ArrivingGuest; visible: boole
       pointerEvents: 'none',
       opacity: visible ? 1 : 0,
       transition: 'opacity 0.12s',
-      boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+      boxShadow: '0 8px 24px rgba(0,0,0,0.22)',
     }}>
       <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6 }}>
         {guest.firstname} {guest.surname}
         {guest.guests.length > 1 && (
-          <span style={{ color: '#A8A29E', fontWeight: 400 }}> +{guest.guests.length - 1}</span>
+          <span style={{ color: '#94A3B8', fontWeight: 400 }}> +{guest.guests.length - 1}</span>
         )}
       </div>
-      <div style={{ fontSize: 11, color: '#A8A29E', lineHeight: 1.7 }}>
+      <div style={{ fontSize: 11, color: '#94A3B8', lineHeight: 1.7 }}>
         <div>#{guest.bookingId} · {guest.hotelName.replace('OREA ', '')}</div>
         <div>{guest.arrival} → {guest.departure} ({nights}n)</div>
         <div>{guest.paxCountAdults}A{guest.paxCountChildren > 0 ? ` + ${guest.paxCountChildren}C` : ''} · {guest.roomType} · {guest.roomRateCode}</div>
-        {guest.benefits.length > 0 && <div style={{ color: '#86EFAC' }}>{guest.benefits.join(', ')}</div>}
-        {guest.inventoryItems.length > 0 && <div style={{ color: '#6EE7B7' }}>{guest.inventoryItems.join(', ')}</div>}
+        {guest.benefits.length > 0 && <div style={{ color: '#6EE7B7' }}>{guest.benefits.join(', ')}</div>}
+        {guest.inventoryItems.length > 0 && <div style={{ color: '#7DD3FC' }}>{guest.inventoryItems.join(', ')}</div>}
       </div>
       {/* arrow */}
       <div style={{
         position: 'absolute', bottom: -5, left: '50%', transform: 'translateX(-50%)',
-        width: 10, height: 10, background: '#1C1917',
+        width: 10, height: 10, background: '#1E293B',
         clipPath: 'polygon(0 0, 100% 0, 50% 100%)',
       }} />
     </div>
@@ -165,9 +164,9 @@ function GanttBar({ guest, days, colWidth }: GanttBarProps) {
         bottom: 6,
         borderRadius: 6,
         background: noRoom
-          ? 'repeating-linear-gradient(45deg, #FEF3C7, #FEF3C7 4px, #FDE68A 4px, #FDE68A 8px)'
+          ? 'repeating-linear-gradient(45deg, rgba(245,158,11,0.18), rgba(245,158,11,0.18) 4px, rgba(245,158,11,0.08) 4px, rgba(245,158,11,0.08) 8px)'
           : tier.bar,
-        border: `1.5px ${noRoom ? 'dashed' : 'solid'} ${noRoom ? '#F59E0B' : tier.border}`,
+        border: `1.5px ${noRoom ? 'dashed' : 'solid'} ${noRoom ? 'rgba(245,158,11,0.6)' : tier.border}`,
         display: 'flex',
         alignItems: 'center',
         paddingLeft: 8,
@@ -187,7 +186,7 @@ function GanttBar({ guest, days, colWidth }: GanttBarProps) {
         <span style={{
           fontFamily: 'var(--font-mono)', fontSize: 10.5, fontWeight: 600,
           color: tier.text,
-          background: 'rgba(255,255,255,0.7)',
+          background: 'rgba(0,0,0,0.08)',
           borderRadius: 3, padding: '1px 5px',
           flexShrink: 0,
         }}>
@@ -195,7 +194,7 @@ function GanttBar({ guest, days, colWidth }: GanttBarProps) {
         </span>
       ) : (
         <span style={{
-          fontSize: 10, color: '#B45309',
+          fontSize: 10, color: 'var(--status-yellow)',
           display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0,
         }}>
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -209,7 +208,7 @@ function GanttBar({ guest, days, colWidth }: GanttBarProps) {
       {width > 100 && (
         <span style={{
           fontSize: 11, fontWeight: 500,
-          color: noRoom ? '#92400E' : tier.text,
+          color: noRoom ? 'var(--status-yellow)' : tier.text,
           overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
         }}>
           {guest.firstname} {guest.surname}
@@ -220,7 +219,7 @@ function GanttBar({ guest, days, colWidth }: GanttBarProps) {
       {isIn && (
         <span style={{
           width: 6, height: 6, borderRadius: '50%',
-          background: '#059669', flexShrink: 0, marginLeft: 'auto', marginRight: 6,
+          background: 'var(--status-green)', flexShrink: 0, marginLeft: 'auto', marginRight: 6,
         }} title="Checked in" />
       )}
 
@@ -292,7 +291,7 @@ function HotelGroup({ hotel, guests, days, colWidth, todayIso }: HotelGroupProps
               width: colWidth, flexShrink: 0,
               borderLeft: '1px solid var(--border)',
               height: 28,
-              background: d === todayIso ? 'rgba(29,53,87,0.04)' : 'transparent',
+              background: d === todayIso ? 'rgba(14,165,233,0.06)' : 'transparent',
             }} />
           ))}
         </div>
@@ -337,7 +336,7 @@ function HotelGroup({ hotel, guests, days, colWidth, todayIso }: HotelGroupProps
               <div key={d} style={{
                 width: colWidth, flexShrink: 0,
                 borderLeft: '1px solid var(--border)',
-                background: d === todayIso ? 'rgba(29,53,87,0.025)' : 'transparent',
+                background: d === todayIso ? 'rgba(14,165,233,0.04)' : 'transparent',
               }} />
             ))}
             {/* Today vertical line */}
@@ -346,7 +345,7 @@ function HotelGroup({ hotel, guests, days, colWidth, todayIso }: HotelGroupProps
                 position: 'absolute',
                 left: days.indexOf(todayIso) * colWidth + Math.floor(colWidth / 2),
                 top: 0, bottom: 0, width: 2,
-                background: 'rgba(29,53,87,0.18)',
+                background: 'rgba(14,165,233,0.35)',
                 pointerEvents: 'none',
                 zIndex: 4,
               }} />
@@ -468,16 +467,16 @@ export default function CalendarPage() {
             </span>
             {noRoomCount > 0 && (
               <span style={{
-                background: '#FEF3C7', color: '#B45309',
+                background: 'var(--status-yellow-bg)', color: 'var(--status-yellow)',
                 borderRadius: 6, padding: '3px 10px', fontWeight: 600,
-                border: '1px dashed #F59E0B',
+                border: '1px dashed var(--status-yellow-border)',
               }}>
                 ⚠ {noRoomCount} no room
               </span>
             )}
             {checkedInCount > 0 && (
               <span style={{
-                background: '#D1FAE5', color: '#059669',
+                background: 'var(--status-green-bg)', color: 'var(--status-green)',
                 borderRadius: 6, padding: '3px 10px', fontWeight: 600,
               }}>
                 ● {checkedInCount} checked in
@@ -548,11 +547,11 @@ export default function CalendarPage() {
       }}>
         <span style={{ fontWeight: 600, color: 'var(--fg-subtle)', letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: 10 }}>Legend</span>
         {[
-          { label: 'Newcomer',  bg: '#F0EEE9', border: '#D6D3CE', text: '#78716C', dashed: false },
-          { label: 'Silver',    bg: '#DBEAFE', border: '#BFDBFE', text: '#1D4ED8', dashed: false },
-          { label: 'Gold',      bg: '#FEF3C7', border: '#FDE68A', text: '#B45309', dashed: false },
-          { label: 'Platinum',  bg: '#EDE9FE', border: '#DDD6FE', text: '#6D28D9', dashed: false },
-          { label: 'No room',   bg: 'repeating-linear-gradient(45deg, #FEF3C7, #FEF3C7 4px, #FDE68A 4px, #FDE68A 8px)', border: '#F59E0B', text: '#92400E', dashed: true },
+          { label: 'Newcomer',  bg: '#F1F5F9', border: '#CBD5E1', text: '#64748B', dashed: false },
+          { label: 'Silver',    bg: '#EFF6FF', border: '#BFDBFE', text: '#3B82F6', dashed: false },
+          { label: 'Gold',      bg: '#FFFBEB', border: '#FDE68A', text: '#D97706', dashed: false },
+          { label: 'Platinum',  bg: '#F5F3FF', border: '#DDD6FE', text: '#7C3AED', dashed: false },
+          { label: 'No room',   bg: 'repeating-linear-gradient(45deg, rgba(245,158,11,0.18), rgba(245,158,11,0.18) 4px, rgba(245,158,11,0.08) 4px, rgba(245,158,11,0.08) 8px)', border: 'rgba(245,158,11,0.6)', text: 'var(--status-yellow)', dashed: true },
         ].map(({ label, bg, border, text, dashed }) => (
           <span key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <span style={{
@@ -565,7 +564,7 @@ export default function CalendarPage() {
           </span>
         ))}
         <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#059669', flexShrink: 0 }} />
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--status-green)', flexShrink: 0 }} />
           Checked in
         </span>
       </div>

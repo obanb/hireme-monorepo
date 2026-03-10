@@ -63,24 +63,24 @@ const STATUS_FILTERS: StatusFilter[] = ['ALL', 'RED', 'YELLOW', 'GREEN', 'PENDIN
 const statusOrder: Record<CheckReservationStatus, number> = { RED: 0, YELLOW: 1, PENDING: 2, GREEN: 3, NONE: 4 };
 
 const filterColors: Record<string, { solid: string; text: string; dot: string }> = {
-  ALL:     { solid: '#1D3557', text: '#fff', dot: '#1D3557' },
-  RED:     { solid: '#DC2626', text: '#fff', dot: '#DC2626' },
-  YELLOW:  { solid: '#CA8A04', text: '#fff', dot: '#CA8A04' },
-  GREEN:   { solid: '#16A34A', text: '#fff', dot: '#16A34A' },
-  PENDING: { solid: '#4F46E5', text: '#fff', dot: '#4F46E5' },
-  NONE:    { solid: '#6B7280', text: '#fff', dot: '#9CA3AF' },
+  ALL:     { solid: '#0EA5E9', text: '#fff',    dot: '#0EA5E9' },
+  RED:     { solid: '#DC2626', text: '#fff',    dot: '#DC2626' },
+  YELLOW:  { solid: '#D97706', text: '#fff',    dot: '#D97706' },
+  GREEN:   { solid: '#059669', text: '#fff',    dot: '#059669' },
+  PENDING: { solid: '#6D28D9', text: '#fff',    dot: '#6D28D9' },
+  NONE:    { solid: '#64748B', text: '#fff',    dot: '#64748B' },
 };
 
 const rowAccent: Record<CheckReservationStatus, string> = {
-  RED: '#DC2626', YELLOW: '#CA8A04', GREEN: '#16A34A', PENDING: '#4F46E5', NONE: '#E5E7EB',
+  RED: '#DC2626', YELLOW: '#D97706', GREEN: '#059669', PENDING: '#6D28D9', NONE: '#94A3B8',
 };
 
 const providerMeta: Record<string, { label: string; color: string }> = {
-  'BOOKING_ENGINE': { label: 'Direct',      color: '#1D3557' },
-  'BOOKING_COM':    { label: 'Booking.com', color: '#003B95' },
-  'EXPEDIA':        { label: 'Expedia',     color: '#00355F' },
-  'HOTEL_TIME':     { label: 'HotelTime',   color: '#7C3AED' },
-  'AIRBNB':         { label: 'Airbnb',      color: '#E61E4D' },
+  'BOOKING_ENGINE': { label: 'Direct',      color: '#0EA5E9' },
+  'BOOKING_COM':    { label: 'Booking.com', color: '#0070C9' },
+  'EXPEDIA':        { label: 'Expedia',     color: '#D97706' },
+  'HOTEL_TIME':     { label: 'HotelTime',   color: '#059669' },
+  'AIRBNB':         { label: 'Airbnb',      color: '#E11D48' },
 };
 
 const segmentMeta = [
@@ -90,7 +90,7 @@ const segmentMeta = [
   { key: 'hskNotes',     label: 'HSK Notes',   color: '#EA580C' },
   { key: 'roomFeatures', label: 'Features',    color: '#059669' },
   { key: 'inventories',  label: 'Inventories', color: '#0891B2' },
-  { key: 'promoCodes',   label: 'Promo',       color: '#DB2777' },
+  { key: 'promoCodes',   label: 'Promo',       color: '#BE185D' },
   { key: 'companies',    label: 'Companies',   color: '#4F46E5' },
 ] as const;
 
@@ -126,7 +126,7 @@ const DOT_CHECKS = [
 ] as const;
 
 const dotColor: Record<CheckReservationStatus, string> = {
-  GREEN: '#16A34A', YELLOW: '#CA8A04', RED: '#DC2626', PENDING: '#4F46E5', NONE: '#D1D5DB',
+  GREEN: 'var(--status-green)', YELLOW: 'var(--status-yellow)', RED: 'var(--status-red)', PENDING: 'var(--status-pending)', NONE: 'var(--fg-subtle)',
 };
 
 function CheckDots({ r }: { r: CheckReservationBooking }) {
@@ -147,7 +147,7 @@ function CheckDots({ r }: { r: CheckReservationBooking }) {
               <div style={{
                 position: 'absolute', bottom: 'calc(100% + 7px)',
                 left: '50%', transform: 'translateX(-50%)',
-                background: '#1C1917', color: '#F5F5F4',
+                background: '#1E293B', color: '#F8FAFC',
                 fontSize: 11, fontWeight: 500, whiteSpace: 'nowrap',
                 padding: '4px 8px', borderRadius: 5,
                 pointerEvents: 'none', zIndex: 200,
@@ -160,7 +160,7 @@ function CheckDots({ r }: { r: CheckReservationBooking }) {
                   position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
                   width: 0, height: 0,
                   borderLeft: '4px solid transparent', borderRight: '4px solid transparent',
-                  borderTop: '4px solid #1C1917',
+                  borderTop: '4px solid #1E293B',
                 }} />
               </div>
             )}
@@ -202,7 +202,7 @@ function NotePreview({ note }: { note: string | null }) {
       {visible && (
         <div style={{
           position: 'absolute', bottom: 'calc(100% + 8px)', left: 0, zIndex: 100,
-          background: '#1C1917', color: '#F5F5F4', fontSize: 12, lineHeight: 1.55,
+          background: '#1E293B', color: '#F8FAFC', fontSize: 12, lineHeight: 1.55,
           fontStyle: 'italic', padding: '10px 13px', borderRadius: 8, width: 280,
           boxShadow: '0 4px 20px rgba(0,0,0,0.18)', pointerEvents: 'none',
         }}>
@@ -211,7 +211,7 @@ function NotePreview({ note }: { note: string | null }) {
             position: 'absolute', top: '100%', left: 16,
             width: 0, height: 0,
             borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
-            borderTop: '6px solid #1C1917',
+            borderTop: '6px solid #1E293B',
           }} />
         </div>
       )}
@@ -227,21 +227,21 @@ function ErrorDot({ errors }: { errors: string[] }) {
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>
       <button onClick={e => { e.stopPropagation(); setOpen(o => !o); }} style={{
-        width: 16, height: 16, borderRadius: '50%', background: '#FEE2E2',
-        border: '1px solid #FCA5A5', cursor: 'pointer', display: 'flex',
+        width: 16, height: 16, borderRadius: '50%', background: 'var(--status-red-bg)',
+        border: '1px solid var(--status-red-border)', cursor: 'pointer', display: 'flex',
         alignItems: 'center', justifyContent: 'center', flexShrink: 0,
       }}>
-        <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#EF4444' }} />
+        <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--status-red)' }} />
       </button>
       {open && (
         <div style={{
           position: 'absolute', bottom: 'calc(100% + 6px)', right: 0, zIndex: 20,
-          background: '#1C1917', color: '#FCA5A5', fontSize: 10, lineHeight: 1.6,
+          background: '#1E293B', color: '#FCA5A5', fontSize: 10, lineHeight: 1.6,
           padding: '8px 10px', borderRadius: 6, width: 260,
           boxShadow: '0 6px 20px rgba(0,0,0,0.25)',
         }}>
           {errors.map((e, i) => <div key={i}>{e}</div>)}
-          <div style={{ position: 'absolute', top: -4, right: 8, width: 8, height: 8, background: '#1C1917', transform: 'rotate(45deg)' }} />
+          <div style={{ position: 'absolute', top: -4, right: 8, width: 8, height: 8, background: '#1E293B', transform: 'rotate(45deg)' }} />
         </div>
       )}
     </div>
@@ -253,9 +253,9 @@ function PanelSegmentRow({ color, ok, errors, children }: { color: string; ok: b
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
       padding: '7px 10px', borderRadius: 6,
-      background: ok ? '#fff' : '#FFF9F9',
-      border: `1px solid ${ok ? 'var(--border)' : '#FEE2E2'}`,
-      borderLeft: `3px solid ${ok ? color : '#EF4444'}`,
+      background: ok ? 'var(--bg-elevated)' : 'var(--status-red-bg)',
+      border: `1px solid ${ok ? 'var(--border)' : 'var(--status-red-border)'}`,
+      borderLeft: `3px solid ${ok ? color : 'var(--status-red)'}`,
     }}>
       <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
       {!ok && <ErrorDot errors={errors} />}
@@ -288,7 +288,7 @@ function PanelSegments({ d }: { d: ReservationCheckDetail }) {
           );
         })}
         {totalErrors > 0 && (
-          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: '#FEE2E2', color: '#DC2626', border: '1px solid #FCA5A5' }}>
+          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: 'var(--status-red-bg)', color: 'var(--status-red)', border: '1px solid var(--status-red-border)' }}>
             {totalErrors} error{totalErrors !== 1 ? 's' : ''}
           </span>
         )}
@@ -332,8 +332,8 @@ function PanelSegments({ d }: { d: ReservationCheckDetail }) {
                       </span>
                       <span style={{
                         fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 3,
-                        background: s.data.status === 'SUCCESSFUL' ? '#F0FDF4' : s.data.status === 'FAILED' ? '#FEF2F2' : '#EEF2FF',
-                        color: s.data.status === 'SUCCESSFUL' ? '#16A34A' : s.data.status === 'FAILED' ? '#DC2626' : '#4338CA',
+                        background: s.data.status === 'SUCCESSFUL' ? 'var(--status-green-bg)' : s.data.status === 'FAILED' ? 'var(--status-red-bg)' : 'var(--status-pending-bg)',
+                        color: s.data.status === 'SUCCESSFUL' ? 'var(--status-green)' : s.data.status === 'FAILED' ? 'var(--status-red)' : 'var(--status-pending)',
                       }}>
                         {s.data.status}
                       </span>
@@ -389,7 +389,7 @@ function PanelSegments({ d }: { d: ReservationCheckDetail }) {
                       {s.data.roomType}
                     </span>
                     {s.data.codes.map(c => (
-                      <span key={c} style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: '#05996914', color: '#059669', border: '1px solid #05996930' }}>
+                      <span key={c} style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: '#ECFDF5', color: '#059669', border: '1px solid #A7F3D0' }}>
                         {c}
                       </span>
                     ))}
@@ -409,7 +409,7 @@ function PanelSegments({ d }: { d: ReservationCheckDetail }) {
                 <PanelSegmentRow key={s.id} color="#0891B2" ok={!s.error} errors={s.errors}>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                     {s.data.inventories.map(item => (
-                      <span key={item.id} style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: '#0891B214', color: '#0891B2', border: '1px solid #0891B230', fontWeight: 600 }}>
+                      <span key={item.id} style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: '#ECFEFF', color: '#0891B2', border: '1px solid #A5F3FC', fontWeight: 600 }}>
                         ×{item.amount} {item.name}
                       </span>
                     ))}
@@ -423,11 +423,11 @@ function PanelSegments({ d }: { d: ReservationCheckDetail }) {
         {/* Promo Codes */}
         {d.promoCodes.length > 0 && (
           <div>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#DB2777', marginBottom: 6 }}>Promo Codes</div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#BE185D', marginBottom: 6 }}>Promo Codes</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {d.promoCodes.map((s: BEPromoCodeSegment) => (
-                <PanelSegmentRow key={s.id} color="#DB2777" ok={!s.error} errors={s.errors}>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 800, color: '#DB2777', letterSpacing: '0.1em' }}>
+                <PanelSegmentRow key={s.id} color="#BE185D" ok={!s.error} errors={s.errors}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 800, color: '#BE185D', letterSpacing: '0.1em' }}>
                     {s.data}
                   </span>
                 </PanelSegmentRow>
@@ -501,7 +501,7 @@ function PreviewPanel({
     <div style={{
       width: 400, flexShrink: 0,
       borderLeft: '1px solid var(--border-strong)',
-      background: '#FAFAF9',
+      background: 'var(--bg-surface)',
       display: 'flex', flexDirection: 'column',
       position: 'sticky', top: 0, height: '100vh',
       overflow: 'hidden',
@@ -510,7 +510,7 @@ function PreviewPanel({
       <div style={{
         padding: '14px 16px',
         borderBottom: '1px solid var(--border-strong)',
-        background: '#fff',
+        background: 'var(--bg-surface)',
         flexShrink: 0,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
       }}>
@@ -531,7 +531,7 @@ function PreviewPanel({
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               width: 28, height: 28, borderRadius: 6,
-              border: '1px solid var(--border-strong)', background: '#fff',
+              border: '1px solid var(--border-strong)', background: 'var(--bg-surface)',
               color: 'var(--fg-muted)', textDecoration: 'none', fontSize: 13,
             }}
           >
@@ -542,7 +542,7 @@ function PreviewPanel({
           <button onClick={onClose} title="Close" style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             width: 28, height: 28, borderRadius: 6,
-            border: '1px solid var(--border-strong)', background: '#fff',
+            border: '1px solid var(--border-strong)', background: 'var(--bg-surface)',
             color: 'var(--fg-muted)', cursor: 'pointer',
           }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -563,14 +563,14 @@ function PreviewPanel({
         )}
 
         {error && (
-          <div style={{ padding: '12px', background: '#FEF2F2', borderRadius: 8, color: '#DC2626', fontSize: 12 }}>{error}</div>
+          <div style={{ padding: '12px', background: 'var(--status-red-bg)', borderRadius: 8, color: 'var(--status-red)', fontSize: 12 }}>{error}</div>
         )}
 
         {data && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
             {/* Quick info */}
-            <div style={{ background: '#fff', border: '1px solid var(--border-strong)', borderRadius: 10, padding: '12px 14px' }}>
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-strong)', borderRadius: 10, padding: '12px 14px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px' }}>
                 {[
                   { label: 'Provider', value: <ProviderTag provider={data.provider} /> },
@@ -590,7 +590,7 @@ function PreviewPanel({
 
             {/* Guest note */}
             {data.customerNote && (
-              <div style={{ background: '#fff', border: '1px solid var(--border-strong)', borderRadius: 10, padding: '12px 14px' }}>
+              <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-strong)', borderRadius: 10, padding: '12px 14px' }}>
                 <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--fg-subtle)', marginBottom: 8 }}>
                   Guest Note
                 </div>
@@ -601,7 +601,7 @@ function PreviewPanel({
             )}
 
             {/* Segments */}
-            <div style={{ background: '#fff', border: '1px solid var(--border-strong)', borderRadius: 10, padding: '12px 14px' }}>
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-strong)', borderRadius: 10, padding: '12px 14px' }}>
               <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--fg-subtle)', marginBottom: 12 }}>
                 Booking Engine Segments
               </div>
@@ -632,7 +632,7 @@ function Skeleton() {
           ))}
         </div>
       </div>
-      <div style={{ background: '#fff', border: '1px solid var(--border-strong)', borderRadius: 10, overflow: 'hidden' }}>
+      <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-strong)', borderRadius: 10, overflow: 'hidden' }}>
         {[...Array(6)].map((_, i) => (
           <div key={i} style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', display: 'flex', gap: 16 }}>
             <div className="skeleton" style={{ width: 100, height: 16 }} />
@@ -795,7 +795,7 @@ export default function ReservationChecksPage() {
         </div>
 
         {error && (
-          <div style={{ padding: '12px 16px', borderRadius: 8, marginBottom: 20, background: '#FEF2F2', border: '1px solid #FECACA', fontSize: 13, color: '#DC2626' }}>
+          <div style={{ padding: '12px 16px', borderRadius: 8, marginBottom: 20, background: 'var(--status-red-bg)', border: '1px solid var(--status-red-border)', fontSize: 13, color: 'var(--status-red)' }}>
             {error}
           </div>
         )}
@@ -814,7 +814,7 @@ export default function ReservationChecksPage() {
               onChange={e => setSearch(e.target.value)}
               style={{
                 padding: '7px 12px 7px 30px', width: 220,
-                background: '#fff', border: '1px solid var(--border-strong)',
+                background: 'var(--bg-surface)', border: '1px solid var(--border-strong)',
                 borderRadius: 7, color: 'var(--fg)', fontSize: 13,
               }}
             />
@@ -855,13 +855,13 @@ export default function ReservationChecksPage() {
               display: 'flex', alignItems: 'center', gap: 6,
               padding: '5px 11px', borderRadius: 6, fontSize: 12, fontWeight: 500,
               cursor: 'pointer', transition: 'all 0.15s',
-              border: `1px solid ${showFlagged ? '#D97706' : 'var(--border-strong)'}`,
-              background: showFlagged ? '#FEF3C7' : '#fff',
-              color: showFlagged ? '#92400E' : 'var(--fg-muted)',
+              border: `1px solid ${showFlagged ? 'var(--status-yellow-border)' : 'var(--border-strong)'}`,
+              background: showFlagged ? 'var(--status-yellow-bg)' : 'var(--bg-surface)',
+              color: showFlagged ? 'var(--status-yellow)' : 'var(--fg-muted)',
             }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill={showFlagged ? '#F59E0B' : 'none'}
-              stroke={showFlagged ? '#D97706' : 'var(--fg-subtle)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill={showFlagged ? 'var(--status-yellow)' : 'none'}
+              stroke={showFlagged ? 'var(--status-yellow)' : 'var(--fg-subtle)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 18h6M10 22h4M12 2a7 7 0 0 1 7 7c0 2.7-1.5 5.1-3.8 6.4L15 17H9l-.2-1.6A7 7 0 0 1 5 9a7 7 0 0 1 7-7z"/>
             </svg>
             Review later
@@ -887,7 +887,7 @@ export default function ReservationChecksPage() {
         </div>
 
         {/* Table */}
-        <div style={{ background: '#fff', border: '1px solid var(--border-strong)', borderRadius: 10, overflow: 'hidden' }}>
+        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-strong)', borderRadius: 10, overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-strong)' }}>
@@ -1025,7 +1025,7 @@ export default function ReservationChecksPage() {
               <strong style={{ color: 'var(--fg)', fontWeight: 600 }}>{meta.total}</strong> reservations
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 11px', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: page === 1 ? 'not-allowed' : 'pointer', border: '1px solid var(--border-strong)', background: '#fff', color: page === 1 ? 'var(--fg-subtle)' : 'var(--fg)', opacity: page === 1 ? 0.45 : 1 }}>
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 11px', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: page === 1 ? 'not-allowed' : 'pointer', border: '1px solid var(--border-strong)', background: 'var(--bg-surface)', color: page === 1 ? 'var(--fg-subtle)' : 'var(--fg)', opacity: page === 1 ? 0.45 : 1 }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
                 Prev
               </button>
@@ -1042,7 +1042,7 @@ export default function ReservationChecksPage() {
                     : <button key={p} onClick={() => setPage(p as number)} style={{ width: 30, height: 28, borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer', border: `1px solid ${page === p ? 'var(--accent)' : 'var(--border-strong)'}`, background: page === p ? 'var(--accent)' : '#fff', color: page === p ? '#fff' : 'var(--fg)' }}>{p}</button>
                   )}
               </div>
-              <button onClick={() => setPage(p => Math.min(meta.totalPages, p + 1))} disabled={page === meta.totalPages} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 11px', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: page === meta.totalPages ? 'not-allowed' : 'pointer', border: '1px solid var(--border-strong)', background: '#fff', color: page === meta.totalPages ? 'var(--fg-subtle)' : 'var(--fg)', opacity: page === meta.totalPages ? 0.45 : 1 }}>
+              <button onClick={() => setPage(p => Math.min(meta.totalPages, p + 1))} disabled={page === meta.totalPages} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 11px', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: page === meta.totalPages ? 'not-allowed' : 'pointer', border: '1px solid var(--border-strong)', background: 'var(--bg-surface)', color: page === meta.totalPages ? 'var(--fg-subtle)' : 'var(--fg)', opacity: page === meta.totalPages ? 0.45 : 1 }}>
                 Next
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
               </button>

@@ -1,3 +1,61 @@
+# ── Registration Cards ────────────────────────────────────────────────────────
+
+type RegistrationCardHotel {
+  id:        Int!
+  name:      String!
+  nameShort: String!
+  street:    String
+  city:      String
+  zip:       String
+  country:   String
+}
+
+type RegistrationCard {
+  id:                   Int!
+  idCard:               Int!
+  firstname:            String!
+  surname:              String!
+  dateOfBirth:          String
+  phone:                String
+  email:                String
+  street:               String
+  city:                 String
+  zip:                  String
+  countryOfResidence:   String
+  nationality:          String
+  documentNumber:       String
+  visaNumber:           String
+  carPlate:             String
+  arrival:              String!
+  departure:            String!
+  reservationId:        Int!
+  hotel:                RegistrationCardHotel!
+  source:               String
+  room:                 String
+  purposeOfStay:        String
+  idStay:               String
+  isDataConfirmed:      Boolean!
+  isGDPRRead:           Boolean!
+  isHouseRulesAccepted: Boolean!
+}
+
+input RegistrationCardsFilter {
+  hotelId:     Int
+  hotelName:   String
+  arrival:     String
+  departure:   String
+  dateOfBirth: String
+  search:      String
+}
+
+type RegistrationCardsPage {
+  items:      [RegistrationCard!]!
+  total:      Int!
+  page:       Int!
+  limit:      Int!
+  totalPages: Int!
+}
+
 # ── Arriving Guests ───────────────────────────────────────────────────────────
 
 enum ArrivalPeriod {
@@ -300,6 +358,8 @@ type Query {
   checkReservation(originId: String!): CheckReservationBooking
   checkReservationDetail(originId: String!): ReservationCheckDetail
   arrivingGuests(filter: ArrivingGuestsFilter, page: Int, limit: Int): ArrivingGuestsPage!
+  registrationCards(filter: RegistrationCardsFilter, page: Int, limit: Int): RegistrationCardsPage!
+  registrationCard(id: Int!): RegistrationCard
 }
 
 type Mutation {

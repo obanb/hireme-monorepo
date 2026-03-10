@@ -109,18 +109,18 @@ const PERIOD_LABELS: Record<ArrivalPeriod, string> = {
 };
 
 const TIER_COLORS: Record<number, { bg: string; text: string; label: string }> = {
-  1: { bg: '#F5F5F4', text: '#78716C', label: 'Newcomer' },
-  2: { bg: '#EFF6FF', text: '#3B82F6', label: 'Silver' },
-  3: { bg: '#FFF8E1', text: '#CA8A04', label: 'Gold' },
+  1: { bg: '#F1F5F9', text: '#64748B', label: 'Newcomer' },
+  2: { bg: '#EFF6FF', text: '#3B82F6', label: 'Silver'   },
+  3: { bg: '#FFFBEB', text: '#D97706', label: 'Gold'     },
   4: { bg: '#F5F3FF', text: '#7C3AED', label: 'Platinum' },
 };
 
 const PROVIDER_COLORS: Record<string, string> = {
-  'Booking.com': '#003B95',
-  'Expedia':     '#FFB900',
-  'Direct':      '#1D3557',
+  'Booking.com': '#0070C9',
+  'Expedia':     '#D97706',
+  'Direct':      '#0EA5E9',
   'HotelTime':   '#059669',
-  'Airbnb':      '#FF385C',
+  'Airbnb':      '#E11D48',
 };
 
 function fmtDate(iso: string): string {
@@ -168,8 +168,10 @@ function RoomCell({ roomCode, roomState }: { roomCode: string | null; roomState:
         </span>
         {isCheckedIn && (
           <span style={{
-            fontSize: 10, fontWeight: 600, color: '#059669',
-            background: '#D1FAE5', borderRadius: 3, padding: '1px 5px',
+            fontSize: 10, fontWeight: 600,
+            color: 'var(--status-green)',
+            background: 'var(--status-green-bg)',
+            borderRadius: 3, padding: '1px 5px',
           }}>
             IN
           </span>
@@ -180,7 +182,7 @@ function RoomCell({ roomCode, roomState }: { roomCode: string | null; roomState:
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 4,
-      color: '#CA8A04', fontSize: 11,
+      color: 'var(--status-yellow)', fontSize: 11,
     }}>
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
@@ -382,7 +384,7 @@ function ArrivingGuestsInner() {
             textDecoration: 'none',
             fontSize: 13, fontWeight: 500,
             letterSpacing: '-0.01em',
-            boxShadow: '0 1px 4px rgba(29,53,87,0.25)',
+            boxShadow: 'var(--shadow-card)',
             transition: 'opacity 0.15s',
           }}
         >
@@ -505,9 +507,11 @@ function ArrivingGuestsInner() {
                   borderRadius: 6, border: 'none', cursor: 'pointer',
                   fontSize: 12, fontWeight: active ? 600 : 400,
                   background: active
-                    ? val === true ? '#059669' : val === false ? '#DC2626' : 'var(--accent)'
+                    ? val === true ? 'var(--status-green-bg)' : val === false ? 'var(--status-red-bg)' : 'var(--accent-light)'
                     : 'transparent',
-                  color: active ? '#fff' : 'var(--fg-muted)',
+                  color: active
+                    ? val === true ? 'var(--status-green)' : val === false ? 'var(--status-red)' : 'var(--accent)'
+                    : 'var(--fg-muted)',
                   transition: 'all 0.15s',
                   whiteSpace: 'nowrap',
                 }}
@@ -583,7 +587,7 @@ function ArrivingGuestsInner() {
             <div
               key={i}
               className="skeleton"
-              style={{ height: 52, borderRadius: 8, animationDelay: `${i * 0.05}s` }}
+              style={{ height: 52, borderRadius: 8 }}
             />
           ))}
         </div>
@@ -644,7 +648,6 @@ function ArrivingGuestsInner() {
               return (
                 <div
                   key={guest.id}
-                  className="animate-fade-up"
                   style={{
                     display: 'grid',
                     gridTemplateColumns: '90px 90px 1fr 1fr 90px 110px 80px 100px 1fr 1fr',
@@ -652,13 +655,12 @@ function ArrivingGuestsInner() {
                     padding: '12px 16px',
                     borderBottom: idx < visibleItems.length - 1 ? '1px solid var(--border)' : 'none',
                     alignItems: 'center',
-                    animationDelay: `${idx * 0.025}s`,
                     transition: 'background 0.1s',
-                    boxShadow: noRoom ? 'inset 3px 0 0 0 #F59E0B' : undefined,
-                    background: noRoom ? '#FFFBEB' : 'transparent',
+                    boxShadow: noRoom ? 'inset 3px 0 0 0 var(--status-yellow)' : undefined,
+                    background: noRoom ? 'rgba(245,158,11,0.07)' : 'var(--bg-surface)',
                   }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = noRoom ? '#FEF3C7' : 'var(--bg-surface)'}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = noRoom ? '#FFFBEB' : 'transparent'}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = noRoom ? 'rgba(245,158,11,0.12)' : 'var(--bg-hover)'}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = noRoom ? 'rgba(245,158,11,0.07)' : 'var(--bg-surface)'}
                 >
                   {/* Booking ID */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -746,12 +748,12 @@ function ArrivingGuestsInner() {
 
                   {/* Benefits */}
                   <div>
-                    <TagList items={guest.benefits} color="#1D3557" />
+                    <TagList items={guest.benefits} color="#60A5FA" />
                   </div>
 
                   {/* Inventory */}
                   <div>
-                    <TagList items={guest.inventoryItems} color="#059669" />
+                    <TagList items={guest.inventoryItems} color="#34D399" />
                   </div>
                 </div>
               );

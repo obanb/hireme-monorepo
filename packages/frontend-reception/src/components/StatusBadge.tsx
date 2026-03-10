@@ -34,13 +34,16 @@ export default function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
       letterSpacing: '0.01em',
       whiteSpace: 'nowrap',
     }}>
-      <span style={{
-        width: sm ? 5 : 6,
-        height: sm ? 5 : 6,
-        borderRadius: '50%',
-        background: c.dot,
-        flexShrink: 0,
-      }} />
+      <span
+        className={status === 'RED' ? 'status-dot-red' : undefined}
+        style={{
+          width: sm ? 5 : 6,
+          height: sm ? 5 : 6,
+          borderRadius: '50%',
+          background: c.dot,
+          flexShrink: 0,
+        }}
+      />
       {c.label}
     </span>
   );

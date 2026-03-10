@@ -28,30 +28,12 @@ const ARRIVALS_QUERY = `
 
 const statusOrder = { RED: 0, YELLOW: 1, PENDING: 2, GREEN: 3, NONE: 4 } as const;
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
 function greeting(): string {
   const h = new Date().getHours();
   if (h < 12) return 'Good morning';
   if (h < 17) return 'Good afternoon';
   return 'Good evening';
 }
-
-// ── Sub-components ─────────────────────────────────────────────────────────────
-
-function StatCard({ label, value, accent, sub }: { label: string; value: number | string; accent?: string; sub?: string }) {
-  return (
-    <div style={{ background: '#fff', border: '1px solid var(--border-strong)', borderRadius: 10, padding: '18px 22px' }}>
-      <div style={{ fontSize: 12, color: 'var(--fg-muted)', fontWeight: 500, marginBottom: 10, letterSpacing: '0.02em' }}>{label}</div>
-      <div style={{ fontSize: 30, fontWeight: 600, fontFamily: 'var(--font-display)', color: accent ?? 'var(--fg)', letterSpacing: '-0.03em', lineHeight: 1 }}>
-        {value}
-      </div>
-      {sub && <div style={{ fontSize: 12, color: 'var(--fg-subtle)', marginTop: 6 }}>{sub}</div>}
-    </div>
-  );
-}
-
-// ── Page ───────────────────────────────────────────────────────────────────────
 
 interface ArrivingGuestBrief {
   bookingId: number;
@@ -65,6 +47,40 @@ interface ArrivingGuestBrief {
   roomCode: string | null;
   roomState: string;
 }
+
+// ── Stat card with colored top accent ──────────────────────────────────────────
+
+function StatRailCard({ label, value, color, sub }: {
+  label: string;
+  value: number | string;
+  color?: string;
+  sub?: string;
+}) {
+  return (
+    <div style={{
+      background: '#FFFFFF',
+      borderRadius: 10,
+      boxShadow: 'var(--shadow-card)',
+      padding: '16px 18px',
+      borderTop: `3px solid ${color ?? 'var(--border-strong)'}`,
+    }}>
+      <div style={{
+        fontSize: 28,
+        fontWeight: 700,
+        fontFamily: 'var(--font-display)',
+        letterSpacing: '-0.03em',
+        lineHeight: 1,
+        color: color ?? 'var(--fg)',
+      }}>
+        {value}
+      </div>
+      <div style={{ fontSize: 11, color: 'var(--fg-muted)', marginTop: 6, fontWeight: 500 }}>{label}</div>
+      {sub && <div style={{ fontSize: 10, color: 'var(--fg-subtle)', marginTop: 2 }}>{sub}</div>}
+    </div>
+  );
+}
+
+// ── Page ───────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   const [all, setAll] = useState<CheckReservationBooking[]>([]);
@@ -110,69 +126,132 @@ export default function DashboardPage() {
 
   const vipArrivals = arrivals.filter(g => g.tier === 4);
   const noRoomToday = arrivals.filter(g => !g.roomCode).length;
+  const checkinToday = all.filter(r => r.checkin === today).length;
 
   return (
-    <div style={{ padding: '36px 40px 60px', maxWidth: 1100 }}>
+    <div style={{ padding: '28px 32px 60px', maxWidth: 1080 }}>
 
-      {/* ── Header ── */}
-      <div style={{ marginBottom: 32, paddingBottom: 24, borderBottom: '1px solid var(--border)' }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--fg)', margin: 0 }}>
-          {greeting()}
-        </h1>
-        <div style={{ color: 'var(--fg-muted)', marginTop: 5, fontSize: 13, display: 'flex', alignItems: 'center', gap: 16 }}>
-          <span>{new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-          {!loading && arrivalsTotal > 0 && (
-            <Link href="/reception/arriving-guests" style={{
-              display: 'inline-flex', alignItems: 'center', gap: 5,
-              color: 'var(--accent)', textDecoration: 'none', fontWeight: 500, fontSize: 12,
-              background: 'var(--accent-light)', borderRadius: 6, padding: '2px 9px',
+      {/* ── Hero Header ─────────────────────────────────────────────────────── */}
+      <div style={{
+        borderRadius: 14,
+        background: 'linear-gradient(135deg, #0EA5E9 0%, #2563EB 100%)',
+        padding: '24px 28px',
+        marginBottom: 24,
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* Decorative circles */}
+        <div style={{
+          position: 'absolute', right: -40, top: -40,
+          width: 160, height: 160, borderRadius: '50%',
+          background: 'rgba(255,255,255,0.07)',
+          pointerEvents: 'none',
+        }} />
+        <div style={{
+          position: 'absolute', right: 60, bottom: -60,
+          width: 200, height: 200, borderRadius: '50%',
+          background: 'rgba(255,255,255,0.05)',
+          pointerEvents: 'none',
+        }} />
+
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 22,
+              fontWeight: 700,
+              color: '#FFFFFF',
+              letterSpacing: '-0.02em',
+              marginBottom: 4,
             }}>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
-              </svg>
-              {arrivalsTotal} arriving today →
-            </Link>
-          )}
+              {greeting()}
+            </div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.72)', letterSpacing: '0.01em' }}>
+              {new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </div>
+          </div>
+
+          {/* Pill badges */}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {!loading && arrivalsTotal > 0 && (
+              <Link href="/reception/arriving-guests" style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                background: 'rgba(255,255,255,0.18)',
+                backdropFilter: 'blur(4px)',
+                color: '#FFFFFF',
+                borderRadius: 20, padding: '5px 12px',
+                textDecoration: 'none', fontSize: 12, fontWeight: 600,
+                border: '1px solid rgba(255,255,255,0.25)',
+              }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                </svg>
+                {arrivalsTotal} arriving
+              </Link>
+            )}
+            {!loading && red > 0 && (
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                background: 'rgba(239,68,68,0.85)',
+                color: '#FFFFFF',
+                borderRadius: 20, padding: '5px 12px',
+                fontSize: 12, fontWeight: 600,
+                border: '1px solid rgba(255,255,255,0.2)',
+              }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff', display: 'inline-block' }} />
+                {red} urgent
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* ── VIP arrivals ── */}
+      {/* ── Stat rail ───────────────────────────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10, marginBottom: 24 }}>
+        <StatRailCard label="Total Reservations" value={loading ? '—' : all.length} color="var(--border-strong)" />
+        <StatRailCard label="Issues" value={loading ? '—' : red} color="var(--status-red)" sub="need action" />
+        <StatRailCard label="Warnings" value={loading ? '—' : yellow} color="var(--status-yellow)" sub="review needed" />
+        <StatRailCard label="Pending" value={loading ? '—' : pending} color="var(--status-pending)" />
+        <StatRailCard label="Ready" value={loading ? '—' : green} color="var(--status-green)" sub="checks passed" />
+      </div>
+
+      {/* ── VIP arrivals ─────────────────────────────────────────────────────── */}
       {!loading && vipArrivals.length > 0 && (
-        <div style={{ marginBottom: 28 }}>
+        <div style={{ marginBottom: 20 }}>
           <div style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            fontSize: 11, fontWeight: 600, color: '#6D28D9',
-            letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10,
+            display: 'flex', alignItems: 'center', gap: 6,
+            fontSize: 10, fontWeight: 700, color: '#7C3AED',
+            letterSpacing: '0.09em', textTransform: 'uppercase', marginBottom: 8,
           }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="#7C3AED" stroke="none">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="#7C3AED" stroke="none">
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
             </svg>
             Platinum arrivals today
           </div>
           <div style={{
-            display: 'flex', flexDirection: 'column',
-            border: '1px solid #DDD6FE',
-            borderRadius: 10, overflow: 'hidden',
-            background: '#FAFAFE',
+            background: '#FFFFFF',
+            borderRadius: 10,
+            boxShadow: 'var(--shadow-card)',
+            border: '1px solid rgba(124,58,237,0.15)',
+            overflow: 'hidden',
           }}>
             {vipArrivals.map((g, i) => (
               <Link key={g.bookingId} href="/reception/arriving-guests" style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '11px 16px', textDecoration: 'none', color: 'var(--fg)',
-                borderBottom: i < vipArrivals.length - 1 ? '1px solid #EDE9FE' : 'none',
-                transition: 'background 0.1s',
+                padding: '10px 16px', textDecoration: 'none', color: 'var(--fg)',
+                borderBottom: i < vipArrivals.length - 1 ? '1px solid rgba(124,58,237,0.08)' : 'none',
               }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#EDE9FE')}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(124,58,237,0.04)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{
                     display: 'inline-flex', alignItems: 'center', gap: 3,
-                    background: '#EDE9FE', color: '#6D28D9',
+                    background: 'rgba(124,58,237,0.10)', color: '#7C3AED',
                     borderRadius: 4, padding: '1px 6px',
-                    fontSize: 10, fontWeight: 700, letterSpacing: '0.04em',
+                    fontSize: 9, fontWeight: 700, letterSpacing: '0.06em',
                   }}>
-                    ★ Platinum
+                    ★ PLATINUM
                   </span>
                   <div>
                     <div style={{ fontWeight: 600, fontSize: 13 }}>{g.firstname} {g.surname}</div>
@@ -181,25 +260,26 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   {g.roomCode ? (
                     <span style={{
                       fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600,
-                      color: '#6D28D9', background: '#EDE9FE',
+                      color: '#7C3AED', background: 'rgba(124,58,237,0.08)',
                       borderRadius: 4, padding: '2px 7px',
                     }}>
-                      Room {g.roomCode}
+                      {g.roomCode}
                     </span>
                   ) : (
                     <span style={{
-                      fontSize: 11, fontWeight: 600, color: '#B45309',
-                      background: '#FEF3C7', borderRadius: 4, padding: '2px 7px',
-                      border: '1px dashed #F59E0B',
+                      fontSize: 11, fontWeight: 600,
+                      color: 'var(--status-yellow)',
+                      background: 'var(--status-yellow-bg)',
+                      borderRadius: 4, padding: '2px 7px',
                     }}>
-                      ⚠ No room assigned
+                      No room
                     </span>
                   )}
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="1.7">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--fg-subtle)" strokeWidth="1.8">
                     <path d="M9 18l6-6-6-6"/>
                   </svg>
                 </div>
@@ -209,66 +289,79 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* ── Reservation check stats ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 36 }}>
-        <StatCard label="Total Reservations" value={loading ? '—' : all.length} sub="under review" />
-        <StatCard label="Issues" value={loading ? '—' : red} accent="var(--status-red)" sub="need action" />
-        <StatCard label="Warnings" value={loading ? '—' : yellow} accent="var(--status-yellow)" sub="review recommended" />
-        <StatCard label="Ready" value={loading ? '—' : green} accent="var(--status-green)" sub="all checks passed" />
-      </div>
-
-      {/* ── Urgent ── */}
+      {/* ── Needs attention ──────────────────────────────────────────────────── */}
       {!loading && urgent.length > 0 && (
-        <div style={{ marginBottom: 36 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg-subtle)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>
+        <div style={{ marginBottom: 20 }}>
+          <div style={{
+            fontSize: 10, fontWeight: 700, color: 'var(--fg-subtle)',
+            letterSpacing: '0.09em', textTransform: 'uppercase', marginBottom: 8,
+          }}>
             Needs attention
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', border: '1px solid var(--border-strong)', borderRadius: 10, overflow: 'hidden', background: '#fff' }}>
+          <div style={{
+            background: '#FFFFFF',
+            borderRadius: 10,
+            boxShadow: 'var(--shadow-card)',
+            overflow: 'hidden',
+          }}>
             {urgent.map((r, i) => (
               <Link key={r.originId} href={`/reception/reservation-checks/${r.originId}`} style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '13px 18px', textDecoration: 'none', color: 'var(--fg)',
+                padding: '11px 16px', textDecoration: 'none', color: 'var(--fg)',
                 borderBottom: i < urgent.length - 1 ? '1px solid var(--border)' : 'none',
-                transition: 'background 0.12s',
+                borderLeft: `3px solid ${r.status === 'RED' ? 'var(--status-red)' : 'var(--status-yellow)'}`,
               }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-surface)')}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <StatusBadge status={r.status as CheckReservationStatus} size="sm" />
                   <div>
                     <div style={{ fontWeight: 500, fontSize: 13 }}>{r.owner}</div>
-                    <div style={{ fontSize: 12, color: 'var(--fg-muted)', marginTop: 1 }}>
+                    <div style={{ fontSize: 11, color: 'var(--fg-muted)', marginTop: 1 }}>
                       {r.originId} · {r.provider} · {r.checkin} → {r.checkout}
                     </div>
                   </div>
                 </div>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fg-subtle)" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--fg-subtle)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9 18l6-6-6-6"/>
                 </svg>
               </Link>
             ))}
           </div>
-          <div style={{ marginTop: 10 }}>
-            <Link href="/reception/reservation-checks" style={{ fontSize: 13, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
+          <div style={{ marginTop: 8 }}>
+            <Link href="/reception/reservation-checks" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
               View all reservation checks →
             </Link>
           </div>
         </div>
       )}
 
-      {/* ── Today strip ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', background: '#fff', border: '1px solid var(--border-strong)', borderRadius: 10, overflow: 'hidden' }}>
+      {/* ── Today strip ──────────────────────────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
         {[
-          { label: 'Arrivals today',    value: loading ? '—' : arrivalsTotal,                                  accent: undefined },
-          { label: 'Guests today',      value: loading ? '—' : arrivalsGuests,                                 accent: undefined },
-          { label: 'No room assigned',  value: loading ? '—' : noRoomToday,  accent: noRoomToday > 0 ? '#B45309' : undefined },
-          { label: 'Pending review',    value: loading ? '—' : pending,                                        accent: undefined },
-          { label: 'Check-ins today',   value: loading ? '—' : all.filter(r => r.checkin === today).length,    accent: undefined },
-        ].map(({ label, value, accent }, i, arr) => (
-          <div key={label} style={{ padding: '16px 20px', borderRight: i < arr.length - 1 ? '1px solid var(--border)' : 'none' }}>
-            <div style={{ fontSize: 22, fontWeight: 600, fontFamily: 'var(--font-display)', letterSpacing: '-0.03em', color: accent ?? 'var(--fg)' }}>{value}</div>
-            <div style={{ fontSize: 12, color: 'var(--fg-muted)', marginTop: 3 }}>{label}</div>
+          { label: 'Arrivals today',   value: loading ? '—' : arrivalsTotal,  color: 'var(--accent)' },
+          { label: 'Guests today',     value: loading ? '—' : arrivalsGuests, color: 'var(--fg)' },
+          { label: 'No room assigned', value: loading ? '—' : noRoomToday,    color: noRoomToday > 0 ? 'var(--status-yellow)' : 'var(--fg)' },
+          { label: 'Pending review',   value: loading ? '—' : pending,        color: 'var(--fg)' },
+          { label: 'Check-ins today',  value: loading ? '—' : checkinToday,   color: 'var(--fg)' },
+        ].map(({ label, value, color }) => (
+          <div key={label} style={{
+            background: '#FFFFFF',
+            borderRadius: 10,
+            boxShadow: 'var(--shadow-card)',
+            padding: '14px 16px',
+          }}>
+            <div style={{
+              fontSize: 22,
+              fontWeight: 700,
+              fontFamily: 'var(--font-display)',
+              letterSpacing: '-0.03em',
+              color,
+            }}>
+              {value}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--fg-muted)', marginTop: 4, fontWeight: 500 }}>{label}</div>
           </div>
         ))}
       </div>
