@@ -76,9 +76,7 @@ const reservationCheckSchema = new Schema<ReservationCheckDoc>(
     requestId:  { type: String, default: "" },
   },
   {
-    // Map to the real collection name
     collection: "reservationChecks",
-    // Disable auto timestamps — `created` comes from the source system
     timestamps: false,
   }
 );

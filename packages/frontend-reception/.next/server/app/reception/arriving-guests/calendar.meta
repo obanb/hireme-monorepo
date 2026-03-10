@@ -1,0 +1,7 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/reception/layout,_N_T_/reception/arriving-guests/layout,_N_T_/reception/arriving-guests/calendar/layout,_N_T_/reception/arriving-guests/calendar/page,_N_T_/reception/arriving-guests/calendar"
+  }
+}

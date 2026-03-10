@@ -1,3 +1,64 @@
+# ── Arriving Guests ───────────────────────────────────────────────────────────
+
+enum ArrivalPeriod {
+  today
+  tomorrow
+  days7
+}
+
+type ArrivingGuestPerson {
+  id:        Int!
+  firstname: String!
+  surname:   String!
+}
+
+type ArrivingGuest {
+  id:                Int!
+  hotelName:         String!
+  bookingId:         Int!
+  idStay:            String!
+  tier:              Int!
+  tierLabel:         String!
+  firstname:         String!
+  surname:           String!
+  guests:            [ArrivingGuestPerson!]!
+  arrival:           String!
+  departure:         String!
+  paxCountAdults:    Int!
+  paxCountChildren:  Int!
+  paxCountAgeGroup1: Int!
+  paxCountAgeGroup2: Int!
+  paxCountAgeGroup3: Int!
+  paxCountAgeGroup4: Int!
+  roomType:          String!
+  roomRateCode:      String!
+  roomResType:       String!
+  roomState:         String!
+  provider:          String!
+  roomCode:          String
+  benefits:          [String!]!
+  inventoryItems:    [String!]!
+  deepLink:          String!
+}
+
+input ArrivingGuestsFilter {
+  period:    ArrivalPeriod
+  hotelName: String
+  checkedIn: Boolean
+}
+
+type ArrivingGuestsPage {
+  items:       [ArrivingGuest!]!
+  total:       Int!
+  totalRooms:  Int!
+  totalGuests: Int!
+  page:        Int!
+  limit:       Int!
+  totalPages:  Int!
+}
+
+# ── CheckIn ───────────────────────────────────────────────────────────────────
+
 type CheckIn {
   id: ID!
   reservationId: ID!
@@ -73,11 +134,172 @@ type CheckReservationsPage {
   totalPages: Int!
 }
 
+# ── Booking engine segment types ──────────────────────────────────────────────
+
+type BookingEnginePaymentData {
+  paidAmount: Float!
+  paymentType: String!
+  currency: String!
+}
+
+type BookingEnginePaymentSegment {
+  id: ID!
+  data: BookingEnginePaymentData!
+  error: Boolean!
+  errors: [String!]!
+  reprocessed: Boolean
+  reprocessAvailable: Boolean
+}
+
+type BookingEngineVoucherAmount {
+  amount: Float!
+  currency: String!
+}
+
+type BookingEngineVoucherTransactionData {
+  amount: BookingEngineVoucherAmount!
+  transactionId: String!
+  voucherNumber: String!
+  status: String!
+  errorMessage: String
+}
+
+type BookingEngineVoucherSegment {
+  id: ID!
+  data: BookingEngineVoucherTransactionData!
+  error: Boolean!
+  errors: [String!]!
+  reprocessed: Boolean
+  reprocessAvailable: Boolean
+}
+
+type BookingEngineNoteSegment {
+  id: ID!
+  data: String!
+  error: Boolean!
+  errors: [String!]!
+  reprocessed: Boolean
+  reprocessAvailable: Boolean
+}
+
+type BookingEngineHSKNoteSegment {
+  id: ID!
+  data: String!
+  error: Boolean!
+  errors: [String!]!
+  reprocessed: Boolean
+  reprocessAvailable: Boolean
+}
+
+type BookingRoomFeatureData {
+  featureMask: Int!
+  codes: [String!]!
+  roomType: String!
+}
+
+type BookingRoomFeatureSegment {
+  id: ID!
+  data: BookingRoomFeatureData!
+  error: Boolean!
+  errors: [String!]!
+  reprocessed: Boolean
+  reprocessAvailable: Boolean
+}
+
+type BookingEngineInventoryItem {
+  id: Int!
+  amount: Float!
+  name: String!
+  code: String!
+}
+
+type BookingEngineInventoryData {
+  inventories: [BookingEngineInventoryItem!]!
+  roomType: String!
+}
+
+type BookingEngineInventorySegment {
+  id: ID!
+  data: BookingEngineInventoryData!
+  error: Boolean!
+  errors: [String!]!
+  reprocessed: Boolean
+  reprocessAvailable: Boolean
+}
+
+type BookingEnginePromoCodeSegment {
+  id: ID!
+  data: String!
+  error: Boolean!
+  errors: [String!]!
+  reprocessed: Boolean
+  reprocessAvailable: Boolean
+}
+
+type BookingEngineContactData {
+  email: String!
+  phone: String!
+}
+
+type BookingEngineCompanyData {
+  id: String!
+  dic: String
+  street: String
+  city: String
+  postalCode: String
+  country: String
+  name: String!
+  comment: String
+  contact: BookingEngineContactData!
+}
+
+type BookingEngineCompanySegment {
+  id: ID!
+  data: BookingEngineCompanyData!
+  error: Boolean!
+  errors: [String!]!
+  reprocessed: Boolean
+  reprocessAvailable: Boolean
+}
+
+# ── Detail type (booking + all segments) ──────────────────────────────────────
+
+type ReservationCheckDetail {
+  originId: String!
+  hotelTimeId: Int
+  provider: String!
+  date: String!
+  adultCount: Int!
+  childCount: Int!
+  checkin: String!
+  checkout: String!
+  owner: String!
+  customerNote: String
+  notesStatus: CheckReservationStatus!
+  featuresStatus: CheckReservationStatus!
+  vouchersStatus: CheckReservationStatus!
+  paymentsStatus: CheckReservationStatus!
+  customerNoteStatus: CheckReservationStatus!
+  inventoriesStatus: CheckReservationStatus!
+  hskStatus: CheckReservationStatus!
+  status: CheckReservationStatus!
+  payments: [BookingEnginePaymentSegment!]!
+  vouchers: [BookingEngineVoucherSegment!]!
+  notes: [BookingEngineNoteSegment!]!
+  hskNotes: [BookingEngineHSKNoteSegment!]!
+  roomFeatures: [BookingRoomFeatureSegment!]!
+  inventories: [BookingEngineInventorySegment!]!
+  promoCodes: [BookingEnginePromoCodeSegment!]!
+  companies: [BookingEngineCompanySegment!]!
+}
+
 type Query {
   checkIn(id: ID!): CheckIn
   checkIns(filter: ListCheckInsFilter): [CheckIn!]!
   checkReservations(page: Int, limit: Int): CheckReservationsPage!
   checkReservation(originId: String!): CheckReservationBooking
+  checkReservationDetail(originId: String!): ReservationCheckDetail
+  arrivingGuests(filter: ArrivingGuestsFilter, page: Int, limit: Int): ArrivingGuestsPage!
 }
 
 type Mutation {

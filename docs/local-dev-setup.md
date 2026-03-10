@@ -25,6 +25,7 @@ docker run -d \
   -e POSTGRES_DB=postgres \
   -p 5432:5432 \
   postgres:15
+i run 
 
 # Start existing container
 docker start hireme-postgres
@@ -93,23 +94,27 @@ SELECT type, COUNT(*) FROM events GROUP BY type;
 ### IDE/GUI Tools
 
 #### 1. DBeaver (Free, Cross-platform)
-- Download: https://dbeaver.io/download/
+
+- Download: <https://dbeaver.io/download/>
 - New Connection > PostgreSQL
 - Enter connection details above
 - Features: SQL editor, data viewer, ER diagrams
 
 #### 2. pgAdmin (Free, Official)
-- Download: https://www.pgadmin.org/download/
+
+- Download: <https://www.pgadmin.org/download/>
 - Add New Server
 - Connection tab: Enter details above
 - Features: Query tool, dashboard, backup/restore
 
 #### 3. DataGrip (Paid, JetBrains)
-- Download: https://www.jetbrains.com/datagrip/
+
+- Download: <https://www.jetbrains.com/datagrip/>
 - New Data Source > PostgreSQL
 - Features: Smart SQL completion, version control integration
 
 #### 4. VS Code Extensions
+
 - **PostgreSQL** by Chris Kolkman
   - Install from Extensions marketplace
   - Cmd/Ctrl+Shift+P > "PostgreSQL: Add Connection"
@@ -120,7 +125,8 @@ SELECT type, COUNT(*) FROM events GROUP BY type;
   - Add PostgreSQL connection
 
 #### 5. TablePlus (Freemium, macOS/Windows/Linux)
-- Download: https://tableplus.com/
+
+- Download: <https://tableplus.com/>
 - Create new connection > PostgreSQL
 - Clean, native interface
 
@@ -180,11 +186,12 @@ amqp://guest:guest@localhost:5672
 
 ### Management UI (Built-in)
 
-Open in browser: **http://localhost:15672**
+Open in browser: **<http://localhost:15672>**
 
 Login: `guest` / `guest`
 
-#### Management UI Features:
+#### Management UI Features
+
 - **Overview**: Node stats, message rates
 - **Connections**: Active AMQP connections
 - **Channels**: Open channels
@@ -192,7 +199,7 @@ Login: `guest` / `guest`
 - **Queues**: Create queues, view messages
 - **Admin**: Users, permissions, policies
 
-#### View Published Events:
+#### View Published Events
 
 1. Go to **Queues** tab
 2. Click **Add a new queue**
@@ -221,11 +228,13 @@ docker exec hireme-rabbitmq rabbitmqctl list_bindings
 ### GUI Tools (Besides Management UI)
 
 #### 1. RabbitMQ Manager (VS Code Extension)
+
 - Install "RabbitMQ" extension
 - Connect using AMQP URL
 
 #### 2. AMQP Client (Desktop Apps)
-- **RabbitMQ Assistant** (macOS): https://github.com/snooken/rabbitmq-assistant
+
+- **RabbitMQ Assistant** (macOS): <https://github.com/snooken/rabbitmq-assistant>
 - Features: Browse queues, publish/consume messages
 
 ---
@@ -265,6 +274,7 @@ volumes:
 ```
 
 Commands:
+
 ```bash
 # Start all services
 docker-compose up -d

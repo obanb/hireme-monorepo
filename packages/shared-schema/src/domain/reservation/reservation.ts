@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zocred';
 
 export const BookingEngineContactSchema = z.object({
     email: z.string(),

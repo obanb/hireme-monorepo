@@ -48,6 +48,18 @@
       "namedRegex": "^/reception(?:/)?$"
     },
     {
+      "page": "/reception/arriving-guests",
+      "regex": "^/reception/arriving\\-guests(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/reception/arriving\\-guests(?:/)?$"
+    },
+    {
+      "page": "/reception/arriving-guests/calendar",
+      "regex": "^/reception/arriving\\-guests/calendar(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/reception/arriving\\-guests/calendar(?:/)?$"
+    },
+    {
       "page": "/reception/reservation-checks",
       "regex": "^/reception/reservation\\-checks(?:/)?$",
       "routeKeys": {},

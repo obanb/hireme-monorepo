@@ -1,4 +1,5 @@
 import { checkReservationRepo } from "./repo";
+import { getReservationCheckDetail } from "./service";
 
 export const checkReservationResolvers = {
   Query: {
@@ -9,5 +10,8 @@ export const checkReservationResolvers = {
 
     checkReservation: (_: unknown, { originId }: { originId: string }) =>
       checkReservationRepo.findByOriginId(originId),
+
+    checkReservationDetail: (_: unknown, { originId }: { originId: string }) =>
+      getReservationCheckDetail(originId),
   },
 };

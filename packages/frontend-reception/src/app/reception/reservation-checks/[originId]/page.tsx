@@ -4,23 +4,57 @@ import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import StatusBadge from '@/components/StatusBadge';
-import type { CheckReservationBooking, CheckReservationStatus } from '@/types/reservation-check';
+import type {
+  CheckReservationStatus,
+  ReservationCheckDetail,
+  BEPaymentSegment,
+  BEVoucherSegment,
+  BENoteSegment,
+  BEHSKNoteSegment,
+  BERoomFeatureSegment,
+  BEInventorySegment,
+  BEPromoCodeSegment,
+  BECompanySegment,
+} from '@/types/reservation-check';
 
 const ENDPOINT = process.env.NEXT_PUBLIC_RECEPTION_API ?? 'http://localhost:4002/graphql';
 
 const QUERY = `
-  query CheckReservation($originId: String!) {
-    checkReservation(originId: $originId) {
+  query CheckReservationDetail($originId: String!) {
+    checkReservationDetail(originId: $originId) {
       originId hotelTimeId provider date
       adultCount childCount checkin checkout
       owner customerNote
       notesStatus featuresStatus vouchersStatus paymentsStatus
       customerNoteStatus inventoriesStatus hskStatus status
+
+      payments { id error errors reprocessed reprocessAvailable
+        data { paidAmount paymentType currency } }
+
+      vouchers { id error errors reprocessed reprocessAvailable
+        data { transactionId voucherNumber status errorMessage
+          amount { amount currency } } }
+
+      notes { id data error errors reprocessed reprocessAvailable }
+
+      hskNotes { id data error errors reprocessed reprocessAvailable }
+
+      roomFeatures { id error errors reprocessed reprocessAvailable
+        data { featureMask codes roomType } }
+
+      inventories { id error errors reprocessed reprocessAvailable
+        data { roomType inventories { id amount name code } } }
+
+      promoCodes { id data error errors reprocessed reprocessAvailable }
+
+      companies { id error errors reprocessed reprocessAvailable
+        data { id name dic street city postalCode country comment
+          contact { email phone } } }
     }
   }
 `;
 
-const CHECK_LABELS: { key: keyof CheckReservationBooking; label: string; desc: string }[] = [
+const CHECK_LABELS: { key: keyof ReservationCheckDetail; label: string; desc: string }[] = [
   { key: 'status',             label: 'Overall',      desc: 'Aggregate reservation quality status' },
   { key: 'notesStatus',        label: 'Notes',        desc: 'Internal staff notes reviewed and actioned' },
   { key: 'featuresStatus',     label: 'Features',     desc: 'Room features and amenities confirmed' },
@@ -51,9 +85,334 @@ function InfoItem({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
+// ── Segment shared pieces ─────────────────────────────────────────────────────
+
+function SegmentErrorBadge({ errors }: { errors: string[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: 4,
+          padding: '2px 7px', borderRadius: 4,
+          background: '#FEF2F2', border: '1px solid #FECACA',
+          color: '#DC2626', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+        }}
+      >
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        Error
+      </button>
+      {open && errors.length > 0 && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 10,
+          background: '#1C1917', color: '#FCA5A5', fontSize: 11, lineHeight: 1.6,
+          padding: '10px 12px', borderRadius: 7, minWidth: 280, maxWidth: 360,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+        }}>
+          {errors.map((e, i) => <div key={i}>{e}</div>)}
+          <div style={{
+            position: 'absolute', top: -4, right: 10,
+            width: 8, height: 8, background: '#1C1917',
+            transform: 'rotate(45deg)',
+          }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ReprocessBadge({ available, reprocessed }: { available: boolean | null; reprocessed: boolean | null }) {
+  if (reprocessed) return (
+    <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: '#EEF2FF', color: '#4338CA', fontWeight: 600, border: '1px solid #C7D2FE' }}>
+      Reprocessed
+    </span>
+  );
+  if (available) return (
+    <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: '#ECFDF5', color: '#059669', fontWeight: 600, border: '1px solid #6EE7B7' }}>
+      Can reprocess
+    </span>
+  );
+  return null;
+}
+
+function SegmentHeader({ color, icon, label, count }: { color: string; icon: React.ReactNode; label: string; count: number }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+      <div style={{ width: 28, height: 28, borderRadius: 7, background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', color }}>
+        {icon}
+      </div>
+      <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>{label}</span>
+      <span style={{
+        fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 10,
+        background: color + '18', color,
+      }}>{count}</span>
+    </div>
+  );
+}
+
+function EmptySegment({ label }: { label: string }) {
+  return (
+    <div style={{ padding: '12px 16px', borderRadius: 8, background: 'var(--bg-surface)', border: '1px solid var(--border)', fontSize: 12, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>
+      No {label} found for this reservation.
+    </div>
+  );
+}
+
+// ── Payment cards ─────────────────────────────────────────────────────────────
+
+const PAYMENT_TYPE_ICON: Record<string, string> = {
+  CREDIT_CARD: '💳', APPLE_PAY: '', GOOGLE_PAY: 'G',
+};
+
+function PaymentCard({ seg }: { seg: BEPaymentSegment }) {
+  const color = '#2563EB';
+  return (
+    <div style={{
+      borderRadius: 10, border: '1px solid var(--border-strong)', background: '#fff',
+      borderLeft: `3px solid ${seg.error ? '#EF4444' : color}`,
+      padding: '14px 16px', display: 'flex', gap: 16, alignItems: 'flex-start',
+    }}>
+      <div style={{
+        width: 44, height: 44, borderRadius: 10, flexShrink: 0,
+        background: color + '12', display: 'flex', alignItems: 'center',
+        justifyContent: 'center', fontSize: 20,
+      }}>
+        {PAYMENT_TYPE_ICON[seg.data.paymentType] ?? '💳'}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 600, letterSpacing: '-0.01em' }}>
+            {seg.data.paidAmount.toLocaleString()} <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--fg-muted)' }}>{seg.data.currency}</span>
+          </span>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} />
+            {seg.error ? <SegmentErrorBadge errors={seg.errors} /> : (
+              <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: '#F0FDF4', color: '#16A34A', fontWeight: 600, border: '1px solid #BBF7D0' }}>OK</span>
+            )}
+          </div>
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--fg-muted)' }}>
+          {seg.data.paymentType.replace(/_/g, ' ')}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Voucher cards ─────────────────────────────────────────────────────────────
+
+const VOUCHER_STATUS_COLOR: Record<string, { bg: string; fg: string; border: string }> = {
+  SUCCESSFUL: { bg: '#F0FDF4', fg: '#16A34A', border: '#BBF7D0' },
+  FAILED:     { bg: '#FEF2F2', fg: '#DC2626', border: '#FECACA' },
+  CREATED:    { bg: '#EEF2FF', fg: '#4338CA', border: '#C7D2FE' },
+};
+
+function VoucherCard({ seg }: { seg: BEVoucherSegment }) {
+  const color = '#7C3AED';
+  const sc = VOUCHER_STATUS_COLOR[seg.data.status] ?? VOUCHER_STATUS_COLOR.CREATED;
+  return (
+    <div style={{
+      borderRadius: 10, border: '1px solid var(--border-strong)', background: '#fff',
+      borderLeft: `3px solid ${seg.error ? '#EF4444' : color}`,
+      padding: '14px 16px',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
+        <div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', color }}>
+            {seg.data.voucherNumber}
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--fg-subtle)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>
+            {seg.data.transactionId.slice(0, 18)}…
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center' }}>
+          <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} />
+          {seg.error ? <SegmentErrorBadge errors={seg.errors} /> : null}
+        </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600 }}>
+          {seg.data.amount.amount.toLocaleString()} <span style={{ fontSize: 11, color: 'var(--fg-muted)', fontWeight: 400 }}>{seg.data.amount.currency}</span>
+        </span>
+        <span style={{ fontSize: 11, padding: '2px 7px', borderRadius: 4, fontWeight: 600, background: sc.bg, color: sc.fg, border: `1px solid ${sc.border}` }}>
+          {seg.data.status}
+        </span>
+      </div>
+      {seg.data.errorMessage && (
+        <div style={{ marginTop: 8, fontSize: 11, color: '#DC2626', fontStyle: 'italic' }}>
+          {seg.data.errorMessage}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Note cards ────────────────────────────────────────────────────────────────
+
+function NoteCard({ seg, color }: { seg: BENoteSegment | BEHSKNoteSegment; color: string }) {
+  return (
+    <div style={{
+      borderRadius: 10, border: '1px solid var(--border-strong)', background: '#fff',
+      borderLeft: `3px solid ${seg.error ? '#EF4444' : color}`,
+      padding: '12px 16px',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
+        <div style={{ fontSize: 13, color: 'var(--fg)', lineHeight: 1.5, fontStyle: 'italic' }}>
+          "{seg.data}"
+        </div>
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+          <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} />
+          {seg.error ? <SegmentErrorBadge errors={seg.errors} /> : (
+            <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: '#F0FDF4', color: '#16A34A', fontWeight: 600, border: '1px solid #BBF7D0' }}>OK</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Room feature cards ────────────────────────────────────────────────────────
+
+function RoomFeatureCard({ seg }: { seg: BERoomFeatureSegment }) {
+  const color = '#059669';
+  return (
+    <div style={{
+      borderRadius: 10, border: '1px solid var(--border-strong)', background: '#fff',
+      borderLeft: `3px solid ${seg.error ? '#EF4444' : color}`,
+      padding: '14px 16px',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
+        <div style={{ fontSize: 12, color: 'var(--fg-muted)' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, background: 'var(--bg-surface)', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)' }}>
+            {seg.data.roomType}
+          </span>
+          <span style={{ marginLeft: 8, color: 'var(--fg-subtle)' }}>mask: {seg.data.featureMask}</span>
+        </div>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} />
+          {seg.error ? <SegmentErrorBadge errors={seg.errors} /> : (
+            <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: '#F0FDF4', color: '#16A34A', fontWeight: 600, border: '1px solid #BBF7D0' }}>OK</span>
+          )}
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+        {seg.data.codes.map(code => (
+          <span key={code} style={{
+            fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 5,
+            background: color + '14', color, border: `1px solid ${color}30`,
+            letterSpacing: '0.04em',
+          }}>
+            {code}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Inventory cards ───────────────────────────────────────────────────────────
+
+function InventoryCard({ seg }: { seg: BEInventorySegment }) {
+  const color = '#0891B2';
+  return (
+    <div style={{
+      borderRadius: 10, border: '1px solid var(--border-strong)', background: '#fff',
+      borderLeft: `3px solid ${seg.error ? '#EF4444' : color}`,
+      padding: '14px 16px',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, background: 'var(--bg-surface)', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)', color: 'var(--fg-muted)' }}>
+          {seg.data.roomType}
+        </span>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} />
+          {seg.error ? <SegmentErrorBadge errors={seg.errors} /> : (
+            <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: '#F0FDF4', color: '#16A34A', fontWeight: 600, border: '1px solid #BBF7D0' }}>OK</span>
+          )}
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {seg.data.inventories.map(item => (
+          <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12 }}>
+            <span style={{ color: 'var(--fg)' }}>{item.name}</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: color, fontWeight: 600 }}>
+              ×{item.amount} <span style={{ color: 'var(--fg-subtle)', fontWeight: 400 }}>[{item.code}]</span>
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Promo code cards ──────────────────────────────────────────────────────────
+
+function PromoCodeCard({ seg }: { seg: BEPromoCodeSegment }) {
+  const color = '#DB2777';
+  return (
+    <div style={{
+      borderRadius: 10, border: '1px solid var(--border-strong)', background: '#fff',
+      borderLeft: `3px solid ${seg.error ? '#EF4444' : color}`,
+      padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+    }}>
+      <span style={{
+        fontFamily: 'var(--font-mono)', fontSize: 15, fontWeight: 800,
+        letterSpacing: '0.12em', color,
+      }}>
+        {seg.data}
+      </span>
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} />
+        {seg.error ? <SegmentErrorBadge errors={seg.errors} /> : (
+          <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: '#F0FDF4', color: '#16A34A', fontWeight: 600, border: '1px solid #BBF7D0' }}>OK</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Company cards ─────────────────────────────────────────────────────────────
+
+function CompanyCard({ seg }: { seg: BECompanySegment }) {
+  const color = '#4F46E5';
+  const d = seg.data;
+  const address = [d.street, d.city, d.postalCode, d.country].filter(Boolean).join(', ');
+  return (
+    <div style={{
+      borderRadius: 10, border: '1px solid var(--border-strong)', background: '#fff',
+      borderLeft: `3px solid ${seg.error ? '#EF4444' : color}`,
+      padding: '14px 16px',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 600 }}>{d.name}</div>
+          {d.dic && <div style={{ fontSize: 11, color: 'var(--fg-subtle)', marginTop: 2 }}>DIČ: {d.dic}</div>}
+        </div>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} />
+          {seg.error ? <SegmentErrorBadge errors={seg.errors} /> : (
+            <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: '#F0FDF4', color: '#16A34A', fontWeight: 600, border: '1px solid #BBF7D0' }}>OK</span>
+          )}
+        </div>
+      </div>
+      {address && <div style={{ fontSize: 11, color: 'var(--fg-muted)', marginBottom: 8 }}>{address}</div>}
+      <div style={{ display: 'flex', gap: 14, fontSize: 11, color: 'var(--fg-muted)' }}>
+        <span>✉ {d.contact.email}</span>
+        <span>✆ {d.contact.phone}</span>
+      </div>
+      {d.comment && <div style={{ marginTop: 6, fontSize: 11, color: 'var(--fg-subtle)', fontStyle: 'italic' }}>{d.comment}</div>}
+    </div>
+  );
+}
+
+// ── Skeleton ──────────────────────────────────────────────────────────────────
+
 function SkeletonDetail() {
   return (
-    <div style={{ padding: '36px 40px 60px', maxWidth: 860 }}>
+    <div style={{ padding: '36px 40px 60px', maxWidth: 900 }}>
       <div className="skeleton" style={{ width: 140, height: 14, marginBottom: 28 }} />
       <div style={{ marginBottom: 24, paddingBottom: 22, borderBottom: '1px solid var(--border)' }}>
         <div className="skeleton" style={{ width: 100, height: 12, marginBottom: 10 }} />
@@ -64,20 +423,27 @@ function SkeletonDetail() {
         <div className="skeleton" style={{ height: 240, borderRadius: 10 }} />
         <div className="skeleton" style={{ height: 240, borderRadius: 10 }} />
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 24 }}>
         {[...Array(8)].map((_, i) => (
           <div key={i} className="skeleton" style={{ height: 62, borderRadius: 9 }} />
+        ))}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="skeleton" style={{ height: 80, borderRadius: 10 }} />
         ))}
       </div>
     </div>
   );
 }
 
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 export default function ReservationCheckDetailPage({ params }: { params: Promise<{ originId: string }> }) {
   const { originId } = use(params);
   const decoded = decodeURIComponent(originId);
 
-  const [r, setR] = useState<CheckReservationBooking | null>(null);
+  const [r, setR] = useState<ReservationCheckDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [missing, setMissing] = useState(false);
@@ -93,8 +459,8 @@ export default function ReservationCheckDetailPage({ params }: { params: Promise
         });
         const json = await res.json();
         if (json.errors) throw new Error(json.errors[0]?.message ?? 'GraphQL error');
-        if (!json.data?.checkReservation) { setMissing(true); return; }
-        setR(json.data.checkReservation);
+        if (!json.data?.checkReservationDetail) { setMissing(true); return; }
+        setR(json.data.checkReservationDetail);
         setError(null);
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Failed to load');
@@ -121,8 +487,16 @@ export default function ReservationCheckDetailPage({ params }: { params: Promise
   const issues = CHECK_LABELS.filter(c => r[c.key] === 'RED' || r[c.key] === 'YELLOW');
   const nights = nightsBetween(r.checkin, r.checkout);
 
+  const totalSegments = r.payments.length + r.vouchers.length + r.notes.length +
+    r.hskNotes.length + r.roomFeatures.length + r.inventories.length +
+    r.promoCodes.length + r.companies.length;
+
+  const erroredSegments = [...r.payments, ...r.vouchers, ...r.notes, ...r.hskNotes,
+    ...r.roomFeatures, ...r.inventories, ...r.promoCodes, ...r.companies]
+    .filter(s => s.error).length;
+
   return (
-    <div style={{ padding: '36px 40px 60px', maxWidth: 860 }}>
+    <div style={{ padding: '36px 40px 60px', maxWidth: 900 }}>
 
       {/* Back */}
       <Link href="/reception/reservation-checks" style={{
@@ -223,7 +597,7 @@ export default function ReservationCheckDetailPage({ params }: { params: Promise
       </div>
 
       {/* Quality checks grid */}
-      <div>
+      <div style={{ marginBottom: 32 }}>
         <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--fg-subtle)', marginBottom: 10 }}>
           Quality Checks
         </div>
@@ -246,6 +620,132 @@ export default function ReservationCheckDetailPage({ params }: { params: Promise
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* ── Booking Engine Segments ── */}
+      <div style={{ borderTop: '1px solid var(--border)', paddingTop: 28 }}>
+
+        {/* Section header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--fg-subtle)', marginBottom: 4 }}>
+              Booking Engine
+            </div>
+            <div style={{ fontSize: 18, fontFamily: 'var(--font-display)', fontWeight: 600, letterSpacing: '-0.01em' }}>
+              Segments
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--fg-muted)' }}>
+              {totalSegments} total
+            </span>
+            {erroredSegments > 0 && (
+              <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', fontWeight: 600 }}>
+                {erroredSegments} error{erroredSegments !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+          {/* Payments */}
+          <div>
+            <SegmentHeader color="#2563EB" label="Payments" count={r.payments.length}
+              icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>}
+            />
+            {r.payments.length === 0 ? <EmptySegment label="payments" /> : (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {r.payments.map(seg => <PaymentCard key={seg.id} seg={seg} />)}
+              </div>
+            )}
+          </div>
+
+          {/* Vouchers */}
+          <div>
+            <SegmentHeader color="#7C3AED" label="Vouchers" count={r.vouchers.length}
+              icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>}
+            />
+            {r.vouchers.length === 0 ? <EmptySegment label="vouchers" /> : (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {r.vouchers.map(seg => <VoucherCard key={seg.id} seg={seg} />)}
+              </div>
+            )}
+          </div>
+
+          {/* Notes */}
+          <div>
+            <SegmentHeader color="#D97706" label="Notes" count={r.notes.length}
+              icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>}
+            />
+            {r.notes.length === 0 ? <EmptySegment label="notes" /> : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {r.notes.map(seg => <NoteCard key={seg.id} seg={seg} color="#D97706" />)}
+              </div>
+            )}
+          </div>
+
+          {/* HSK Notes */}
+          <div>
+            <SegmentHeader color="#EA580C" label="Housekeeping Notes" count={r.hskNotes.length}
+              icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>}
+            />
+            {r.hskNotes.length === 0 ? <EmptySegment label="housekeeping notes" /> : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {r.hskNotes.map(seg => <NoteCard key={seg.id} seg={seg} color="#EA580C" />)}
+              </div>
+            )}
+          </div>
+
+          {/* Room Features */}
+          <div>
+            <SegmentHeader color="#059669" label="Room Features" count={r.roomFeatures.length}
+              icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>}
+            />
+            {r.roomFeatures.length === 0 ? <EmptySegment label="room features" /> : (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {r.roomFeatures.map(seg => <RoomFeatureCard key={seg.id} seg={seg} />)}
+              </div>
+            )}
+          </div>
+
+          {/* Inventories */}
+          <div>
+            <SegmentHeader color="#0891B2" label="Inventories" count={r.inventories.length}
+              icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>}
+            />
+            {r.inventories.length === 0 ? <EmptySegment label="inventories" /> : (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {r.inventories.map(seg => <InventoryCard key={seg.id} seg={seg} />)}
+              </div>
+            )}
+          </div>
+
+          {/* Promo Codes */}
+          <div>
+            <SegmentHeader color="#DB2777" label="Promo Codes" count={r.promoCodes.length}
+              icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>}
+            />
+            {r.promoCodes.length === 0 ? <EmptySegment label="promo codes" /> : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {r.promoCodes.map(seg => <PromoCodeCard key={seg.id} seg={seg} />)}
+              </div>
+            )}
+          </div>
+
+          {/* Companies */}
+          <div>
+            <SegmentHeader color="#4F46E5" label="Companies" count={r.companies.length}
+              icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><rect x="9" y="14" width="6" height="8"/></svg>}
+            />
+            {r.companies.length === 0 ? <EmptySegment label="companies" /> : (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {r.companies.map(seg => <CompanyCard key={seg.id} seg={seg} />)}
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
     </div>

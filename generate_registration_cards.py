@@ -336,7 +336,7 @@ def main():
         try:
             generate_pdf(row, out)
             print(f"  [{i+1:4d}/{total}] {os.path.basename(out)}")
-        except Exception as e:
+        except Exception as e:/
             errors += 1
             print(f"  [{i+1:4d}/{total}] ERROR: {e}")
 

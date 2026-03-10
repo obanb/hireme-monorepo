@@ -64,35 +64,7 @@ export async function listRentalItems(filter?: {
   return result.rows;
 }
 
-export async function createRentalItem(data: {
-  name: string;
-  description?: string | null;
-  category: string;
-  imageUrl?: string | null;
-  totalQuantity: number;
-  dailyRate?: number | null;
-  currency?: string | null;
-}): Promise<RentalItemRow> {
-  const pool = getPool();
-  const id = uuidv4();
-  const result = await pool.query(
-    `INSERT INTO rental_items
-       (id, name, description, category, image_url, total_quantity, daily_rate, currency)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-     RETURNING *`,
-    [
-      id,
-      data.name,
-      data.description ?? null,
-      data.category,
-      data.imageUrl ?? null,
-      data.totalQuantity,
-      data.dailyRate ?? null,
-      data.currency ?? 'EUR',
-    ]
-  );
-  return result.rows[0];
-}
+
 
 export async function updateRentalItem(
   id: string,

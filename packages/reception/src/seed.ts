@@ -18,6 +18,13 @@ function randomOriginId(): string {
   return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
 }
 
+function randomUuid(): string {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = Math.random() * 16 | 0;
+    return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
 function addDays(date: Date, days: number): Date {
   const d = new Date(date);
   d.setDate(d.getDate() + days);
@@ -27,6 +34,188 @@ function addDays(date: Date, days: number): Date {
 function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
+
+// 1 or 2 randomly
+function count12(): number {
+  return Math.random() < 0.5 ? 1 : 2;
+}
+
+function baseSegment(originId: string, msgNumber: number, created: Date, errored = false) {
+  return {
+    originId,
+    notificationId: randomUuid(),
+    sourceId:       randomUuid(),
+    reservationId:  randomUuid(),
+    created,
+    error:          errored,
+    errors:         errored ? ["Error processing: HotelTime error, id: 404, metadata: Reservation not found or has been canceled."] : [],
+    used:           !errored,
+    status:         errored ? "ERROR" : "OK",
+    retrys:         errored ? 1 : 0,
+    msgNumber,
+    hotelId,
+    reprocessed:        false,
+    reprocessedAt:      null,
+    reprocessError:     null,
+    reprocessErrors:    null,
+    reprocessAvailable: errored,
+    apiRequest: {
+      method: "POST",
+      url:    `https://api.hoteltime.com/reservations/${originId}`,
+      body:   { originId },
+    },
+  };
+}
+
+// ── Per-collection generators ─────────────────────────────────────────────────
+
+function makePayments(originId: string, created: Date) {
+  const paymentTypes = ["CREDIT_CARD", "APPLE_PAY", "GOOGLE_PAY"] as const;
+  return Array.from({ length: count12() }, (_, i) => {
+    const errored = i === 1 && Math.random() < 0.3;
+    return {
+      ...baseSegment(originId, i + 1, created, errored),
+      data: {
+        paidAmount:  Math.round(Math.random() * 5000 + 500),
+        paymentType: pick([...paymentTypes]),
+        currency:    "CZK",
+      },
+      dateOfPayment: errored ? null : addDays(created, 1),
+    };
+  });
+}
+
+function makeVouchers(originId: string, created: Date) {
+  const voucherStatuses = ["SUCCESSFUL", "FAILED", "CREATED"] as const;
+  const voucherChars = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+  return Array.from({ length: count12() }, (_, i) => {
+    const errored = i === 1 && Math.random() < 0.3;
+    const status = errored ? "FAILED" : pick(["SUCCESSFUL", "SUCCESSFUL", "CREATED"]);
+    return {
+      ...baseSegment(originId, i + 1, created, errored),
+      data: {
+        amount: {
+          amount:   Math.round(Math.random() * 4000 + 500),
+          currency: "CZK",
+        },
+        transactionId: randomUuid(),
+        voucherNumber: Array.from({ length: 16 }, () => voucherChars[Math.floor(Math.random() * voucherChars.length)]).join(""),
+        status,
+        errorMessage: errored ? "Reservation not found or has been canceled." : null,
+      },
+      dateOfUsage: errored ? null : addDays(created, 2),
+    };
+  });
+}
+
+const noteTexts = [
+  "Guest requested hypoallergenic bedding.",
+  "Late check-in after 23:00 confirmed.",
+  "Anniversary package — flowers and champagne prepared.",
+  "Baby cot requested for child aged 2.",
+  "Vegetarian meal plan noted for entire stay.",
+];
+
+function makeNotes(originId: string, created: Date) {
+  return Array.from({ length: count12() }, (_, i) => ({
+    ...baseSegment(originId, i + 1, created),
+    data:          pick(noteTexts),
+    dateOfUsage:   addDays(created, 1),
+    bookingDotCom: Math.random() < 0.3,
+  }));
+}
+
+const hskNoteTexts = [
+  "Extra towels requested.",
+  "Room refresh needed after 14:00.",
+  "Do not disturb until 11:00.",
+  "Extra pillow for guest with back issues.",
+];
+
+function makeHSKNotes(originId: string, created: Date) {
+  return Array.from({ length: count12() }, (_, i) => ({
+    ...baseSegment(originId, i + 1, created),
+    data:          pick(hskNoteTexts),
+    dateOfUsage:   addDays(created, 1),
+    bookingDotCom: false,
+    roomId:        100 + Math.floor(Math.random() * 50),
+  }));
+}
+
+const roomTypes = ["EXETRP", "STDTWN", "DLXDBL", "SUIKIN", "FAMRM"];
+const featureCodes = [["KING"], ["TWIN"], ["BALCONY", "SEA_VIEW"], ["KING", "JACUZZI"], ["TWIN", "GARDEN_VIEW"]];
+
+function makeRoomFeatures(originId: string, created: Date) {
+  return Array.from({ length: count12() }, (_, i) => {
+    const codes = pick(featureCodes);
+    return {
+      ...baseSegment(originId, i + 1, created),
+      data: {
+        featureMask: Math.pow(2, Math.floor(Math.random() * 16)),
+        codes,
+        roomType:    pick(roomTypes),
+      },
+      multiroom:         Math.random() < 0.2,
+      multiroomWarnings: null,
+      dateOfUsage:       addDays(created, 1),
+      bookingDotCom:     Math.random() < 0.2,
+    };
+  });
+}
+
+const inventoryItems = [
+  { id: 1, name: "Breakfast",      code: "BRK" },
+  { id: 2, name: "Airport Transfer", code: "TRNS" },
+  { id: 3, name: "Parking",        code: "PARK" },
+  { id: 4, name: "Spa Access",     code: "SPA" },
+  { id: 5, name: "Late Checkout",  code: "LTCO" },
+];
+
+function makeInventories(originId: string, created: Date) {
+  return Array.from({ length: count12() }, (_, i) => {
+    const itemCount = 1 + Math.floor(Math.random() * 2);
+    const shuffled = [...inventoryItems].sort(() => Math.random() - 0.5).slice(0, itemCount);
+    return {
+      ...baseSegment(originId, i + 1, created),
+      data: {
+        inventories: shuffled.map((item) => ({ ...item, amount: 1 + Math.floor(Math.random() * 3) })),
+        roomType:    pick(roomTypes),
+      },
+      multiroom:         Math.random() < 0.2,
+      multiroomWarnings: null,
+      dateOfUsage:       addDays(created, 1),
+      bookingDotCom:     Math.random() < 0.2,
+    };
+  });
+}
+
+const promoCodes = ["SUMMER25", "LOYALTY10", "EARLYBIRD", "HONEYMOON", "WEEKEND15"];
+
+function makePromoCodes(originId: string, created: Date) {
+  return Array.from({ length: count12() }, (_, i) => ({
+    ...baseSegment(originId, i + 1, created),
+    data:        pick(promoCodes),
+    dateOfUsage: addDays(created, 1),
+  }));
+}
+
+const companies = [
+  { id: "C001", name: "Acme Corp s.r.o.", dic: "CZ12345678", street: "Wenceslas Square 1", city: "Prague", postalCode: "110 00", country: "CZ", comment: null, contact: { email: "reservations@acme.cz", phone: "+420222333444" } },
+  { id: "C002", name: "TechTravel a.s.",  dic: "CZ87654321", street: "Náměstí Míru 12",   city: "Brno",   postalCode: "602 00", country: "CZ", comment: "VIP client", contact: { email: "travel@techtravel.cz", phone: "+420533222111" } },
+  { id: "C003", name: "Global Events GmbH", dic: null,       street: "Unter den Linden 5", city: "Berlin", postalCode: "10117",  country: "DE", comment: null, contact: { email: "events@globalevents.de", phone: "+493012345678" } },
+];
+
+function makeCompanies(originId: string, created: Date) {
+  // Not every reservation has a company — ~60% chance
+  if (Math.random() > 0.6) return [];
+  return [{
+    ...baseSegment(originId, 1, created),
+    data:        pick(companies),
+    dateOfUsage: null,
+  }];
+}
+
+// ── Reservation check document ────────────────────────────────────────────────
 
 interface BookingDoc {
   originId: string;
@@ -49,7 +238,6 @@ interface BookingDoc {
   status: Status;
 }
 
-// Compute overall status as worst of all sub-statuses
 function overallStatus(statuses: Status[]): Status {
   const order: Record<Status, number> = { RED: 0, YELLOW: 1, PENDING: 2, GREEN: 3, NONE: 4 };
   return [...statuses].sort((a, b) => order[a] - order[b])[0];
@@ -63,7 +251,7 @@ const guestNames = [
   "Jiří Fiala", "Tereza Doležalová", "Michal Krejčí", "Veronika Pokorná",
 ];
 
-const notes = [
+const notePool = [
   "Dobrý den, poprosila bych o potvrzení možnosti malé postýlky pro 2 leté dítě. Mám také bezlepkovou dietu.",
   "Please prepare champagne and flowers for our anniversary. Arriving late after 23:00.",
   "Allergy to feathers — please use hypoallergenic pillows and duvet for all beds.",
@@ -71,11 +259,7 @@ const notes = [
   "We would appreciate a quiet room away from the elevator if possible. Thank you.",
   "Celebrating my husband's 50th birthday. Any small surprise would be appreciated!",
   "Early check-in requested around 10:00 if possible. Will call ahead to confirm.",
-  null,
-  null,
-  null,
-  null,
-  null,
+  null, null, null, null, null,
   "Wheelchair accessible room required. Please confirm availability before arrival.",
   "Connecting rooms needed for family of 5. Children ages 3, 7 and 12.",
   null,
@@ -107,7 +291,7 @@ function generateBooking(index: number): BookingDoc {
   const nights = 1 + Math.floor(Math.random() * 7);
   const checkout = addDays(checkinBase, nights);
   const provider = pick(providers);
-  const customerNote = pick(notes);
+  const customerNote = pick(notePool);
   const adultCount = 1 + Math.floor(Math.random() * 3);
   const childCount = Math.random() < 0.3 ? Math.floor(Math.random() * 3) : 0;
 
@@ -131,17 +315,19 @@ function generateBooking(index: number): BookingDoc {
   };
 }
 
+// ── Seed ──────────────────────────────────────────────────────────────────────
+
 async function seed() {
   await mongoose.connect(MONGO_URI);
   console.log("Connected to MongoDB");
 
   const db = mongoose.connection.db!;
+
+  // ── reservationChecks ──────────────────────────────────────────────────────
   const col = db.collection("reservationChecks");
-
-  // Clear existing seed data
   await col.deleteMany({});
-  console.log("Cleared existing documents");
 
+  const created = addDays(new Date("2025-12-01"), 0);
   const docs = Array.from({ length: 20 }, (_, i) => ({
     data: {
       hotelId,
@@ -157,14 +343,37 @@ async function seed() {
   await col.insertMany(docs);
   console.log(`Inserted ${docs.length} documents into reservationChecks`);
 
-  // Print a summary
+  const originIds = docs.map(d => ({ originId: d.data.booking.originId, created: new Date(d.created) }));
+
+  // ── Booking engine segments ────────────────────────────────────────────────
+  const collections: Array<{ name: string; make: (o: string, c: Date) => object[] }> = [
+    { name: "bookingEnginePayment",    make: makePayments },
+    { name: "bookingEngineVouchers",   make: makeVouchers },
+    { name: "bookingEngineNotes",      make: makeNotes },
+    { name: "bookingEngineHSKNotes",   make: makeHSKNotes },
+    { name: "bookingEngineRoomFeatures", make: makeRoomFeatures },
+    { name: "bookingEngineInventories",  make: makeInventories },
+    { name: "bookingEnginePromoCodes",   make: makePromoCodes },
+    { name: "bookingEngineCompanies",    make: makeCompanies },
+  ];
+
+  for (const { name, make } of collections) {
+    const c = db.collection(name);
+    await c.deleteMany({});
+    const segDocs = originIds.flatMap(({ originId, created }) => make(originId, created));
+    if (segDocs.length > 0) await c.insertMany(segDocs);
+    console.log(`Inserted ${segDocs.length} documents into ${name}`);
+  }
+
+  // ── Summary ────────────────────────────────────────────────────────────────
+  console.log("\nReservation summary:");
   for (const d of docs) {
     const b = d.data.booking;
     console.log(`  ${b.originId}  ${b.owner.padEnd(24)} ${b.status.padEnd(8)} ${b.checkin} → ${b.checkout}`);
   }
 
   await mongoose.disconnect();
-  console.log("Done.");
+  console.log("\nDone.");
 }
 
 seed().catch(err => {
