@@ -209,37 +209,42 @@ export default function RegistrationCardDetailPage() {
   const allOk = card.isDataConfirmed && card.isGDPRRead && card.isHouseRulesAccepted;
 
   return (
-    <div style={{ padding: '28px 32px 60px', maxWidth: 960 }}>
+    <div>
 
-      {/* ── Breadcrumb ── */}
-      <Link href="/reception/registration-cards" style={{
-        fontSize: 12, color: 'var(--accent)', textDecoration: 'none',
-        display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 18,
+      {/* ── Page header ── */}
+      <div style={{
+        background: '#FFFFFF', borderBottom: '1px solid var(--border)',
+        padding: '0 24px', display: 'flex', alignItems: 'center', gap: 14,
+        height: 52, flexShrink: 0,
       }}>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <path d="M15 18l-6-6 6-6"/>
-        </svg>
-        Registration Cards
-      </Link>
-
-      {/* ── Title ── */}
-      <div style={{ marginBottom: 20, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-        <div>
-          <h1 style={{
-            fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700,
-            color: 'var(--fg)', letterSpacing: '-0.02em', margin: 0,
-          }}>
-            {card.firstname} {card.surname}
-          </h1>
-          <div style={{ fontSize: 12, color: 'var(--fg-muted)', marginTop: 5, display: 'flex', gap: 14, alignItems: 'center' }}>
-            <span>Card <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>#{card.idCard}</span></span>
-            <span>·</span>
-            <span>Res <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>#{card.reservationId}</span></span>
-            <span>·</span>
-            <span>{card.hotel.nameShort}</span>
-            {card.source && <><span>·</span><span>{card.source}</span></>}
-          </div>
+        <Link href="/reception/registration-cards" style={{
+          display: 'inline-flex', alignItems: 'center', gap: 5,
+          fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500,
+        }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+          Registration Cards
+        </Link>
+        <span style={{ color: 'var(--border-strong)', fontSize: 16 }}>/</span>
+        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)' }}>
+          {card.firstname} {card.surname}
         </div>
+        <div style={{ fontSize: 11.5, color: 'var(--fg-subtle)', display: 'flex', gap: 10, alignItems: 'center' }}>
+          <span>Card <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--fg-muted)' }}>#{card.idCard}</span></span>
+          <span>·</span>
+          <span>Res <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--fg-muted)' }}>#{card.reservationId}</span></span>
+          <span>·</span>
+          <span>{card.hotel.nameShort}</span>
+          {card.source && <><span>·</span><span>{card.source}</span></>}
+        </div>
+      </div>
+
+    <div style={{ padding: '20px 24px 60px', maxWidth: 960 }}>
+
+      {/* ── Title section ── */}
+      <div style={{ marginBottom: 20, display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', gap: 16 }}>
+        <div style={{ flex: 1 }} />
 
         {/* Right side: stay pill + PDF actions */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flexShrink: 0, alignItems: 'flex-end' }}>
@@ -381,6 +386,7 @@ export default function RegistrationCardDetailPage() {
         )}
       </Section>
 
+    </div>
     </div>
   );
 }

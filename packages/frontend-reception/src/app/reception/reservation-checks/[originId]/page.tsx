@@ -496,42 +496,39 @@ export default function ReservationCheckDetailPage({ params }: { params: Promise
     .filter(s => s.error).length;
 
   return (
-    <div style={{ padding: '36px 40px 60px', maxWidth: 900 }}>
+    <div>
 
-      {/* Back */}
-      <Link href="/reception/reservation-checks" style={{
-        display: 'inline-flex', alignItems: 'center', gap: 6,
-        fontSize: 13, color: 'var(--fg-muted)', textDecoration: 'none', marginBottom: 28,
-        transition: 'color 0.12s',
-      }}
-        onMouseEnter={e => (e.currentTarget.style.color = 'var(--fg)')}
-        onMouseLeave={e => (e.currentTarget.style.color = 'var(--fg-muted)')}
-      >
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M19 12H5M12 19l-7-7 7-7"/>
-        </svg>
-        Reservation Checks
-      </Link>
-
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, paddingBottom: 22, borderBottom: '1px solid var(--border)' }}>
-        <div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--fg-subtle)', marginBottom: 6 }}>{r.originId}</div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em', margin: 0 }}>
-            {r.owner}
-          </h1>
-          <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 13, color: 'var(--fg-muted)', flexWrap: 'wrap' }}>
-            <span>{r.provider}</span>
-            <span style={{ color: 'var(--border-strong)' }}>·</span>
-            <span>{r.checkin} → {r.checkout}</span>
-            <span style={{ color: 'var(--border-strong)' }}>·</span>
-            <span>{nights} night{nights !== 1 ? 's' : ''}</span>
-            <span style={{ color: 'var(--border-strong)' }}>·</span>
-            <span>{r.adultCount} adult{r.adultCount !== 1 ? 's' : ''}{r.childCount > 0 ? `, ${r.childCount} child${r.childCount !== 1 ? 'ren' : ''}` : ''}</span>
-          </div>
+      {/* ── Page header ── */}
+      <div style={{
+        background: '#FFFFFF', borderBottom: '1px solid var(--border)',
+        padding: '0 24px', display: 'flex', alignItems: 'center', gap: 14,
+        height: 52, flexShrink: 0,
+      }}>
+        <Link href="/reception/reservation-checks" style={{
+          display: 'inline-flex', alignItems: 'center', gap: 5,
+          fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500,
+        }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+          Reservation Checks
+        </Link>
+        <span style={{ color: 'var(--border-strong)', fontSize: 16 }}>/</span>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--fg-muted)', fontWeight: 500 }}>{r.originId}</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)' }}>{r.owner}</div>
+        <div style={{ fontSize: 11.5, color: 'var(--fg-subtle)', display: 'flex', gap: 8, alignItems: 'center' }}>
+          <span>{r.provider}</span>
+          <span>·</span>
+          <span>{r.checkin} → {r.checkout}</span>
+          <span>·</span>
+          <span>{nights}n</span>
         </div>
-        <StatusBadge status={r.status} />
+        <div style={{ marginLeft: 'auto' }}>
+          <StatusBadge status={r.status} />
+        </div>
       </div>
+
+    <div style={{ padding: '20px 24px 60px', maxWidth: 900 }}>
 
       {/* Alert banner */}
       {issues.length > 0 && (
@@ -748,6 +745,7 @@ export default function ReservationCheckDetailPage({ params }: { params: Promise
 
         </div>
       </div>
+    </div>
     </div>
   );
 }

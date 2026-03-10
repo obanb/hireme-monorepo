@@ -12,7 +12,7 @@
       "static/chunks/4bd1b696-382748cc942d8a14.js",
       "static/chunks/255-943b5d4167f9acc9.js",
       "static/chunks/main-app-79ca58000d177cb4.js",
-      "static/css/eba0348ee1e26717.css",
+      "static/css/c71c54c730e1fa29.css",
       "static/chunks/app/layout-a3284437c8a5b88b.js"
     ],
     "/page": [
@@ -28,15 +28,7 @@
       "static/chunks/255-943b5d4167f9acc9.js",
       "static/chunks/main-app-79ca58000d177cb4.js",
       "static/chunks/619-4615fff36a19bab2.js",
-      "static/chunks/app/reception/layout-1afb9d6017ab0089.js"
-    ],
-    "/reception/page": [
-      "static/chunks/webpack-45ffa6695c3dc91b.js",
-      "static/chunks/4bd1b696-382748cc942d8a14.js",
-      "static/chunks/255-943b5d4167f9acc9.js",
-      "static/chunks/main-app-79ca58000d177cb4.js",
-      "static/chunks/619-4615fff36a19bab2.js",
-      "static/chunks/app/reception/page-20d5b04211b6b433.js"
+      "static/chunks/app/reception/layout-bfa1ba47eb72067c.js"
     ],
     "/reception/arriving-guests/calendar/page": [
       "static/chunks/webpack-45ffa6695c3dc91b.js",
@@ -44,7 +36,7 @@
       "static/chunks/255-943b5d4167f9acc9.js",
       "static/chunks/main-app-79ca58000d177cb4.js",
       "static/chunks/619-4615fff36a19bab2.js",
-      "static/chunks/app/reception/arriving-guests/calendar/page-f509e38e87cd35bb.js"
+      "static/chunks/app/reception/arriving-guests/calendar/page-814f66bf3bb2add5.js"
     ],
     "/reception/arriving-guests/page": [
       "static/chunks/webpack-45ffa6695c3dc91b.js",
@@ -52,7 +44,15 @@
       "static/chunks/255-943b5d4167f9acc9.js",
       "static/chunks/main-app-79ca58000d177cb4.js",
       "static/chunks/619-4615fff36a19bab2.js",
-      "static/chunks/app/reception/arriving-guests/page-5f0e0fd477de61ff.js"
+      "static/chunks/app/reception/arriving-guests/page-048ab5e11e033717.js"
+    ],
+    "/reception/page": [
+      "static/chunks/webpack-45ffa6695c3dc91b.js",
+      "static/chunks/4bd1b696-382748cc942d8a14.js",
+      "static/chunks/255-943b5d4167f9acc9.js",
+      "static/chunks/main-app-79ca58000d177cb4.js",
+      "static/chunks/619-4615fff36a19bab2.js",
+      "static/chunks/app/reception/page-34804dc3d0c35b44.js"
     ],
     "/reception/registration-cards/[id]/page": [
       "static/chunks/webpack-45ffa6695c3dc91b.js",
@@ -60,7 +60,7 @@
       "static/chunks/255-943b5d4167f9acc9.js",
       "static/chunks/main-app-79ca58000d177cb4.js",
       "static/chunks/619-4615fff36a19bab2.js",
-      "static/chunks/app/reception/registration-cards/[id]/page-4195e48f567719e9.js"
+      "static/chunks/app/reception/registration-cards/[id]/page-b8e69ce420fc0ab5.js"
     ],
     "/reception/registration-cards/page": [
       "static/chunks/webpack-45ffa6695c3dc91b.js",
@@ -68,7 +68,7 @@
       "static/chunks/255-943b5d4167f9acc9.js",
       "static/chunks/main-app-79ca58000d177cb4.js",
       "static/chunks/619-4615fff36a19bab2.js",
-      "static/chunks/app/reception/registration-cards/page-9bbfee3c1e7d57ad.js"
+      "static/chunks/app/reception/registration-cards/page-9514e4b7ecca2709.js"
     ],
     "/reception/reservation-checks/[originId]/page": [
       "static/chunks/webpack-45ffa6695c3dc91b.js",
@@ -76,7 +76,7 @@
       "static/chunks/255-943b5d4167f9acc9.js",
       "static/chunks/main-app-79ca58000d177cb4.js",
       "static/chunks/619-4615fff36a19bab2.js",
-      "static/chunks/app/reception/reservation-checks/[originId]/page-c2bf0ee24381ad4d.js"
+      "static/chunks/app/reception/reservation-checks/[originId]/page-5e950c3fd3dfc7ff.js"
     ],
     "/reception/reservation-checks/page": [
       "static/chunks/webpack-45ffa6695c3dc91b.js",
@@ -84,7 +84,7 @@
       "static/chunks/255-943b5d4167f9acc9.js",
       "static/chunks/main-app-79ca58000d177cb4.js",
       "static/chunks/619-4615fff36a19bab2.js",
-      "static/chunks/app/reception/reservation-checks/page-90e464f74578e40c.js"
+      "static/chunks/app/reception/reservation-checks/page-771742dd04947ed9.js"
     ]
   }
 }

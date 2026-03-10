@@ -1,9 +1,9 @@
 {
   "/_not-found/page": "/_not-found",
   "/page": "/",
-  "/reception/page": "/reception",
   "/reception/arriving-guests/calendar/page": "/reception/arriving-guests/calendar",
   "/reception/arriving-guests/page": "/reception/arriving-guests",
+  "/reception/page": "/reception",
   "/reception/registration-cards/[id]/page": "/reception/registration-cards/[id]",
   "/reception/registration-cards/page": "/reception/registration-cards",
   "/reception/reservation-checks/[originId]/page": "/reception/reservation-checks/[originId]",

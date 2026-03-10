@@ -422,37 +422,33 @@ export default function CalendarPage() {
 
       {/* ── Top bar ── */}
       <div style={{
-        padding: '16px 24px',
-        borderBottom: '1px solid var(--border-strong)',
-        background: 'var(--bg)',
+        height: 52,
+        paddingLeft: 24, paddingRight: 24,
+        borderBottom: '1px solid var(--border)',
+        background: '#FFFFFF',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         flexShrink: 0,
         gap: 16,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href="/reception/arriving-guests" style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            color: 'var(--fg-muted)', textDecoration: 'none',
-            fontSize: 13, padding: '5px 10px',
-            border: '1px solid var(--border-strong)',
-            borderRadius: 7,
-            background: 'var(--bg-surface)',
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500,
           }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M19 12H5M12 5l-7 7 7 7"/>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M15 18l-6-6 6-6"/>
             </svg>
-            List
+            Arriving Guests
           </Link>
-
-          <div>
-            <h1 style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 20, fontWeight: 600,
-              color: 'var(--fg)', margin: 0,
-              letterSpacing: '-0.02em',
-            }}>
-              7-Day Arrival Calendar
-            </h1>
+          <span style={{ color: 'var(--border-strong)', fontSize: 16 }}>/</span>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            7-Day Arrival Calendar
           </div>
         </div>
 

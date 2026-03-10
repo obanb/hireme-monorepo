@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FrontDesk 2.0 — Loyalty & Perks (SC-03)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+  :root {
+    --navy:#1C2B3A; --accent:#E8A045; --red:#C84B4B; --green:#3A9E6F; --blue:#4A7FCB;
+    --surface:#F4F6F9; --white:#FFFFFF;
+    --border:rgba(28,43,58,.09); --border-mid:rgba(28,43,58,.16);
+    --text:#1C2B3A; --text-mid:#4A5E72; --text-soft:#8A9BB0;
+    --c-r:#C84B4B; --c-l:#3A9E6F; --c-v:#4A7FCB; --c-re:#E8A045;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--text);min-height:100vh;font-size:13px}
+
+  /* NAV */
+  .topnav{background:var(--navy);height:48px;display:flex;align-items:center;padding:0 20px;gap:16px;position:sticky;top:0;z-index:100}
+  .logo{font-size:13px;font-weight:600;color:#fff;letter-spacing:3px;line-height:1}
+  .logo small{display:block;font-size:9px;font-weight:300;letter-spacing:1px;opacity:.5;margin-top:1px}
+  .nav-search{flex:1;max-width:440px;display:flex;margin-left:auto}
+  .nav-search select{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-right:none;color:rgba(255,255,255,.75);padding:0 10px;font-size:12px;font-family:inherit;border-radius:6px 0 0 6px;height:32px;outline:none}
+  .nav-search input{flex:1;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;padding:0 12px;font-size:12px;font-family:inherit;border-radius:0 6px 6px 0;height:32px;outline:none}
+  .nav-search input::placeholder{color:rgba(255,255,255,.35)}
+  .nav-user{color:rgba(255,255,255,.65);font-size:12px;margin-left:auto;display:flex;align-items:center;gap:8px}
+  .nav-avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff}
+
+  /* PAGE HEADER */
+  .page-header{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:12px;height:52px}
+  .page-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--navy);flex-shrink:0}
+  .page-title svg{color:var(--accent)}
+  .hotel-sel{border:1px solid var(--border-mid);border-radius:7px;padding:0 10px;height:32px;font-family:inherit;font-size:12px;color:var(--navy);background:var(--white);outline:none;min-width:155px;cursor:pointer}
+  .period-tabs{display:flex;gap:4px;background:var(--surface);border-radius:7px;padding:3px;flex-shrink:0}
+  .pt{padding:4px 12px;border-radius:5px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--text-mid);font-family:inherit;transition:all .15s}
+  .pt.active{background:var(--navy);color:#fff}
+  .pt:hover:not(.active){background:rgba(28,43,58,.07)}
+  .lc-wrap{display:flex;align-items:center;gap:4px}
+  .lc-lbl{font-size:11px;color:var(--text-mid);margin-right:2px;white-space:nowrap}
+  .lc{display:flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;border:none;cursor:pointer;transition:opacity .15s}
+  .lc:hover{opacity:.75}
+  .lc.r{background:rgba(200,75,75,.1);color:var(--c-r)}
+  .lc.l{background:rgba(58,158,111,.1);color:var(--c-l)}
+  .lc.v{background:rgba(74,127,203,.1);color:var(--c-v)}
+  .lc.re{background:rgba(232,160,69,.1);color:var(--c-re)}
+  .tdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+  .tdot.r{background:var(--c-r)} .tdot.l{background:var(--c-l)} .tdot.v{background:var(--c-v)} .tdot.re{background:var(--c-re)}
+  .filter-btn{margin-left:auto;display:flex;align-items:center;gap:5px;border:1px solid var(--border-mid);background:var(--white);border-radius:7px;padding:0 12px;height:32px;font-family:inherit;font-size:12px;font-weight:500;color:var(--text-mid);cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0}
+  .filter-btn:hover{border-color:var(--navy);color:var(--navy)}
+
+  /* SMART ALERT */
+  .smart-alert{margin:14px 20px 0;background:linear-gradient(135deg,rgba(232,160,69,.07),rgba(232,160,69,.02));border:1px solid rgba(232,160,69,.28);border-radius:9px;padding:9px 14px;display:flex;align-items:center;gap:10px}
+  .sa-icon{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+  .sa-text{font-size:12px;color:var(--navy);line-height:1.5}
+  .sa-text strong{font-weight:600}
+  .sa-btn{margin-left:auto;background:var(--accent);color:#fff;border:none;border-radius:7px;padding:6px 12px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0;transition:opacity .15s}
+  .sa-btn:hover{opacity:.85}
+
+  /* MAIN */
+  .main{display:flex;height:calc(100vh - 48px - 52px - 62px);margin-top:14px;padding:0 20px 14px}
+
+  /* TABLE */
+  .tbl-wrap{flex:1;background:var(--white);border-radius:11px;border:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column;transition:margin-right .22s;min-width:0}
+  .tbl-wrap.panel-open{margin-right:14px}
+  .tbl-head{display:grid;grid-template-columns:28px 96px 26px minmax(100px,1fr) 84px 84px 110px 50px 96px minmax(80px,1fr);align-items:center;padding:0 14px;height:36px;border-bottom:1px solid var(--border);background:var(--surface);gap:8px;flex-shrink:0}
+  .th{font-size:10.5px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tbl-body{flex:1;overflow-y:auto}
+  .tbl-body::-webkit-scrollbar{width:3px}
+  .tbl-body::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:3px}
+
+  /* ROW */
+  .row{display:grid;grid-template-columns:28px 96px 26px minmax(100px,1fr) 84px 84px 110px 50px 96px minmax(80px,1fr);align-items:center;padding:0 14px;height:44px;border-bottom:1px solid var(--border);gap:8px;cursor:pointer;transition:background .1s;position:relative}
+  .row:hover{background:rgba(28,43,58,.025)}
+  .row.sel{background:rgba(74,127,203,.055)}
+  .row.al{border-left:3px solid var(--accent)}
+  .row.al-r{border-left:3px solid var(--c-r)}
+  .ht-ico{width:20px;height:20px;background:var(--navy);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .ht-ico span{color:#fff;font-size:6.5px;font-weight:700;font-family:'DM Mono'}
+  .res-link{font-family:'DM Mono';font-size:11px;color:var(--blue);font-weight:500;white-space:nowrap;text-decoration:underline;text-underline-offset:2px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;display:block}
+  .res-link:hover{color:var(--navy)}
+  .t-ico{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:#fff}
+  .t-ico.r{background:var(--c-r)} .t-ico.l{background:var(--c-l)} .t-ico.v{background:var(--c-v)} .t-ico.re{background:var(--c-re)}
+  .g-name{font-weight:500;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1}
+  .cell-date{font-size:11.5px;color:var(--text-mid);white-space:nowrap}
+  .cell-phone{font-size:11px;color:var(--text-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cell-num{font-size:12px;font-weight:600;color:var(--navy)}
+  .cell-amt{font-size:11.5px;font-weight:500;color:var(--navy);white-space:nowrap}
+  .chips{display:flex;flex-wrap:wrap;gap:3px;align-items:center}
+  .chip{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:10.5px;font-weight:500;white-space:nowrap}
+  .chip.ok{background:rgba(58,158,111,.1);color:var(--green)}
+  .chip.miss{background:rgba(232,160,69,.1);color:var(--c-re);border:1px dashed rgba(232,160,69,.4)}
+  .chip-add{width:20px;height:20px;border:1.5px dashed var(--border-mid);border-radius:4px;display:flex;align-items:center;justify-content:center;color:var(--text-soft);font-size:13px;cursor:pointer;transition:all .15s;flex-shrink:0;line-height:1}
+  .chip-add:hover{border-color:var(--blue);color:var(--blue);background:rgba(74,127,203,.08)}
+
+  /* QUICK PANEL */
+  .qp{width:0;overflow:hidden;background:var(--white);border-radius:11px;border:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;transition:width .22s ease}
+  .qp.open{width:312px}
+  .qp-inner{width:312px;display:flex;flex-direction:column;height:100%;overflow:hidden}
+  .qp-top{padding:12px 14px 10px;border-bottom:1px solid var(--border);flex-shrink:0}
+  .qp-toprow{display:flex;align-items:flex-start;gap:8px}
+  .qp-close{width:24px;height:24px;border-radius:5px;border:none;background:var(--surface);color:var(--text-mid);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;transition:background .12s;margin-left:auto}
+  .qp-close:hover{background:var(--border-mid)}
+  .qp-res-num{font-size:13.5px;font-weight:700;color:var(--navy)}
+  .qp-hotel{font-size:11px;color:var(--text-mid);margin-top:1px}
+  .qp-owner{font-size:13px;font-weight:600;color:var(--navy);margin-top:7px}
+  .qp-contact-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-top:4px}
+  .qp-contact-info{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .qp-ci{font-size:11px;color:var(--text-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .qp-comms-btns{display:flex;gap:4px;flex-shrink:0;margin-top:1px}
+  .qp-comm-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:6px;border:1.5px solid var(--border-mid);background:var(--white);font-family:inherit;font-size:11px;font-weight:500;color:var(--text-mid);cursor:pointer;transition:all .15s;white-space:nowrap}
+  .qp-comm-btn:hover:not(.dis){border-color:var(--blue);color:var(--blue);background:rgba(74,127,203,.07)}
+  .qp-comm-btn.dis{opacity:.35;cursor:not-allowed}
+  .qp-comm-btn.active{border-color:var(--navy);background:var(--navy);color:#fff}
+  .qp-comms-inline{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+  .qp-comms-inline.hidden{display:none}
+  .comms-mode-label{font-size:10px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+  .tier-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:4px;font-size:10.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;margin-top:6px}
+  .tier-badge.r{background:rgba(200,75,75,.1);color:var(--c-r)}
+  .tier-badge.l{background:rgba(58,158,111,.1);color:var(--c-l)}
+  .tier-badge.v{background:rgba(74,127,203,.1);color:var(--c-v)}
+  .tier-badge.re{background:rgba(232,160,69,.1);color:var(--c-re)}
+
+  /* summary (no title) */
+  .qp-summ{padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+  .summ-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-radius:7px;overflow:hidden}
+  .summ-cell{background:var(--surface);padding:8px 10px}
+  .summ-lbl{font-size:10px;color:var(--text-soft);margin-bottom:2px}
+  .summ-val{font-size:14px;font-weight:700;color:var(--navy)}
+  .summ-sub{font-size:10px;color:var(--text-soft);margin-top:1px}
+
+  /* scrollable */
+  .qp-scroll{flex:1;overflow-y:auto;padding:0}
+  .qp-scroll::-webkit-scrollbar{width:3px}
+  .qp-scroll::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:3px}
+
+  /* collapsible benefits */
+  .ben-block{border-bottom:1px solid var(--border)}
+  .ben-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;user-select:none;transition:background .12s}
+  .ben-header:hover{background:rgba(28,43,58,.025)}
+  .ben-htitle{font-size:10px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+  .ben-toggle{font-size:11px;color:var(--text-soft);transition:transform .2s}
+  .ben-toggle.collapsed{transform:rotate(-90deg)}
+  .ben-toggle-wrap{display:flex;align-items:center;gap:6px}
+  .ben-body{padding:0 14px 10px}
+  .ben-body.hidden{display:none}
+  .ben-list{display:flex;flex-direction:column;gap:4px}
+  .ben-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;border:1.5px solid var(--border);cursor:pointer;transition:all .12s}
+  .ben-item:hover{border-color:var(--blue);background:rgba(74,127,203,.05)}
+  .ben-item.chk{border-color:var(--green);background:rgba(58,158,111,.07)}
+  .ben-cb{width:16px;height:16px;border-radius:4px;border:2px solid var(--border-mid);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .12s}
+  .ben-item.chk .ben-cb{background:var(--green);border-color:var(--green);color:#fff}
+  .ben-name{font-size:12px;font-weight:500;color:var(--navy);flex:1}
+  .ai-tag{display:inline-flex;align-items:center;gap:3px;padding:1px 5px;background:linear-gradient(135deg,rgba(155,110,207,.15),rgba(74,127,203,.15));border:1px solid rgba(155,110,207,.25);border-radius:3px;font-size:9.5px;color:#7B5EA7;font-weight:600;white-space:nowrap}
+  .assigned-pills{display:flex;flex-wrap:wrap;gap:3px;padding:0 14px 10px}
+  .assigned-pills.hidden{display:none}
+  .ap{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:10.5px;font-weight:500;background:rgba(58,158,111,.1);color:var(--green)}
+
+  /* info sections */
+  .info-block{padding:10px 14px;border-bottom:1px solid var(--border)}
+  .sec-title{font-size:10px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
+  .info-grid{display:flex;flex-direction:column;gap:4px}
+  .i-row{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+  .i-lbl{font-size:11px;color:var(--text-soft);flex-shrink:0}
+  .i-val{font-size:11px;font-weight:500;color:var(--navy);text-align:right}
+
+  /* PDF section */
+  .pdf-section{padding:10px 14px;border-bottom:1px solid var(--border)}
+  .pdf-row{display:flex;align-items:center;gap:9px;padding:3px 0}
+  .pdf-ico{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .12s}
+  .pdf-ico.done{background:rgba(58,158,111,.1)}
+  .pdf-ico.done:hover{background:rgba(58,158,111,.2)}
+  .pdf-ico.done svg{color:var(--green)}
+  .pdf-ico.partial{background:rgba(232,160,69,.12)}
+  .pdf-ico.partial:hover{background:rgba(232,160,69,.22)}
+  .pdf-ico.partial svg{color:var(--c-re)}
+  .pdf-info{flex:1;min-width:0}
+  .pdf-gname{font-size:12px;font-weight:500;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pdf-status{font-size:10.5px;color:var(--text-soft);margin-top:1px}
+  .pdf-progress{flex-shrink:0;display:flex;align-items:center;gap:5px}
+  .pdf-frac{font-size:11.5px;font-weight:700}
+  .pdf-frac.complete{color:var(--green)}
+  .pdf-frac.partial{color:var(--c-re)}
+  .pdf-dots{display:flex;gap:3px}
+  .pdot{width:8px;height:8px;border-radius:50%}
+  .pdot.on{background:var(--green)}
+  .pdot.off{background:rgba(232,160,69,.35);border:1.5px solid rgba(232,160,69,.6)}
+
+  /* COMMS WIDGET */
+  .comms-block{border-bottom:1px solid var(--border)}
+  .comms-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;user-select:none;transition:background .12s}
+  .comms-header:hover{background:rgba(28,43,58,.025)}
+  .comms-htitle{font-size:10px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:7px}
+  .comms-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;background:rgba(74,127,203,.1);border-radius:4px;font-size:9.5px;color:var(--blue);font-weight:600;text-transform:none;letter-spacing:0}
+  .comms-toggle{font-size:11px;color:var(--text-soft);transition:transform .2s}
+  .comms-toggle.collapsed{transform:rotate(-90deg)}
+  .comms-body{padding:0 14px 12px}
+  .comms-body.hidden{display:none}
+  .comms-tabs{display:flex;gap:4px;margin-bottom:10px}
+  .ctab{flex:1;padding:6px 4px;border-radius:7px;font-family:inherit;font-size:11.5px;font-weight:500;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--text-mid);transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px}
+  .ctab.active{border-color:var(--navy);background:var(--navy);color:#fff}
+  .ctab:hover:not(.active){border-color:var(--blue);color:var(--blue)}
+  .ctab:disabled{opacity:.4;cursor:not-allowed}
+  .comms-to-line{font-size:11px;color:var(--text-soft);margin-bottom:8px;display:flex;align-items:center;gap:5px}
+  .comms-to-line strong{color:var(--navy);font-weight:500}
+  .comms-to-line .warn{color:var(--c-re);font-size:10px}
+  .tpls{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+  .tpl{padding:3px 8px;border-radius:5px;border:1px solid var(--border-mid);background:var(--surface);font-family:inherit;font-size:10.5px;color:var(--text-mid);cursor:pointer;transition:all .15s;white-space:nowrap}
+  .tpl:hover{border-color:var(--blue);color:var(--blue);background:rgba(74,127,203,.07)}
+  .comms-ta{width:100%;border:1.5px solid var(--border-mid);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:12px;color:var(--navy);resize:none;outline:none;line-height:1.5;transition:border-color .15s;background:var(--white)}
+  .comms-ta:focus{border-color:var(--blue)}
+  .comms-send{width:100%;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:8px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;margin-top:8px;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px}
+  .comms-send:hover{opacity:.85}
+  .comms-send.sent{background:var(--green)}
+
+  /* actions */
+  .qp-actions{padding:10px 14px;flex-shrink:0;border-top:1px solid var(--border);display:flex;gap:6px}
+  .btn-save{flex:1;background:var(--navy);color:#fff;border:none;border-radius:8px;padding:9px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+  .btn-save:hover{opacity:.85}
+  .btn-save.ok{background:var(--green)}
+  .btn-reset{background:transparent;color:var(--text-mid);border:1px solid var(--border-mid);border-radius:8px;padding:9px 14px;font-family:inherit;font-size:12px;cursor:pointer;transition:all .15s;white-space:nowrap}
+  .btn-reset:hover{border-color:var(--c-r);color:var(--c-r)}
+
+  /* toast */
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(50px);background:var(--navy);color:#fff;padding:10px 18px;border-radius:9px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:8px;opacity:0;transition:all .25s;z-index:200;box-shadow:0 4px 16px rgba(0,0,0,.18)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="logo">O·R·E·A<small>Hotels & Resorts</small></div>
+  <div class="nav-search">
+    <select><option>Hotely</option></select>
+    <input type="text" placeholder="Napište cokoliv…">
+  </div>
+  <div class="nav-user">peter.balaz@orea.cz<div class="nav-avatar">PB</div></div>
+</nav>
+
+<div class="page-header">
+  <div class="page-title">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+    Loyalty &amp; Perks
+  </div>
+  <select class="hotel-sel"><option>All hotels</option><option>OREA Congress Hotel Brno</option><option>OREA Hotel Špičák Šumava</option></select>
+  <div class="period-tabs">
+    <button class="pt active" onclick="switchTab(this)">Dnes</button>
+    <button class="pt" onclick="switchTab(this)">Zítra</button>
+    <button class="pt" onclick="switchTab(this)">7 dní</button>
+  </div>
+  <div class="lc-wrap">
+    <span class="lc-lbl">Celkem Loyalty: 98</span>
+    <button class="lc r"><div class="tdot r"></div>51 Repeater</button>
+    <button class="lc l"><div class="tdot l"></div>29 Loyal</button>
+    <button class="lc v"><div class="tdot v"></div>12 VIP</button>
+    <button class="lc re"><div class="tdot re"></div>6 Reactivated</button>
+  </div>
+  <button class="filter-btn" onclick="showToast('Filter panel')">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+    Filter
+  </button>
+</div>
+
+<div class="smart-alert">
+  <div class="sa-icon">✦</div>
+  <div class="sa-text"><strong>Smart Alert:</strong> 12 hostí s Loyalty statusom nemá priradené benefity na dnešný nájazd.</div>
+  <button class="sa-btn" onclick="openPanel('holcner')">Zobraziť hostí bez benefitov</button>
+</div>
+
+<div class="main">
+  <div class="tbl-wrap" id="tblWrap">
+    <div class="tbl-head">
+      <div class="th">HT</div>
+      <div class="th">Rezervácia</div>
+      <div class="th"></div>
+      <div class="th">Profil</div>
+      <div class="th">Check-in</div>
+      <div class="th">Check-out</div>
+      <div class="th">Telefón</div>
+      <div class="th">Pobyty</div>
+      <div class="th">Utraceno</div>
+      <div class="th">Benefity</div>
+    </div>
+    <div class="tbl-body" id="tblBody"></div>
+  </div>
+  <div class="qp" id="qp">
+    <div class="qp-inner" id="qpInner"></div>
+  </div>
+</div>
+
+<div class="toast" id="toastEl"><span>✓</span><span id="toastTxt"></span></div>
+
+<script>
+const ALL_BENEFITS = [
+  'Amenita do 100 Kč','Amenita do 50 Kč','Amenita nad 100 CZK',
+  'Early C/I','Fruit plate','Late C/O','Makronky','Minibar',
+  'Parkování zdarma','Pes zdarma','Prossecco',
+  'Stejný pokoj','Storno bez poplatku','Upgrade pokoje',
+  'Uvítací kartička','Welcome drink'
+];
+
+const TIER_SVG = {
+  r:`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`,
+  l:`<svg width="12" height="12" viewBox="0 0 24 24" fill="#fff" stroke="#fff" stroke-width="1"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
+  v:`<svg width="12" height="12" viewBox="0 0 24 24" fill="#fff" stroke="#fff" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+  re:`<svg width="12" height="12" viewBox="0 0 24 24" fill="#fff" stroke="#fff" stroke-width="1"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`
+};
+const TIER_NAME = { r:'Repeater', l:'Loyal', v:'VIP', re:'Reactivated' };
+
+// Email/SMS templates
+const EMAIL_TPLS = {
+  'Potvrdenie príchodu': 'Dobrý deň, tešíme sa na Váš príchod {checkin}. Check-in je od 15:00, pokoj {room} Vás bude čakať. V prípade otázok sme k dispozícii.',
+  'Benefity pripravené': 'Dobrý deň, ako náš verný hosť sme pre Vás pripravili malé prekvapenie. Tešíme sa na Vás!',
+  'Upgrade pokoja': 'Dobrý deň, radi by sme Vám ponúkli upgrade na vyššiu kategóriu pokoja. Kontaktujte nás pre viac informácií.',
+  'Early check-in': 'Dobrý deň, potvrzujeme Váš early check-in. Pokoj bude pripravený od 12:00.'
+};
+const SMS_TPLS = {
+  'Príchod dnes': 'OREA: Vitajte! Check-in od 15:00, pokoj {room}. Tešíme sa na Vás.',
+  'Pokoj pripravený': 'OREA: Váš pokoj {room} je pripravený. Prajeme príjemný pobyt!',
+  'Benefit': 'OREA: Pripravili sme pre Vás malé prekvapenie pri príchode. Tešíme sa!'
+};
+
+const GUESTS = [
+  { id:'rechtorovic', res:'658804322', tier:'l', name:'Rechtorovic Martin', phone:'+420702289219', email:'martin.rechtorovic@gmail.com', checkin:'10.03.2026', checkout:'14.03.2026', stays:44, spent:'335 571 Kč', hotel:'OREA Congress Hotel Brno', rooms:1, gc:2, g2name:'Rechtorovicová Jana', g2email:'', g2phone:'', g2filled:false, ratecode:'BAD-BB-CZ', room:'804', nights:4, benefits:{'Welcome drink':true,'Late C/O':false}, ai:[] },
+  { id:'rezek', res:'658777422', tier:'l', name:'Rezek Jan', phone:'+420724028037', email:'janrezek@email.cz', checkin:'10.03.2026', checkout:'12.03.2026', stays:12, spent:'275 834 Kč', hotel:'OREA Congress Hotel Brno', rooms:1, gc:1, g2name:'', g2email:'', g2phone:'', g2filled:false, ratecode:'BAD-BB-CZ', room:'512', nights:2, benefits:{'Amenita do 100 Kč':false}, ai:['Amenita do 100 Kč'] },
+  { id:'herman', res:'658549260', tier:'l', name:'Herman Miroslav', phone:'+420775235278', email:'xherman@seznam.cz', checkin:'10.03.2026', checkout:'13.03.2026', stays:47, spent:'273 318 Kč', hotel:'OREA Congress Hotel Brno', rooms:1, gc:2, g2name:'Hermanová Petra', g2email:'petra.herman@seznam.cz', g2phone:'+420775235279', g2filled:true, ratecode:'BAD-BB-CZ', room:'315', nights:3, benefits:{'Prossecco':true,'Welcome drink':true}, ai:[] },
+  { id:'cempirkova', res:'652490590', tier:'l', name:'Cempírková Lucie', phone:'+420732117181', email:'adamovalucie93@gmail.com', checkin:'10.03.2026', checkout:'11.03.2026', stays:13, spent:'251 722 Kč', hotel:'OREA Congress Hotel Brno', rooms:1, gc:1, g2name:'', g2email:'', g2phone:'', g2filled:false, ratecode:'BAD-BB-CZ', room:'207', nights:1, benefits:{'Amenita do 50 Kč':false}, ai:['Amenita do 50 Kč'] },
+  { id:'bartonova', res:'658867732', tier:'l', name:'Bartoňová Jaroslava', phone:'+420739682812', email:'jarka.bartonova3@seznam.cz', checkin:'10.03.2026', checkout:'12.03.2026', stays:15, spent:'230 148 Kč', hotel:'OREA Congress Hotel Brno', rooms:1, gc:2, g2name:'Bartoň Pavel', g2email:'', g2phone:'+420739682813', g2filled:false, ratecode:'BAD-BB-CZ', room:'418', nights:2, benefits:{'Upgrade pokoje':true}, ai:[] },
+  { id:'csomor', res:'658144695', tier:'l', name:'Csomor Jan', phone:'+420732150742', email:'jan.csomor@uvn.cz', checkin:'10.03.2026', checkout:'12.03.2026', stays:13, spent:'203 613 Kč', hotel:'OREA Congress Hotel Brno', rooms:1, gc:1, g2name:'', g2email:'', g2phone:'', g2filled:false, ratecode:'BAD-BB-CZ', room:'320', nights:2, benefits:{'Amenita do 100 Kč':true}, ai:[] },
+  { id:'placha', res:'658517990', tier:'v', name:'Plachá Michaela', phone:'+420777685514', email:'jasnykvet@volny.cz', checkin:'10.03.2026', checkout:'13.03.2026', stays:8, spent:'138 561 Kč', hotel:'OREA Congress Hotel Brno', rooms:1, gc:2, g2name:'Plachý Tomáš', g2email:'', g2phone:'', g2filled:false, ratecode:'BAR-BB-CZ', room:'601', nights:3, benefits:{'Fruit plate':false,'Upgrade pokoje':false}, ai:['Fruit plate','Upgrade pokoje'] },
+  { id:'holcner', res:'658837536', tier:'v', name:'Holcner Ing. Miloš', phone:'+420777710708', email:'milos.holcner@masek.cz', checkin:'10.03.2026', checkout:'11.03.2026', stays:11, spent:'113 955 Kč', hotel:'OREA Congress Hotel Brno', rooms:1, gc:2, g2name:'Holcnerová Eva', g2email:'eva.holcner@masek.cz', g2phone:'+420777710709', g2filled:true, ratecode:'BAR-BB-CZ', room:'1007', nights:1,
+    benefits:{'Amenita do 100 Kč':false,'Amenita do 50 Kč':false,'Amenita nad 100 CZK':false,'Early C/I':false,'Fruit plate':false,'Late C/O':false,'Makronky':false,'Minibar':false,'Parkování zdarma':false,'Pes zdarma':false,'Prossecco':false,'Stejný pokoj':false,'Storno bez poplatku':false,'Upgrade pokoje':false,'Uvítací kartička':false,'Welcome drink':false},
+    ai:['Amenita nad 100 CZK','Upgrade pokoje'] },
+  { id:'sablikova', res:'658794953', tier:'l', name:'Sablíková Marketa', phone:'+420605952499', email:'mari.machacova@gmail.com', checkin:'10.03.2026', checkout:'12.03.2026', stays:6, spent:'102 732 Kč', hotel:'OREA Congress Hotel Brno', rooms:1, gc:1, g2name:'', g2email:'', g2phone:'', g2filled:false, ratecode:'BAD-BB-CZ', room:'210', nights:2, benefits:{'Welcome drink':false}, ai:['Welcome drink'] },
+  { id:'maule', res:'658769974', tier:'v', name:'Maule Petr', phone:'+420602434513', email:'maule@cefas.cz', checkin:'10.03.2026', checkout:'13.03.2026', stays:14, spent:'97 679 Kč', hotel:'OREA Congress Hotel Brno', rooms:1, gc:2, g2name:'Maulová Kateřina', g2email:'', g2phone:'+420602434514', g2filled:false, ratecode:'BAR-BB-CZ', room:'703', nights:3, benefits:{'Upgrade pokoje':false,'Stejný pokoj':false}, ai:['Upgrade pokoje'] },
+  { id:'bezouskova', res:'658786878', tier:'l', name:'Bezoušková Tereza', phone:'+420737851735', email:'tetefka@seznam.cz', checkin:'10.03.2026', checkout:'11.03.2026', stays:4, spent:'89 694 Kč', hotel:'OREA Congress Hotel Brno', rooms:1, gc:1, g2name:'', g2email:'', g2phone:'', g2filled:false, ratecode:'BAD-BB-CZ', room:'108', nights:1, benefits:{'Amenita do 50 Kč':false}, ai:['Amenita do 50 Kč'] },
+  { id:'jelinkova', res:'654000860', tier:'v', name:'Jelínková Jana', phone:'+420724112846', email:'yanna.jelinkova@gmail.com', checkin:'10.03.2026', checkout:'12.03.2026', stays:8, spent:'77 881 Kč', hotel:'OREA Congress Hotel Brno', rooms:1, gc:2, g2name:'Jelínek Pavel', g2email:'pavel.jelinek@gmail.com', g2phone:'+420724112847', g2filled:true, ratecode:'BAR-BB-CZ', room:'406', nights:2, benefits:{'Fruit plate':true}, ai:[] },
+  { id:'holl', res:'658784319', tier:'l', name:'Holl Petra', phone:'+420604332276', email:'petra.holl@seznam.cz', checkin:'10.03.2026', checkout:'12.03.2026', stays:7, spent:'74 263 Kč', hotel:'OREA Congress Hotel Brno', rooms:1, gc:1, g2name:'', g2email:'', g2phone:'', g2filled:false, ratecode:'BAD-BB-CZ', room:'215', nights:2, benefits:{'Uvítací kartička':false}, ai:['Uvítací kartička'] },
+  { id:'krausova', res:'657447202', tier:'r', name:'Krausová Lucie', phone:'+420774104734', email:'luciekrausova1@gmail.com', checkin:'10.03.2026', checkout:'11.03.2026', stays:5, spent:'73 278 Kč', hotel:'OREA Congress Hotel Brno', rooms:1, gc:1, g2name:'', g2email:'', g2phone:'', g2filled:false, ratecode:'BAD-BB-CZ', room:'112', nights:1, benefits:{'Amenita do 100 Kč':true}, ai:[] },
+  { id:'cino', res:'653679914', tier:'l', name:'Cino Miroslav', phone:'+420722212159', email:'miroslav.cino@gmail.com', checkin:'10.03.2026', checkout:'13.03.2026', stays:17, spent:'67 968 Kč', hotel:'OREA Congress Hotel Brno', rooms:1, gc:2, g2name:'Cinová Věra', g2email:'vera.cino@gmail.com', g2phone:'+420722212160', g2filled:true, ratecode:'BAD-BB-CZ', room:'416', nights:3, benefits:{'Late C/O':true}, ai:[] },
+];
+
+let localBenefits = {};
+let currentId = null;
+let commsMode = 'email'; // 'email' | 'sms'
+
+function renderTable() {
+  document.getElementById('tblBody').innerHTML = GUESTS.map(g => {
+    const assigned = Object.entries(g.benefits).filter(([,v])=>v).map(([k])=>`<span class="chip ok">✓ ${k}</span>`).join('');
+    const firstMiss = g.ai.length ? `<span class="chip miss">! ${g.ai[0]}</span>` : '';
+    const alertCls = g.ai.length ? 'al' : '';
+    return `<div class="row ${alertCls}" id="row-${g.id}" onclick="openPanel('${g.id}')">
+      <div class="ht-ico"><span>HT</span></div>
+      <span class="res-link" onclick="event.stopPropagation()">${g.res}</span>
+      <div class="t-ico ${g.tier}" title="${TIER_NAME[g.tier]}">${TIER_SVG[g.tier]}</div>
+      <div class="g-name">${g.name}</div>
+      <span class="cell-date">${g.checkin}</span>
+      <span class="cell-date">${g.checkout}</span>
+      <span class="cell-phone">${g.phone}</span>
+      <span class="cell-num">${g.stays}</span>
+      <span class="cell-amt">${g.spent}</span>
+      <div class="chips" id="chips-${g.id}">${assigned}${firstMiss}<div class="chip-add" onclick="event.stopPropagation();openPanel('${g.id}')" title="Benefity">+</div></div>
+    </div>`;
+  }).join('');
+}
+
+function openPanel(id) {
+  const g = GUESTS.find(x=>x.id===id);
+  if (!g) return;
+  currentId = id;
+  commsMode = 'email';
+  localBenefits = {};
+  ALL_BENEFITS.forEach(b => { localBenefits[b] = g.benefits[b] || false; });
+  document.querySelectorAll('.row').forEach(r=>r.classList.remove('sel'));
+  const row = document.getElementById('row-'+id);
+  if (row) { row.classList.add('sel'); row.scrollIntoView({block:'nearest',behavior:'smooth'}); }
+  renderPanel(g);
+  document.getElementById('qp').classList.add('open');
+  document.getElementById('tblWrap').classList.add('panel-open');
+}
+
+function closePanel() {
+  document.getElementById('qp').classList.remove('open');
+  document.getElementById('tblWrap').classList.remove('panel-open');
+  document.querySelectorAll('.row').forEach(r=>r.classList.remove('sel'));
+  currentId = null;
+}
+
+function renderPanel(g) {
+  const openCount = Math.max(1, Math.floor(g.stays * 0.18));
+  const totalNum = parseInt(g.spent.replace(/[^\d]/g,''));
+  const openNum = Math.round(totalNum * 0.33);
+  const fmt = n => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+
+  // Benefits collapsible
+  const startCollapsed = Object.values(g.benefits).some(v=>v);
+  const assignedCount = Object.values(g.benefits).filter(v=>v).length;
+  const aiLabel = g.ai.length ? `<span class="ai-tag" style="margin-left:4px">✦ AI ${g.ai.length}</span>` : '';
+  const countLabel = assignedCount > 0
+    ? `<span style="font-size:10px;color:var(--green);font-weight:600">${assignedCount} priradené</span>`
+    : `<span style="font-size:10px;color:var(--c-re)">žiadne</span>`;
+  const benHtml = ALL_BENEFITS.map(b => {
+    const chk = localBenefits[b];
+    const isAI = g.ai.includes(b);
+    return `<div class="ben-item${chk?' chk':''}" onclick="toggleBen('${b}',this)">
+      <div class="ben-cb">${chk?'✓':''}</div>
+      <span class="ben-name">${b}</span>
+      ${isAI?`<span class="ai-tag">✦ AI</span>`:''}
+    </div>`;
+  }).join('');
+  const assignedPills = Object.entries(g.benefits).filter(([,v])=>v).map(([k])=>`<span class="ap">✓ ${k}</span>`).join('');
+  const collCls = startCollapsed ? 'hidden' : '';
+  const pillsCls = startCollapsed ? '' : 'hidden';
+  const togCls = startCollapsed ? 'collapsed' : '';
+
+  // PDF rows — 1 or 2 guests
+  function pdfRow(name, filled, idx, total) {
+    const frac = `${idx}/${total}`;
+    const isComplete = filled;
+    const icoClass = isComplete ? 'done' : 'partial';
+    const fracClass = isComplete ? 'complete' : 'partial';
+    const dots = Array.from({length:total},(_,i)=>`<div class="pdot ${i<idx?'on':'off'}"></div>`).join('');
+    return `<div class="pdf-row">
+      <div class="pdf-ico ${icoClass}" onclick="showToast('PDF: ${name}')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </div>
+      <div class="pdf-info">
+        <div class="pdf-gname">${name}</div>
+        <div class="pdf-status">${isComplete ? 'Vyplnené' : 'Čaká na vyplnenie'}</div>
+      </div>
+      <div class="pdf-progress">
+        <div class="pdf-dots">${dots}</div>
+        <span class="pdf-frac ${fracClass}">${frac}</span>
+      </div>
+    </div>`;
+  }
+
+  // Filled count for guest 1 always 1 (main), guest 2 depends on g2filled
+  const totalGuests = g.gc;
+  const g1FilledIdx = 1; // main guest always has PDF
+  const g1Row = pdfRow(g.name, true, g1FilledIdx, totalGuests);
+  const g2Row = g.gc === 2 ? pdfRow(g.g2name || '2. hosť', g.g2filled, g.g2filled ? 2 : 1, totalGuests) : '';
+
+  // Comms widget
+  const hasEmail = !!g.email;
+  const hasPhone = !!g.phone;
+  const tplHtml = (tpls) => Object.keys(tpls).map(k=>`<button class="tpl" onclick="fillTpl('${k}')">${k}</button>`).join('');
+  const toLine = commsMode === 'email'
+    ? (hasEmail ? `<span>Komu: <strong>${g.name}</strong> &lt;${g.email}&gt;</span>` : `<span class="warn">⚠ Hosť nemá email</span>`)
+    : (hasPhone ? `<span>Komu: <strong>${g.name}</strong> ${g.phone}</span>` : `<span class="warn">⚠ Hosť nemá telefón</span>`);
+  const emailDisabled = hasEmail ? '' : 'disabled';
+  const smsDisabled = hasPhone ? '' : 'disabled';
+
+  document.getElementById('qpInner').innerHTML = `
+    <div class="qp-top">
+      <div class="qp-toprow">
+        <div style="flex:1">
+          <div class="qp-res-num">Rezervace č. ${g.res}</div>
+          <div class="qp-hotel">${g.hotel}</div>
+          <div class="qp-owner">${g.name}</div>
+          <div class="qp-contact-row">
+            <div class="qp-contact-info">
+              ${g.phone ? `<span class="qp-ci">${g.phone}</span>` : ''}
+              ${g.email ? `<span class="qp-ci">${g.email}</span>` : ''}
+            </div>
+            <div class="qp-comms-btns">
+              <button class="qp-comm-btn${hasEmail?'':' dis'}" onclick="${hasEmail?'openCommsInline(&apos;email&apos;)':''}" title="${hasEmail?'Email':'Bez emailu'}">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                Email
+              </button>
+              <button class="qp-comm-btn${hasPhone?'':' dis'}" onclick="${hasPhone?'openCommsInline(&apos;sms&apos;)':''}" title="${hasPhone?'SMS':'Bez telefónu'}">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                SMS
+              </button>
+            </div>
+          </div>
+          <div class="qp-comms-inline hidden" id="commsInline">
+            <div class="comms-mode-label" id="commsModeLabel"></div>
+            <div class="tpls" id="commsTpls"></div>
+            <textarea class="comms-ta" id="commsTa" rows="3" placeholder="Napíšte správu…"></textarea>
+            <div style="display:flex;gap:5px;margin-top:6px">
+              <button class="comms-send" id="commsSend" onclick="sendComms()" style="flex:1;padding:7px">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                Odoslať
+              </button>
+              <button onclick="closeCommsInline()" style="background:transparent;border:1px solid var(--border-mid);border-radius:8px;padding:7px 12px;font-family:inherit;font-size:11px;cursor:pointer;color:var(--text-mid)">Zrušiť</button>
+            </div>
+          </div>
+          <div class="tier-badge ${g.tier}">${TIER_SVG[g.tier]} ${TIER_NAME[g.tier]}</div>
+        </div>
+        <button class="qp-close" onclick="closePanel()">✕</button>
+      </div>
+    </div>
+
+    <!-- SUMMARY — no title -->
+    <div class="qp-summ">
+      <div class="summ-grid">
+        <div class="summ-cell">
+          <div class="summ-lbl">Celkem rezervací</div>
+          <div class="summ-val">${g.stays}</div>
+          <div class="summ-sub">${g.spent}</div>
+        </div>
+        <div class="summ-cell">
+          <div class="summ-lbl">Otevřené</div>
+          <div class="summ-val">${openCount}</div>
+          <div class="summ-sub">${fmt(openNum)} Kč</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="qp-scroll">
+
+      <!-- BENEFITS -->
+      <div class="ben-block">
+        <div class="ben-header" onclick="toggleBenCollapse(this)">
+          <div class="ben-htitle">Benefity ${aiLabel}</div>
+          <div class="ben-toggle-wrap">
+            ${countLabel}
+            <div class="ben-toggle ${togCls}">▾</div>
+          </div>
+        </div>
+        <div class="assigned-pills ${pillsCls}" id="assignedPills">${assignedPills}</div>
+        <div class="ben-body ${collCls}" id="benBody">
+          <div class="ben-list">${benHtml}</div>
+        </div>
+      </div>
+
+      <!-- RESERVATION -->
+      <div class="info-block">
+        <div class="sec-title">Rezervace</div>
+        <div class="info-grid">
+          <div class="i-row"><span class="i-lbl">Termín:</span><span class="i-val">${g.checkin} – ${g.checkout}</span></div>
+          <div class="i-row"><span class="i-lbl">Celkem pokojů:</span><span class="i-val">${g.rooms}</span></div>
+          <div class="i-row"><span class="i-lbl">Celkem hostů:</span><span class="i-val">${g.gc}</span></div>
+          <div class="i-row"><span class="i-lbl">Promokód:</span><span class="i-val" style="color:var(--text-soft)">—</span></div>
+        </div>
+      </div>
+
+      <!-- GUESTS -->
+      <div class="info-block">
+        <div class="sec-title">Hosté</div>
+        <div class="info-grid">
+          <div class="i-row"><span class="i-lbl">Termín:</span><span class="i-val">${g.checkin} – ${g.checkout} (${g.nights} noc/í)</span></div>
+          <div class="i-row"><span class="i-lbl">Pokoj číslo:</span><span class="i-val">${g.room}</span></div>
+          <div class="i-row"><span class="i-lbl">Ratecode:</span><span class="i-val">${g.ratecode}</span></div>
+          <div class="i-row"><span class="i-lbl">1. hosť:</span><span class="i-val">${g.name}</span></div>
+          ${g.gc===2 ? `<div class="i-row"><span class="i-lbl">2. hosť:</span><span class="i-val">${g.g2name||'—'}</span></div>` : ''}
+        </div>
+      </div>
+
+      <!-- PDF REGISTRATION CARDS -->
+      <div class="pdf-section">
+        <div class="sec-title" style="margin-bottom:8px">Registračné karty</div>
+        ${g1Row}
+        ${g2Row}
+      </div>
+
+    </div>
+
+    <div class="qp-actions">
+      <button class="btn-save" id="saveBtn" onclick="saveBenefits()">Uložiť</button>
+      <button class="btn-reset" onclick="resetBenefits()">Resetovat</button>
+    </div>
+  `;
+}
+
+// ── COMMS INLINE ──
+function openCommsInline(mode) {
+  if (!currentId) return;
+  const g = GUESTS.find(x=>x.id===currentId);
+  commsMode = mode;
+  // highlight active button
+  document.querySelectorAll('.qp-comm-btn').forEach(b => b.classList.remove('active'));
+  const idx = mode==='email' ? 0 : 1;
+  const btns = document.querySelectorAll('.qp-comm-btn');
+  if (btns[idx]) btns[idx].classList.add('active');
+  // show inline area
+  const inline = document.getElementById('commsInline');
+  if (inline) inline.classList.remove('hidden');
+  // set label
+  const lbl = document.getElementById('commsModeLabel');
+  if (lbl) lbl.textContent = mode==='email' ? `Email → ${g.email}` : `SMS → ${g.phone}`;
+  // fill templates
+  const tpls = mode==='email' ? EMAIL_TPLS : SMS_TPLS;
+  const tplsEl = document.getElementById('commsTpls');
+  if (tplsEl) tplsEl.innerHTML = Object.keys(tpls).map(k=>`<button class="tpl" onclick="fillTpl('${k}')">${k}</button>`).join('');
+  // reset textarea
+  const ta = document.getElementById('commsTa');
+  if (ta) { ta.placeholder = mode==='email'?'Napíšte správu…':'Max. 160 znakov…'; ta.value=''; ta.focus(); }
+  // update send btn label
+  const btn = document.getElementById('commsSend');
+  if (btn) btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Odoslať ${mode==='email'?'email':'SMS'}`;
+}
+
+function closeCommsInline() {
+  const inline = document.getElementById('commsInline');
+  if (inline) inline.classList.add('hidden');
+  document.querySelectorAll('.qp-comm-btn').forEach(b => b.classList.remove('active'));
+}
+
+function fillTpl(key) {
+  if (!currentId) return;
+  const g = GUESTS.find(x=>x.id===currentId);
+  const tpls = commsMode==='email' ? EMAIL_TPLS : SMS_TPLS;
+  const txt = (tpls[key]||'').replace('{checkin}',g.checkin).replace('{room}',g.room);
+  const ta = document.getElementById('commsTa');
+  if (ta) { ta.value = txt; ta.focus(); }
+}
+
+function sendComms() {
+  const ta = document.getElementById('commsTa');
+  if (!ta || !ta.value.trim()) { showToast('Napíšte správu pred odoslaním'); return; }
+  const btn = document.getElementById('commsSend');
+  if (btn) { btn.classList.add('sent'); btn.textContent='✓ Odoslané'; setTimeout(()=>{ btn.classList.remove('sent'); btn.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Odoslať ${commsMode==='email'?'email':'SMS'}`; }, 1800); }
+  ta.value = '';
+  const g = GUESTS.find(x=>x.id===currentId);
+  showToast(`${commsMode==='email'?'Email':'SMS'} odoslaný: ${g.name}`);
+  closeCommsInline();
+}
+
+// ── BENEFITS ──
+function toggleBenCollapse(headerEl) {
+  const block = headerEl.closest('.ben-block');
+  const body = block.querySelector('#benBody');
+  const pills = block.querySelector('#assignedPills');
+  const toggle = headerEl.querySelector('.ben-toggle');
+  const isHidden = body.classList.toggle('hidden');
+  toggle.classList.toggle('collapsed', isHidden);
+  if (pills) {
+    const hasAssigned = pills.children.length > 0;
+    pills.classList.toggle('hidden', !isHidden || !hasAssigned);
+  }
+}
+
+function toggleBen(name, el) {
+  localBenefits[name] = !localBenefits[name];
+  el.classList.toggle('chk', localBenefits[name]);
+  el.querySelector('.ben-cb').textContent = localBenefits[name] ? '✓' : '';
+  const cnt = Object.values(localBenefits).filter(v=>v).length;
+  const cEl = document.querySelector('.ben-toggle-wrap span');
+  if (cEl) { cEl.style.color = cnt>0?'var(--green)':'var(--c-re)'; cEl.textContent = cnt>0?`${cnt} priradené`:'žiadne'; }
+  const pills = document.getElementById('assignedPills');
+  if (pills) pills.innerHTML = ALL_BENEFITS.filter(b=>localBenefits[b]).map(b=>`<span class="ap">✓ ${b}</span>`).join('');
+}
+
+function saveBenefits() {
+  if (!currentId) return;
+  const g = GUESTS.find(x=>x.id===currentId);
+  ALL_BENEFITS.forEach(b => { g.benefits[b] = localBenefits[b]; });
+  g.ai = g.ai.filter(a => !localBenefits[a]);
+  const chips = document.getElementById('chips-'+currentId);
+  if (chips) {
+    const assigned = ALL_BENEFITS.filter(b=>g.benefits[b]).map(b=>`<span class="chip ok">✓ ${b}</span>`).join('');
+    const miss = g.ai.length ? `<span class="chip miss">! ${g.ai[0]}</span>` : '';
+    chips.innerHTML = assigned + miss + `<div class="chip-add" onclick="event.stopPropagation();openPanel('${currentId}')" title="Benefity">+</div>`;
+  }
+  if (g.ai.length === 0) document.getElementById('row-'+currentId)?.classList.remove('al','al-r');
+  const btn = document.getElementById('saveBtn');
+  if (btn) { btn.classList.add('ok'); btn.textContent='✓ Uložené'; setTimeout(()=>{btn.classList.remove('ok');btn.textContent='Uložiť';},1500); }
+  showToast('Benefity pre '+g.name.split(' ')[0]+' boli uložené');
+}
+
+function resetBenefits() {
+  ALL_BENEFITS.forEach(b => { localBenefits[b] = false; });
+  document.querySelectorAll('.ben-item').forEach(el => { el.classList.remove('chk'); el.querySelector('.ben-cb').textContent=''; });
+  const cEl = document.querySelector('.ben-toggle-wrap span');
+  if (cEl) { cEl.style.color='var(--c-re)'; cEl.textContent='žiadne'; }
+  const pills = document.getElementById('assignedPills');
+  if (pills) pills.innerHTML = '';
+  showToast('Benefity resetované');
+}
+
+function switchTab(btn) {
+  document.querySelectorAll('.pt').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toastEl');
+  document.getElementById('toastTxt').textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2400);
+}
+
+renderTable();
+</script>
+</body>
+</html>

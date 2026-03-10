@@ -321,44 +321,48 @@ function RegistrationCardsInner() {
         onClose={() => { esRef.current?.close(); setBulkProgress(null); }}
       />
     )}
-    <div style={{ padding: '28px 32px 60px' }}>
+    <div>
 
-      {/* ── Header ── */}
-      <div style={{ marginBottom: 22, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-        <div>
-          <h1 style={{
-            fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700,
-            color: 'var(--fg)', letterSpacing: '-0.02em', margin: 0,
-          }}>
-            Registration Cards
-          </h1>
-          <div style={{ fontSize: 12, color: 'var(--fg-muted)', marginTop: 4 }}>
-            {loading ? 'Loading…' : `${data?.total ?? 0} records`}
-          </div>
+      {/* ── Page header ── */}
+      <div style={{
+        background: '#FFFFFF', borderBottom: '1px solid var(--border)',
+        padding: '0 24px', display: 'flex', alignItems: 'center', gap: 14,
+        height: 52, flexShrink: 0,
+      }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0"/>
+          </svg>
+          Registration Cards
         </div>
-
-        {/* Download all — SSE-based with progress modal */}
+        <div style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>
+          {loading ? 'Loading…' : `${data?.total ?? 0} records`}
+        </div>
         {!loading && data && data.total > 0 && (
-          <button
-            onClick={startBulkDownload}
-            disabled={bulkProgress?.phase === 'generating'}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 7,
-              padding: '8px 14px', borderRadius: 8,
-              border: 'none', background: 'var(--accent)',
-              color: '#fff', cursor: bulkProgress?.phase === 'generating' ? 'default' : 'pointer',
-              fontSize: 12, fontWeight: 600, boxShadow: 'var(--shadow-card)',
-              flexShrink: 0, opacity: bulkProgress?.phase === 'generating' ? 0.7 : 1,
-            }}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-              <polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            Download all ({data.total}) PDF
-          </button>
+          <div style={{ marginLeft: 'auto' }}>
+            <button
+              onClick={startBulkDownload}
+              disabled={bulkProgress?.phase === 'generating'}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '6px 13px', borderRadius: 7,
+                border: 'none', background: 'var(--accent)',
+                color: '#fff', cursor: bulkProgress?.phase === 'generating' ? 'default' : 'pointer',
+                fontSize: 12, fontWeight: 600,
+                opacity: bulkProgress?.phase === 'generating' ? 0.7 : 1,
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Download all ({data.total}) PDF
+            </button>
+          </div>
         )}
       </div>
+
+    <div style={{ padding: '20px 24px 60px' }}>
 
       {/* ── Filters ── */}
       <div style={{
@@ -663,6 +667,7 @@ function RegistrationCardsInner() {
         </div>
       )}
 
+    </div>
     </div>
     </>
   );

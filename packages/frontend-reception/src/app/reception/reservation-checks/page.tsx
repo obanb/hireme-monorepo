@@ -63,20 +63,20 @@ const STATUS_FILTERS: StatusFilter[] = ['ALL', 'RED', 'YELLOW', 'GREEN', 'PENDIN
 const statusOrder: Record<CheckReservationStatus, number> = { RED: 0, YELLOW: 1, PENDING: 2, GREEN: 3, NONE: 4 };
 
 const filterColors: Record<string, { solid: string; text: string; dot: string }> = {
-  ALL:     { solid: '#0EA5E9', text: '#fff',    dot: '#0EA5E9' },
-  RED:     { solid: '#DC2626', text: '#fff',    dot: '#DC2626' },
-  YELLOW:  { solid: '#D97706', text: '#fff',    dot: '#D97706' },
-  GREEN:   { solid: '#059669', text: '#fff',    dot: '#059669' },
-  PENDING: { solid: '#6D28D9', text: '#fff',    dot: '#6D28D9' },
-  NONE:    { solid: '#64748B', text: '#fff',    dot: '#64748B' },
+  ALL:     { solid: '#1C2B3A', text: '#fff',    dot: '#1C2B3A' },
+  RED:     { solid: '#C84B4B', text: '#fff',    dot: '#C84B4B' },
+  YELLOW:  { solid: '#C88A20', text: '#fff',    dot: '#C88A20' },
+  GREEN:   { solid: '#3A9E6F', text: '#fff',    dot: '#3A9E6F' },
+  PENDING: { solid: '#4A7FCB', text: '#fff',    dot: '#4A7FCB' },
+  NONE:    { solid: '#8A9BB0', text: '#fff',    dot: '#8A9BB0' },
 };
 
 const rowAccent: Record<CheckReservationStatus, string> = {
-  RED: '#DC2626', YELLOW: '#D97706', GREEN: '#059669', PENDING: '#6D28D9', NONE: '#94A3B8',
+  RED: '#C84B4B', YELLOW: '#C88A20', GREEN: '#3A9E6F', PENDING: '#4A7FCB', NONE: '#8A9BB0',
 };
 
 const providerMeta: Record<string, { label: string; color: string }> = {
-  'BOOKING_ENGINE': { label: 'Direct',      color: '#0EA5E9' },
+  'BOOKING_ENGINE': { label: 'Direct',      color: '#4A7FCB' },
   'BOOKING_COM':    { label: 'Booking.com', color: '#0070C9' },
   'EXPEDIA':        { label: 'Expedia',     color: '#D97706' },
   'HOTEL_TIME':     { label: 'HotelTime',   color: '#059669' },
@@ -760,39 +760,46 @@ export default function ReservationChecksPage() {
   const to   = Math.min(meta.page * meta.limit, meta.total);
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'flex-start' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
 
-      {/* ── List side ── */}
-      <div style={{ flex: 1, minWidth: 0, padding: '36px 32px 60px', transition: 'padding 0.25s' }}>
-
-        {/* Header */}
-        <div style={{
-          display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
-          marginBottom: 24, paddingBottom: 22, borderBottom: '1px solid var(--border)',
-        }}>
-          <div>
-            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em', margin: 0 }}>
-              Reservation Checks
-            </h1>
-            <p style={{ color: 'var(--fg-muted)', margin: '5px 0 0', fontSize: 13 }}>
-              Showing {from}–{to} of {meta.total} reservation{meta.total !== 1 ? 's' : ''}
-            </p>
-          </div>
+      {/* ── Page header ── */}
+      <div style={{
+        background: '#FFFFFF', borderBottom: '1px solid var(--border)',
+        padding: '0 24px', display: 'flex', alignItems: 'center', gap: 14,
+        height: 52, flexShrink: 0,
+      }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 8l2 2 4-4"/>
+          </svg>
+          Reservation Checks
+        </div>
+        <div style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>
+          {from}–{to} of {meta.total} reservation{meta.total !== 1 ? 's' : ''}
+        </div>
+        <div style={{ marginLeft: 'auto' }}>
           <button
             onClick={() => location.reload()}
             style={{
-              display: 'flex', alignItems: 'center', gap: 6,
+              display: 'inline-flex', alignItems: 'center', gap: 6,
               fontSize: 12, color: 'var(--fg-muted)', cursor: 'pointer',
-              padding: '5px 10px', borderRadius: 6,
-              background: 'var(--bg-surface)', border: '1px solid var(--border)',
+              padding: '5px 11px', borderRadius: 7,
+              background: 'var(--bg-surface)', border: '1px solid var(--border-strong)',
             }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
             </svg>
             Refresh
           </button>
         </div>
+      </div>
+
+      {/* ── Two-pane body ── */}
+      <div style={{ display: 'flex', flex: 1, alignItems: 'flex-start' }}>
+
+      {/* ── List side ── */}
+      <div style={{ flex: 1, minWidth: 0, padding: '20px 24px 60px', transition: 'padding 0.25s' }}>
 
         {error && (
           <div style={{ padding: '12px 16px', borderRadius: 8, marginBottom: 20, background: 'var(--status-red-bg)', border: '1px solid var(--status-red-border)', fontSize: 13, color: 'var(--status-red)' }}>
@@ -1059,6 +1066,7 @@ export default function ReservationChecksPage() {
           onClose={() => setPreviewId(null)}
         />
       )}
+      </div>
     </div>
   );
 }

@@ -354,49 +354,45 @@ function ArrivingGuestsInner() {
     });
 
   return (
-    <div style={{ padding: '28px 32px', maxWidth: 1400 }}>
+    <div style={{ minHeight: '100%' }}>
 
-      {/* ── Header ── */}
-      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-        <div>
-          <h1 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 26,
-            fontWeight: 600,
-            color: 'var(--fg)',
-            margin: 0,
-            letterSpacing: '-0.02em',
-          }}>
-            Arriving Guests
-          </h1>
-          <p style={{ color: 'var(--fg-muted)', fontSize: 13, margin: '4px 0 0', lineHeight: 1.4 }}>
-            Upcoming reservations and check-in overview
-          </p>
-        </div>
-        <Link
-          href="/reception/arriving-guests/calendar"
-          style={{
-            display: 'flex', alignItems: 'center', gap: 7,
-            padding: '8px 16px',
-            borderRadius: 8,
-            background: 'var(--accent)',
-            color: '#fff',
-            textDecoration: 'none',
-            fontSize: 13, fontWeight: 500,
-            letterSpacing: '-0.01em',
-            boxShadow: 'var(--shadow-card)',
-            transition: 'opacity 0.15s',
-          }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-            <line x1="16" y1="2" x2="16" y2="6"/>
-            <line x1="8" y1="2" x2="8" y2="6"/>
-            <line x1="3" y1="10" x2="21" y2="10"/>
+      {/* ── Page header ── */}
+      <div style={{
+        background: '#FFFFFF', borderBottom: '1px solid var(--border)',
+        padding: '0 24px', display: 'flex', alignItems: 'center', gap: 14,
+        height: 52, flexShrink: 0,
+      }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
           </svg>
-          7-Day Calendar
-        </Link>
+          Arriving Guests
+        </div>
+        <div style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>
+          Upcoming reservations &amp; check-in overview
+        </div>
+        <div style={{ marginLeft: 'auto' }}>
+          <Link
+            href="/reception/arriving-guests/calendar"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '6px 13px', borderRadius: 7,
+              background: 'var(--accent)', color: '#fff',
+              textDecoration: 'none', fontSize: 12, fontWeight: 500,
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            7-Day Calendar
+          </Link>
+        </div>
       </div>
+
+    <div style={{ padding: '20px 24px 60px', maxWidth: 1400 }}>
 
       {/* ── Filters ── */}
       <div style={{
@@ -816,6 +812,7 @@ function ArrivingGuestsInner() {
           )}
         </>
       )}
+    </div>
     </div>
   );
 }

@@ -58,23 +58,6 @@ const nav: NavGroup[] = [
   },
 ];
 
-function HotelMark() {
-  return (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      {/* Building silhouette */}
-      <rect x="4" y="10" width="20" height="16" rx="1" stroke="var(--accent)" strokeWidth="1.5" fill="var(--accent-light)" />
-      {/* Roof peak */}
-      <path d="M2 11L14 3l12 8" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      {/* Door */}
-      <rect x="11" y="19" width="6" height="7" rx="0.5" stroke="var(--accent)" strokeWidth="1.2" />
-      {/* Windows row */}
-      <rect x="6" y="13" width="3" height="3" rx="0.5" fill="var(--accent)" opacity="0.6" />
-      <rect x="12.5" y="13" width="3" height="3" rx="0.5" fill="var(--accent)" opacity="0.6" />
-      <rect x="19" y="13" width="3" height="3" rx="0.5" fill="var(--accent)" opacity="0.6" />
-    </svg>
-  );
-}
-
 export default function Sidebar() {
   const pathname = usePathname();
   const [time, setTime] = useState<Date | null>(null);
@@ -96,7 +79,6 @@ export default function Sidebar() {
     <aside style={{
       width: 'var(--sidebar-width)',
       background: 'var(--sidebar-bg)',
-      borderRight: '1px solid var(--border)',
       display: 'flex',
       flexDirection: 'column',
       flexShrink: 0,
@@ -107,41 +89,43 @@ export default function Sidebar() {
     }}>
 
       {/* Logo */}
-      <div style={{ padding: '20px 18px 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <HotelMark />
-          <div>
-            <div style={{
-              fontFamily: 'var(--font-display)',
-              fontWeight: 700,
-              fontSize: 14,
-              color: 'var(--fg)',
-              letterSpacing: '-0.01em',
-              lineHeight: 1.1,
-            }}>
-              Reception
-            </div>
-            <div style={{ fontSize: 10, color: 'var(--fg-subtle)', marginTop: 2, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-              Hotel Ops
-            </div>
-          </div>
+      <div style={{ padding: '16px 16px 14px' }}>
+        <div style={{
+          fontFamily: 'var(--font-mono)',
+          fontWeight: 600,
+          fontSize: 13,
+          color: '#FFFFFF',
+          letterSpacing: '0.18em',
+          lineHeight: 1,
+        }}>
+          O·R·E·A
+        </div>
+        <div style={{
+          fontSize: 9,
+          fontWeight: 400,
+          letterSpacing: '0.10em',
+          color: 'rgba(255,255,255,.35)',
+          marginTop: 3,
+          textTransform: 'uppercase',
+        }}>
+          Reception
         </div>
       </div>
 
-      <div style={{ height: 1, background: 'var(--border)', margin: '0 0' }} />
+      <div style={{ height: 1, background: 'rgba(255,255,255,.07)', margin: '0' }} />
 
       {/* Navigation */}
-      <nav style={{ padding: '12px 8px', flex: 1 }}>
+      <nav style={{ padding: '10px 8px', flex: 1 }}>
         {nav.map((group, gi) => (
-          <div key={group.section} style={{ marginBottom: gi < nav.length - 1 ? 16 : 0 }}>
+          <div key={group.section} style={{ marginBottom: gi < nav.length - 1 ? 14 : 0 }}>
             <div style={{
               fontSize: 9,
-              fontWeight: 700,
+              fontWeight: 600,
               letterSpacing: '0.11em',
               textTransform: 'uppercase',
-              color: 'var(--fg-subtle)',
-              padding: '0 10px',
-              marginBottom: 5,
+              color: 'rgba(255,255,255,.28)',
+              padding: '0 8px',
+              marginBottom: 4,
             }}>
               {group.section}
             </div>
@@ -155,32 +139,31 @@ export default function Sidebar() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: 8,
-                    padding: '7px 10px',
-                    borderRadius: 7,
-                    color: active ? 'var(--accent)' : 'var(--fg-muted)',
-                    background: active ? 'var(--accent-light)' : 'transparent',
+                    padding: '7px 8px',
+                    borderRadius: 6,
+                    color: active ? '#E8A045' : 'rgba(255,255,255,.55)',
+                    background: active ? 'rgba(232,160,69,.12)' : 'transparent',
                     textDecoration: 'none',
-                    fontSize: 13,
+                    fontSize: 12.5,
                     fontWeight: active ? 600 : 400,
                     transition: 'all 0.1s',
                     marginBottom: 1,
-                    position: 'relative',
-                    borderLeft: active ? '2.5px solid var(--accent)' : '2.5px solid transparent',
+                    borderLeft: active ? '2.5px solid #E8A045' : '2.5px solid transparent',
                   }}
                   onMouseEnter={e => {
                     if (!active) {
-                      (e.currentTarget as HTMLElement).style.background = 'var(--bg-hover)';
-                      (e.currentTarget as HTMLElement).style.color = 'var(--fg)';
+                      (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,.06)';
+                      (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,.85)';
                     }
                   }}
                   onMouseLeave={e => {
                     if (!active) {
                       (e.currentTarget as HTMLElement).style.background = 'transparent';
-                      (e.currentTarget as HTMLElement).style.color = 'var(--fg-muted)';
+                      (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,.55)';
                     }
                   }}
                 >
-                  <span style={{ display: 'flex', flexShrink: 0, opacity: active ? 1 : 0.65 }}>{item.icon}</span>
+                  <span style={{ display: 'flex', flexShrink: 0, opacity: active ? 1 : 0.6 }}>{item.icon}</span>
                   {item.label}
                 </Link>
               );
@@ -191,21 +174,21 @@ export default function Sidebar() {
 
       {/* Footer with live clock */}
       <div style={{
-        padding: '12px 18px 16px',
-        borderTop: '1px solid var(--border)',
+        padding: '12px 16px 14px',
+        borderTop: '1px solid rgba(255,255,255,.07)',
       }}>
         <div style={{
           fontFamily: 'var(--font-mono)',
-          fontSize: 16,
-          fontWeight: 600,
-          color: 'var(--fg)',
+          fontSize: 15,
+          fontWeight: 500,
+          color: 'rgba(255,255,255,.75)',
           letterSpacing: '0.04em',
           lineHeight: 1,
-          marginBottom: 4,
+          marginBottom: 3,
         }}>
           {timeStr}
         </div>
-        <div style={{ fontSize: 10, color: 'var(--fg-subtle)', letterSpacing: '0.03em' }}>
+        <div style={{ fontSize: 10, color: 'rgba(255,255,255,.28)', letterSpacing: '0.03em' }}>
           {time ? time.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }) : ''}
         </div>
       </div>
