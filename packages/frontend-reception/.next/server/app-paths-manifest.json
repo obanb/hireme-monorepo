@@ -1,13 +1,13 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
   "/page": "app/page.js",
-  "/reception/arriving-guests/calendar/page": "app/reception/arriving-guests/calendar/page.js",
-  "/reception/registration-cards/page": "app/reception/registration-cards/page.js",
+  "/reception/arriving-guests/page": "app/reception/arriving-guests/page.js",
   "/reception/actions/page": "app/reception/actions/page.js",
+  "/reception/page": "app/reception/page.js",
   "/reception/benefits/page": "app/reception/benefits/page.js",
   "/reception/reservation-checks/page": "app/reception/reservation-checks/page.js",
-  "/reception/reservation-checks/[originId]/page": "app/reception/reservation-checks/[originId]/page.js",
-  "/reception/page": "app/reception/page.js",
   "/reception/registration-cards/[id]/page": "app/reception/registration-cards/[id]/page.js",
-  "/reception/arriving-guests/page": "app/reception/arriving-guests/page.js"
+  "/reception/arriving-guests/calendar/page": "app/reception/arriving-guests/calendar/page.js",
+  "/reception/registration-cards/page": "app/reception/registration-cards/page.js",
+  "/reception/reservation-checks/[originId]/page": "app/reception/reservation-checks/[originId]/page.js"
 }

@@ -126,7 +126,7 @@ const TIER_META: Record<number, { bg: string; text: string; label: string }> = {
   1: { bg: '#F1F5F9', text: '#64748B', label: 'Newcomer' },
   2: { bg: '#EFF6FF', text: '#3B82F6', label: 'Silver'   },
   3: { bg: '#FFFBEB', text: '#D97706', label: 'Gold'     },
-  4: { bg: '#F5F3FF', text: '#7C3AED', label: 'Platinum' },
+  4: { bg: 'var(--accent-light)', text: 'var(--accent)', label: 'Platinum' },
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -169,8 +169,8 @@ function BenefitCountBadge({ count }: { count: number }) {
     <span style={{
       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
       minWidth: 20, height: 20,
-      background: '#7C3AED15', color: '#7C3AED',
-      border: '1px solid #7C3AED30',
+      background: 'var(--accent-light)', color: 'var(--accent)',
+      border: '1px solid var(--accent-light)',
       borderRadius: 10,
       fontSize: 11, fontWeight: 700,
       padding: '0 6px',
@@ -210,7 +210,7 @@ function BenefitStrip({
       {/* Pill row */}
       <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 5 }}>
         {benefits.map(b => {
-          const col = CATEGORY_COLOR[b.name] ?? { bg: '#F5F3FF', text: '#7C3AED' };
+          const col = CATEGORY_COLOR[b.name] ?? { bg: 'var(--accent-light)', text: 'var(--accent)' };
           // find by catalog to get category
           const cat = BENEFIT_CATALOG.find(c => c.name === b.name);
           const colors = cat ? (CATEGORY_COLOR[cat.category] ?? col) : col;
@@ -251,9 +251,9 @@ function BenefitStrip({
             display: 'inline-flex', alignItems: 'center', gap: 4,
             fontSize: 11, fontWeight: 600, padding: '2px 9px',
             borderRadius: 12, cursor: 'pointer',
-            background: isAdding ? '#7C3AED' : 'transparent',
-            color: isAdding ? '#fff' : '#7C3AED',
-            border: '1px dashed #7C3AED60',
+            background: isAdding ? 'var(--accent)' : 'transparent',
+            color: isAdding ? '#fff' : 'var(--accent)',
+            border: '1px dashed var(--accent-light)',
             transition: 'all 0.12s',
           }}
         >
@@ -268,7 +268,7 @@ function BenefitStrip({
       {isAdding && (
         <div style={{
           marginTop: 8, padding: '10px 12px',
-          background: 'var(--bg-surface)', border: '1px solid #DDD6FE',
+          background: 'var(--bg-surface)', border: '1px solid var(--accent-light)',
           borderRadius: 8,
         }}>
           {/* Search */}
@@ -285,7 +285,7 @@ function BenefitStrip({
               style={{
                 width: '100%', boxSizing: 'border-box',
                 padding: '5px 8px 5px 26px', borderRadius: 6,
-                border: '1px solid #DDD6FE', background: 'var(--bg)',
+                border: '1px solid var(--accent-light)', background: 'var(--bg)',
                 color: 'var(--fg)', fontSize: 12, fontFamily: 'inherit', outline: 'none',
               }}
             />
@@ -299,7 +299,7 @@ function BenefitStrip({
           ) : (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
               {filtered.map(cat => {
-                const colors = CATEGORY_COLOR[cat.category] ?? { bg: '#F5F3FF', text: '#7C3AED' };
+                const colors = CATEGORY_COLOR[cat.category] ?? { bg: 'var(--accent-light)', text: 'var(--accent)' };
                 return (
                   <button
                     key={cat.id}
@@ -363,7 +363,7 @@ function BenefitGuestPanel({
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
             <span style={{
               fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
-              color: '#7C3AED', background: '#F5F3FF', border: '1px solid #DDD6FE',
+              color: 'var(--accent)', background: 'var(--accent-light)', border: '1px solid var(--accent-light)',
               borderRadius: 4, padding: '1px 6px',
             }}>
               Guest Detail
@@ -503,8 +503,8 @@ function BenefitGuestPanel({
             <span>Benefits</span>
             <span style={{
               fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 11,
-              color: guest.benefits.length > 0 ? '#7C3AED' : 'var(--fg-subtle)',
-              background: guest.benefits.length > 0 ? '#F5F3FF' : 'transparent',
+              color: guest.benefits.length > 0 ? 'var(--accent)' : 'var(--fg-subtle)',
+              background: guest.benefits.length > 0 ? 'var(--accent-light)' : 'transparent',
               borderRadius: 8, padding: '0 6px',
             }}>
               {guest.benefits.length}
@@ -526,7 +526,7 @@ function BenefitGuestPanel({
                   border: '1px solid var(--border)',
                   borderRadius: 8,
                   padding: '10px 12px',
-                  borderLeft: '3px solid #7C3AED',
+                  borderLeft: '3px solid var(--accent)',
                 }}>
                   <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 5, color: 'var(--fg)' }}>
                     {b.name}
@@ -661,7 +661,7 @@ function BenefitsInner() {
         height: 52, flexShrink: 0,
       }}>
         <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
           </svg>
           Benefits
@@ -715,7 +715,7 @@ function BenefitsInner() {
                 style={{
                   padding: '5px 14px', borderRadius: 6, border: 'none', cursor: 'pointer',
                   fontSize: 12.5, fontWeight: period === p ? 600 : 400,
-                  background: period === p ? '#7C3AED' : 'transparent',
+                  background: period === p ? 'var(--accent)' : 'transparent',
                   color: period === p ? '#fff' : 'var(--fg-muted)',
                   transition: 'all 0.15s',
                 }}
@@ -820,8 +820,8 @@ function BenefitsInner() {
               const hasBenefits = benefits.length > 0;
               const isAdding   = addingFor === guest.bookingId;
               const rowBg      = isSelected
-                ? 'rgba(124,58,237,0.06)'
-                : hasBenefits ? 'rgba(124,58,237,0.025)' : 'var(--bg-surface)';
+                ? 'var(--accent-light)'
+                : hasBenefits ? 'var(--bg-elevated)' : 'var(--bg-surface)';
 
               const handleAdd = (cat: CatalogBenefit) => {
                 const newItem: BenefitItem = {
@@ -859,8 +859,8 @@ function BenefitsInner() {
                     alignItems: 'center', cursor: 'pointer',
                     background: rowBg,
                     boxShadow: isSelected
-                      ? 'inset 3px 0 0 0 #7C3AED'
-                      : hasBenefits ? 'inset 3px 0 0 0 #DDD6FE' : 'none',
+                      ? 'inset 3px 0 0 0 var(--accent)'
+                      : hasBenefits ? 'inset 3px 0 0 0 var(--accent-light)' : 'none',
                     transition: 'background 0.1s',
                   }}
                   onMouseEnter={e => {
@@ -891,7 +891,7 @@ function BenefitsInner() {
                   </div>
 
                   {/* Booking ID */}
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, color: '#7C3AED' }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, color: 'var(--accent)' }}>
                     #{guest.bookingId}
                   </div>
 
@@ -942,7 +942,7 @@ function BenefitsInner() {
                   {/* Row arrow */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                      stroke={isSelected ? '#7C3AED' : 'var(--fg-subtle)'}
+                      stroke={isSelected ? 'var(--accent)' : 'var(--fg-subtle)'}
                       strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M9 18l6-6-6-6"/>
                     </svg>
@@ -1005,7 +1005,7 @@ function BenefitsInner() {
                     style={{
                       padding: '6px 11px', borderRadius: 7,
                       border: p === page ? 'none' : '1px solid var(--border)',
-                      background: p === page ? '#7C3AED' : '#FFFFFF',
+                      background: p === page ? 'var(--accent)' : '#FFFFFF',
                       color: p === page ? '#fff' : 'var(--fg)',
                       fontSize: 12, fontWeight: p === page ? 600 : 400, cursor: 'pointer',
                     }}

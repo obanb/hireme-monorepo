@@ -201,7 +201,7 @@ function RoomCell({ roomCode, roomState }: { roomCode: string | null; roomState:
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 4,
-      color: 'var(--status-yellow)', fontSize: 11,
+      color: 'var(--status-red)', fontSize: 11,
     }}>
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
@@ -254,7 +254,7 @@ function GuestNames({ guests, firstname, surname }: {
 
   return (
     <span>
-      <span style={{ fontWeight: 500, color: 'var(--fg)' }}>{names[0]}</span>
+      <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--fg)' }}>{names[0]}</span>
       {names.length > 1 && (
         <span style={{ color: 'var(--fg-subtle)', fontSize: 11 }}> +{names.length - 1}</span>
       )}
@@ -677,11 +677,11 @@ function ArrivingGuestsInner() {
                     borderBottom: idx < visibleItems.length - 1 ? '1px solid var(--border)' : 'none',
                     alignItems: 'center',
                     transition: 'background 0.1s',
-                    boxShadow: noRoom ? 'inset 3px 0 0 0 var(--status-yellow)' : undefined,
-                    background: noRoom ? 'rgba(245,158,11,0.07)' : 'var(--bg-surface)',
+                    boxShadow: noRoom ? 'inset 3px 0 0 0 var(--status-red-border)' : undefined,
+                    background: noRoom ? 'var(--status-red-bg)' : 'var(--bg-surface)',
                   }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = noRoom ? 'rgba(245,158,11,0.12)' : 'var(--bg-hover)'}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = noRoom ? 'rgba(245,158,11,0.07)' : 'var(--bg-surface)'}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = noRoom ? '#FEE2E2' : 'var(--bg-hover)'; }}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = noRoom ? 'var(--status-red-bg)' : 'var(--bg-surface)'}
                 >
                   {/* HotelTime link */}
                   <div style={{ display: 'flex', alignItems: 'center' }}>

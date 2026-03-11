@@ -99,37 +99,50 @@ export default function Sidebar() {
     }}>
 
       {/* Logo */}
-      <div style={{ padding: '16px 16px 14px', display: 'flex', alignItems: 'center', gap: 9 }}>
-        <div style={{
-          width: 28, height: 28, borderRadius: 7, flexShrink: 0,
-          background: 'linear-gradient(135deg, #E8A045 0%, #b86e1f 100%)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-            <path d="M9 22V12h6v10"/>
+      <div style={{ padding: '18px 16px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+        {/* Mark: stacked key-ring shape */}
+        <div style={{ position: 'relative', width: 32, height: 32, flexShrink: 0 }}>
+          {/* Outer glow ring */}
+          <div style={{
+            position: 'absolute', inset: 0, borderRadius: 9,
+            background: 'linear-gradient(140deg, #F0B05A 0%, #C97828 60%, #8B4E10 100%)',
+            boxShadow: '0 0 0 1px rgba(255,255,255,.1), 0 2px 8px rgba(200,120,40,.45)',
+          }} />
+          <svg
+            width="32" height="32" viewBox="0 0 32 32"
+            style={{ position: 'absolute', inset: 0 }}
+          >
+            {/* Vertical bar */}
+            <rect x="15" y="8" width="2" height="10" rx="1" fill="rgba(255,255,255,.95)" />
+            {/* Key bow (circle top) */}
+            <circle cx="16" cy="8" r="4" fill="none" stroke="rgba(255,255,255,.95)" strokeWidth="2" />
+            {/* Key teeth */}
+            <rect x="17" y="16" width="2" height="2" rx=".5" fill="rgba(255,255,255,.95)" />
+            <rect x="17" y="20" width="2" height="2" rx=".5" fill="rgba(255,255,255,.95)" />
           </svg>
         </div>
+
         <div>
           <div style={{
-            fontFamily: 'var(--font-mono)',
+            fontSize: 14,
             fontWeight: 700,
-            fontSize: 13,
             color: '#FFFFFF',
-            letterSpacing: '0.12em',
+            letterSpacing: '0.14em',
             lineHeight: 1,
+            textTransform: 'uppercase',
+            fontFamily: 'var(--font-display, var(--font-body))',
           }}>
-            PORTIER
+            Manatee
           </div>
           <div style={{
-            fontSize: 9,
-            fontWeight: 400,
-            letterSpacing: '0.10em',
-            color: 'rgba(255,255,255,.35)',
-            marginTop: 3,
+            fontSize: 8.5,
+            fontWeight: 500,
+            letterSpacing: '0.18em',
+            color: 'rgba(255,255,255,.32)',
+            marginTop: 4,
             textTransform: 'uppercase',
           }}>
-            Reception
+            Reception&nbsp;Desk
           </div>
         </div>
       </div>

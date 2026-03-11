@@ -992,7 +992,7 @@ export default function ReservationChecksPage() {
                       )}
                     </td>
                     <td style={{ padding: '12px 14px' }}>
-                      <div style={{ fontSize: 13, fontWeight: 500 }}>{r.owner}</div>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{r.owner}</div>
                     </td>
                     {!previewId && (
                       <td style={{ padding: '12px 14px' }}>
