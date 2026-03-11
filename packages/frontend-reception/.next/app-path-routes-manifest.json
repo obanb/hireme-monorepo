@@ -1,11 +1,1 @@
-{
-  "/_not-found/page": "/_not-found",
-  "/page": "/",
-  "/reception/arriving-guests/calendar/page": "/reception/arriving-guests/calendar",
-  "/reception/arriving-guests/page": "/reception/arriving-guests",
-  "/reception/page": "/reception",
-  "/reception/registration-cards/[id]/page": "/reception/registration-cards/[id]",
-  "/reception/registration-cards/page": "/reception/registration-cards",
-  "/reception/reservation-checks/[originId]/page": "/reception/reservation-checks/[originId]",
-  "/reception/reservation-checks/page": "/reception/reservation-checks"
-}
+{"/_not-found/page":"/_not-found","/page":"/","/reception/actions/page":"/reception/actions","/reception/arriving-guests/calendar/page":"/reception/arriving-guests/calendar","/reception/arriving-guests/page":"/reception/arriving-guests","/reception/page":"/reception","/reception/registration-cards/[id]/page":"/reception/registration-cards/[id]","/reception/benefits/page":"/reception/benefits","/reception/registration-cards/page":"/reception/registration-cards","/reception/reservation-checks/[originId]/page":"/reception/reservation-checks/[originId]","/reception/reservation-checks/page":"/reception/reservation-checks"}

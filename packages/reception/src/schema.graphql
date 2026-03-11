@@ -56,6 +56,98 @@ type RegistrationCardsPage {
   totalPages: Int!
 }
 
+# ── PMS ───────────────────────────────────────────────────────────────────────
+
+type PmsAddress {
+  street:      String!
+  city:        String!
+  zip:         String!
+  countryISO2: String!
+}
+
+type PmsGdpr {
+  repetitiveStay: Boolean!
+  marketing:      Boolean!
+}
+
+type PmsAge {
+  idAge:  Int!
+  amount: Int!
+}
+
+type PmsGuest {
+  id:              Int!
+  idGuestAccount:  Int!
+  firstName:       String!
+  surname:         String!
+  address:         PmsAddress!
+  isMale:          Int!
+  birthDate:       String
+  idCard:          String!
+  visa:            String!
+  nationalityISO2: String
+  email:           String
+  gsm:             String
+  phone:           String
+  languageISO:     String!
+  gdpr:            PmsGdpr!
+  idSignature:     String
+  carLicensePlate: String
+}
+
+type PmsRoom {
+  id:              Int!
+  idStay:          Int!
+  arrival:         String!
+  departure:       String!
+  eta:             String
+  state:           Int!
+  roomTypeCode:    String!
+  roomCode:        String
+  roomRequestMask: Int!
+  authCode:        String
+  pax:             Int!
+  ages:            [PmsAge!]!
+  guests:          [PmsGuest!]!
+  note:            String!
+}
+
+type PmsOwner {
+  id:          Int!
+  name:        String!
+  email:       String
+  gsm:         String
+  phone:       String
+  languageISO: String!
+  idSignature: String
+}
+
+type PmsReservation {
+  id:                       Int!
+  originID:                 String
+  owner:                    PmsOwner!
+  currencyISO:              String!
+  idMainAccount:            Int!
+  totalPrice:               Float!
+  advances:                 Float!
+  dueBalance:               Float!
+  created:                  String!
+  arrival:                  String!
+  departure:                String!
+  segment:                  String!
+  clientType:               String!
+  source:                   String!
+  virtualCardExists:        Boolean!
+  chmExtraServiceInclusive: Boolean!
+  chmExtraServiceExclusive: Boolean!
+  expectedPaymentMethod:    Int!
+  specialsMask:             Int!
+  rooms:                    [PmsRoom!]!
+  note:                     String!
+  passwordProtected:        Boolean!
+  hasAgreement:             Boolean!
+}
+
 # ── Arriving Guests ───────────────────────────────────────────────────────────
 
 enum ArrivalPeriod {
@@ -351,15 +443,218 @@ type ReservationCheckDetail {
   companies: [BookingEngineCompanySegment!]!
 }
 
+# ── Benefits ──────────────────────────────────────────────────────────────────
+
+type BenefitItem {
+  id:          Int!
+  benefitRef:  Int!
+  name:        String!
+  roomArrival: String!
+  hotelName:   String!
+  deliveredBy: String!
+  created:     String!
+}
+
+type BenefitGuest {
+  bookingId:        Int!
+  firstname:        String!
+  surname:          String!
+  tier:             Int!
+  minArrival:       String!
+  phone:            String
+  email:            String
+  reservationCount: Int!
+  totalSpent:       Float!
+  benefits:         [BenefitItem!]!
+  deepLink:         String!
+}
+
+enum BenefitsPeriod {
+  today
+  tomorrow
+  days7
+}
+
+input BenefitsFilter {
+  period:    BenefitsPeriod
+  hotelName: String
+  search:    String
+}
+
+type BenefitsPage {
+  items:      [BenefitGuest!]!
+  total:      Int!
+  page:       Int!
+  limit:      Int!
+  totalPages: Int!
+}
+
+# ── Hotel Actions ──────────────────────────────────────────────────────────────
+
+type ActionType {
+  id:        ID!
+  name:      String!
+  color:     String!
+  createdAt: String!
+}
+
+type HotelAction {
+  id:          ID!
+  title:       String!
+  description: String
+  type:        ActionType!
+  typeId:      ID!
+  startDate:   String!
+  endDate:     String!
+  pictureUrl:  String
+  pdfUrl:      String
+  createdAt:   String!
+  updatedAt:   String!
+}
+
+input CreateActionTypeInput {
+  name:  String!
+  color: String!
+}
+
+input UpdateActionTypeInput {
+  name:  String
+  color: String
+}
+
+input CreateActionInput {
+  title:       String!
+  description: String
+  typeId:      ID!
+  startDate:   String!
+  endDate:     String!
+}
+
+input UpdateActionInput {
+  title:       String
+  description: String
+  typeId:      ID
+  startDate:   String
+  endDate:     String
+}
+
+input ActionsFilter {
+  typeId: ID
+  month:  String
+  search: String
+}
+
+type HotelActionsPage {
+  items:      [HotelAction!]!
+  total:      Int!
+  page:       Int!
+  limit:      Int!
+  totalPages: Int!
+}
+
 type Query {
   checkIn(id: ID!): CheckIn
   checkIns(filter: ListCheckInsFilter): [CheckIn!]!
   checkReservations(page: Int, limit: Int): CheckReservationsPage!
   checkReservation(originId: String!): CheckReservationBooking
   checkReservationDetail(originId: String!): ReservationCheckDetail
+  benefits(filter: BenefitsFilter, page: Int, limit: Int): BenefitsPage!
   arrivingGuests(filter: ArrivingGuestsFilter, page: Int, limit: Int): ArrivingGuestsPage!
   registrationCards(filter: RegistrationCardsFilter, page: Int, limit: Int): RegistrationCardsPage!
   registrationCard(id: Int!): RegistrationCard
+  pmsReservation(reservationId: Int!): PmsReservation
+  actionTypes: [ActionType!]!
+  actionType(id: ID!): ActionType
+  actions(filter: ActionsFilter, page: Int, limit: Int): HotelActionsPage!
+  action(id: ID!): HotelAction
+}
+
+type PmsMutationResult {
+  isSuccess: Boolean!
+  errors:    String
+}
+
+input PmsCheckInInput {
+  reservationId: Int!
+  resRoomId:     Int!
+}
+
+input PmsGuestAddressInput {
+  street:      String!
+  city:        String!
+  zip:         String!
+  countryISO2: String!
+}
+
+input PmsGuestGdprInput {
+  repetitiveStay: Boolean!
+  marketing:      Boolean!
+}
+
+input PmsGuestLoyaltyInput {
+  loyaltyConsent: Boolean!
+}
+
+input PmsGuestCitizenInput {
+  firstName:       String!
+  surname:         String!
+  address:         PmsGuestAddressInput!
+  isMale:          Boolean!
+  birthDate:       String
+  idCard:          String!
+  visa:            String!
+  nationalityISO2: String
+  email:           String
+  gsm:             String
+  gdpr:            PmsGuestGdprInput!
+  loyalty:         PmsGuestLoyaltyInput
+  idSignature:     String
+  carLicensePlate: String
+}
+
+input PmsUpdateGuestInput {
+  reservationId: Int!
+  resRoomId:     Int!
+  stayReasonId:  Int
+  citizenId:     Int!
+  citizen:       PmsGuestCitizenInput!
+}
+
+input PmsCompanyAddressInput {
+  street:      String
+  city:        String
+  zip:         String
+  countryISO2: String
+}
+
+input PmsCompanyLoyaltyInput {
+  loyaltyConsent: Boolean!
+  id:             Int
+  number:         String
+}
+
+input PmsOwnerCompanyInput {
+  name:       String!
+  businessId: Float
+  vatId:      String
+  vatId2:     String
+  vatPayer:   Boolean
+  address:    PmsCompanyAddressInput
+  loyalty:    PmsCompanyLoyaltyInput
+  email:      String
+  gsm:        String
+  phone:      String
+}
+
+input PmsOwnerSubjectInput {
+  id:      Int
+  citizen: String
+  company: PmsOwnerCompanyInput
+}
+
+input PmsUpdateOwnerInput {
+  reservationId: Int!
+  subject:       PmsOwnerSubjectInput!
 }
 
 type Mutation {
@@ -367,4 +662,14 @@ type Mutation {
   performCheckIn(id: ID!): CheckIn!
   performCheckOut(input: CheckOutInput!): CheckIn!
   markNoShow(id: ID!): CheckIn!
+  pmsUpdateNote(reservationId: Int!, note: String!): PmsMutationResult!
+  pmsCheckIn(input: PmsCheckInInput!): PmsMutationResult!
+  pmsUpdateGuest(input: PmsUpdateGuestInput!): PmsMutationResult!
+  pmsUpdateOwner(input: PmsUpdateOwnerInput!): PmsMutationResult!
+  createActionType(input: CreateActionTypeInput!): ActionType!
+  updateActionType(id: ID!, input: UpdateActionTypeInput!): ActionType
+  deleteActionType(id: ID!): Boolean!
+  createAction(input: CreateActionInput!): HotelAction!
+  updateAction(id: ID!, input: UpdateActionInput!): HotelAction
+  deleteAction(id: ID!): Boolean!
 }

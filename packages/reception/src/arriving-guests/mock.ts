@@ -145,8 +145,57 @@ function makeReservation(
   };
 }
 
+// ── Pinned entries linking to PMS mock data (bookingId = PMS reservation ID) ──
+
+const PINNED_ARRIVALS: ArrivingGuest[] = [
+  {
+    id: 11040001, hotelName: "OREA Hotel Andel's", bookingId: 654451274,
+    idStay: "654451274", tier: 3, tierLabel: "Gold",
+    firstname: "Jára", surname: "Malý",
+    guests: [{ id: 37980001, firstname: "Jára", surname: "Malý" }],
+    arrival: isoDate(today), departure: isoDate(addDays(today, 2)),
+    paxCountAdults: 1, paxCountChildren: 0,
+    paxCountAgeGroup1: 0, paxCountAgeGroup2: 0, paxCountAgeGroup3: 0, paxCountAgeGroup4: 1,
+    roomType: "STDTWN", roomRateCode: "BAR-BB-CZ", roomResType: "Room",
+    roomState: "Confirmed", provider: "Direct", roomCode: "1009",
+    benefits: ["Free breakfast", "Room upgrade"],
+    inventoryItems: ["City tax"],
+    deepLink: "https://orea-andels.hoteltime.cz/provider/ResDet2.aspx?idres=654451274",
+  },
+  {
+    id: 11040002, hotelName: "OREA Hotel Angelo Praha", bookingId: 654451276,
+    idStay: "654451276", tier: 2, tierLabel: "Silver",
+    firstname: "Hans", surname: "Müller",
+    guests: [{ id: 37980002, firstname: "Hans", surname: "Müller" }],
+    arrival: isoDate(today), departure: isoDate(addDays(today, 5)),
+    paxCountAdults: 1, paxCountChildren: 0,
+    paxCountAgeGroup1: 0, paxCountAgeGroup2: 0, paxCountAgeGroup3: 0, paxCountAgeGroup4: 1,
+    roomType: "DLXDBL", roomRateCode: "OTA-RO", roomResType: "Room",
+    roomState: "Confirmed", provider: "Expedia", roomCode: "504",
+    benefits: ["Welcome drink"],
+    inventoryItems: ["Mini bar"],
+    deepLink: "https://orea-angelo.hoteltime.cz/provider/ResDet2.aspx?idres=654451276",
+  },
+  {
+    id: 11040003, hotelName: "OREA Place Marienbad", bookingId: 654451278,
+    idStay: "654451278", tier: 4, tierLabel: "Platinum",
+    firstname: "John", surname: "Smith",
+    guests: [{ id: 37980003, firstname: "John", surname: "Smith" }],
+    arrival: isoDate(today), departure: isoDate(addDays(today, 7)),
+    paxCountAdults: 1, paxCountChildren: 0,
+    paxCountAgeGroup1: 0, paxCountAgeGroup2: 0, paxCountAgeGroup3: 0, paxCountAgeGroup4: 1,
+    roomType: "SUIKIN", roomRateCode: "PKG-SPA", roomResType: "Room",
+    roomState: "Confirmed", provider: "Booking.com", roomCode: "112",
+    benefits: ["Spa access", "Late checkout", "Airport transfer"],
+    inventoryItems: ["Dinner package", "Spa package"],
+    deepLink: "https://orea-marienbad.hoteltime.cz/provider/ResDet2.aspx?idres=654451278",
+  },
+];
+
 // Generate mock dataset: 12 today, 10 tomorrow, 18 spread over next 7 days
 export const MOCK_ARRIVING_GUESTS: ArrivingGuest[] = [
+  // Pinned entries with real PMS links (always at top of today)
+  ...PINNED_ARRIVALS,
   // Today — 12 reservations
   ...Array.from({ length: 12 }, (_, i) => makeReservation(i, today)),
   // Tomorrow — 10 reservations

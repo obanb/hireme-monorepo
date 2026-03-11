@@ -16,6 +16,7 @@ import { resolvers } from "./resolvers";
 import { frontdeskRouter } from "./frontdesk/routes";
 import { startFrontdeskWorker } from "./frontdesk/mq";
 import { pdfRouter } from "./pdf/routes";
+import { actionsRouter } from "./actions/routes";
 
 const schemaStr = readFileSync(join(__dirname, "schema.graphql"), "utf-8");
 const typeDefs = gql(schemaStr);
@@ -38,6 +39,10 @@ export async function startServer(): Promise<void> {
   // REST routes under /api
   app.use("/api/frontdesk", frontdeskRouter);
   app.use("/api/pdf", pdfRouter);
+  app.use("/api/actions", actionsRouter);
+
+  // Serve uploaded files
+  app.use("/uploads", express.static("uploads"));
 
   // Swagger UI at /docs
   mountSwagger(app);

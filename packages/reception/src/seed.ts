@@ -285,6 +285,112 @@ function randomStatuses(hasNote: boolean): Omit<BookingDoc, "originId" | "hotelT
   return { notesStatus, featuresStatus, vouchersStatus, paymentsStatus, customerNoteStatus, inventoriesStatus, hskStatus };
 }
 
+// ── Pinned bookings that link to PMS mock data ────────────────────────────────
+// hotelTimeId matches keys in packages/reception/src/pms/mock.ts
+
+const PINNED_BOOKINGS: BookingDoc[] = [
+  {
+    originId:           "BKG20001",
+    hotelTimeId:        654451274,
+    provider:           "BOOKING_ENGINE",
+    date:               "2026-02-01T09:14:22.000Z",
+    adultCount:         1,
+    childCount:         0,
+    checkin:            "2026-03-10",
+    checkout:           "2026-03-12",
+    owner:              "Malý Jára",
+    customerNote:       "Vegetarian meal plan requested for all days of the stay. No meat whatsoever.",
+    notesStatus:        "GREEN",
+    featuresStatus:     "GREEN",
+    vouchersStatus:     "NONE",
+    paymentsStatus:     "GREEN",
+    customerNoteStatus: "YELLOW",
+    inventoriesStatus:  "GREEN",
+    hskStatus:          "GREEN",
+    status:             "YELLOW",
+  },
+  {
+    originId:           "EXP20002",
+    hotelTimeId:        654451276,
+    provider:           "EXPEDIA",
+    date:               "2026-01-15T14:30:00.000Z",
+    adultCount:         1,
+    childCount:         0,
+    checkin:            "2026-03-10",
+    checkout:           "2026-03-15",
+    owner:              "Müller Hans",
+    customerNote:       "Please prepare champagne and flowers for our anniversary. Arriving late after 23:00.",
+    notesStatus:        "RED",
+    featuresStatus:     "YELLOW",
+    vouchersStatus:     "GREEN",
+    paymentsStatus:     "GREEN",
+    customerNoteStatus: "RED",
+    inventoriesStatus:  "GREEN",
+    hskStatus:          "GREEN",
+    status:             "RED",
+  },
+  {
+    originId:           "BKC20003",
+    hotelTimeId:        654451278,
+    provider:           "BOOKING_COM",
+    date:               "2025-12-20T11:05:43.000Z",
+    adultCount:         1,
+    childCount:         0,
+    checkin:            "2026-03-10",
+    checkout:           "2026-03-17",
+    owner:              "Smith John",
+    customerNote:       "Wheelchair accessible room required. Please confirm availability before arrival.",
+    notesStatus:        "GREEN",
+    featuresStatus:     "GREEN",
+    vouchersStatus:     "GREEN",
+    paymentsStatus:     "YELLOW",
+    customerNoteStatus: "GREEN",
+    inventoriesStatus:  "GREEN",
+    hskStatus:          "PENDING",
+    status:             "YELLOW",
+  },
+  {
+    originId:           "EXP20004",
+    hotelTimeId:        654451282,
+    provider:           "EXPEDIA",
+    date:               "2026-02-10T08:20:11.000Z",
+    adultCount:         1,
+    childCount:         0,
+    checkin:            "2026-03-09",
+    checkout:           "2026-03-12",
+    owner:              "Chen David",
+    customerNote:       null,
+    notesStatus:        "GREEN",
+    featuresStatus:     "GREEN",
+    vouchersStatus:     "NONE",
+    paymentsStatus:     "GREEN",
+    customerNoteStatus: "NONE",
+    inventoriesStatus:  "GREEN",
+    hskStatus:          "GREEN",
+    status:             "GREEN",
+  },
+  {
+    originId:           "DIR20005",
+    hotelTimeId:        654451287,
+    provider:           "HOTEL_TIME",
+    date:               "2026-02-28T16:55:00.000Z",
+    adultCount:         1,
+    childCount:         0,
+    checkin:            "2026-03-13",
+    checkout:           "2026-03-14",
+    owner:              "Kratochvíl Michal",
+    customerNote:       "Early check-in requested around 10:00 if possible. Will call ahead to confirm.",
+    notesStatus:        "GREEN",
+    featuresStatus:     "GREEN",
+    vouchersStatus:     "NONE",
+    paymentsStatus:     "GREEN",
+    customerNoteStatus: "YELLOW",
+    inventoriesStatus:  "GREEN",
+    hskStatus:          "GREEN",
+    status:             "YELLOW",
+  },
+];
+
 function generateBooking(index: number): BookingDoc {
   const createdAt = addDays(new Date("2025-12-01"), index);
   const checkinBase = addDays(new Date("2026-02-01"), index * 3 + Math.floor(Math.random() * 5));
@@ -328,10 +434,17 @@ async function seed() {
   await col.deleteMany({});
 
   const created = addDays(new Date("2025-12-01"), 0);
-  const docs = Array.from({ length: 20 }, (_, i) => ({
+
+  // First 5 are pinned (linked to PMS mock data), remaining 15 are random
+  const bookings: BookingDoc[] = [
+    ...PINNED_BOOKINGS,
+    ...Array.from({ length: 15 }, (_, i) => generateBooking(i + 5)),
+  ];
+
+  const docs = bookings.map((booking, i) => ({
     data: {
       hotelId,
-      booking: generateBooking(i),
+      booking,
     },
     msgNumber: i + 1,
     error:     false,

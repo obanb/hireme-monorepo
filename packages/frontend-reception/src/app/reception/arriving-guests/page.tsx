@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { PmsPanel } from '@/components/PmsPanel';
+import { PreCheckInModal } from '@/components/PreCheckInModal';
 
 const ENDPOINT = process.env.NEXT_PUBLIC_RECEPTION_API ?? 'http://localhost:4002/graphql';
 
@@ -294,6 +296,8 @@ function ArrivingGuestsInner() {
   const [data, setData] = useState<ArrivingGuestsPage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pmsId,        setPmsId]        = useState<number | null>(null);
+  const [checkInGuest, setCheckInGuest] = useState<{ bookingId: number; name: string } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -354,7 +358,7 @@ function ArrivingGuestsInner() {
     });
 
   return (
-    <div style={{ minHeight: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
 
       {/* ── Page header ── */}
       <div style={{
@@ -392,7 +396,8 @@ function ArrivingGuestsInner() {
         </div>
       </div>
 
-    <div style={{ padding: '20px 24px 60px', maxWidth: 1400 }}>
+    <div style={{ display: 'flex', flex: 1, alignItems: 'flex-start' }}>
+    <div style={{ flex: 1, minWidth: 0, padding: '20px 24px 60px', maxWidth: 1400 }}>
 
       {/* ── Filters ── */}
       <div style={{
@@ -601,7 +606,7 @@ function ArrivingGuestsInner() {
             {/* Table header */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: '90px 90px 1fr 1fr 90px 110px 80px 100px 1fr 1fr',
+              gridTemplateColumns: '28px 90px 90px 1fr 1fr 90px 110px 80px 100px 1fr 1fr 70px',
               gap: '0 12px',
               padding: '9px 16px',
               background: 'var(--bg-surface)',
@@ -612,6 +617,7 @@ function ArrivingGuestsInner() {
               textTransform: 'uppercase',
               color: 'var(--fg-subtle)',
             }}>
+              <div />
               <div>Booking</div>
               <div>Room</div>
               <div>Guest(s)</div>
@@ -622,6 +628,7 @@ function ArrivingGuestsInner() {
               <div>Rate / Provider</div>
               <div>Benefits</div>
               <div>Inventory</div>
+              <div />
             </div>
 
             {/* Rows */}
@@ -646,7 +653,7 @@ function ArrivingGuestsInner() {
                   key={guest.id}
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: '90px 90px 1fr 1fr 90px 110px 80px 100px 1fr 1fr',
+                    gridTemplateColumns: '28px 90px 90px 1fr 1fr 90px 110px 80px 100px 1fr 1fr 70px',
                     gap: '0 12px',
                     padding: '12px 16px',
                     borderBottom: idx < visibleItems.length - 1 ? '1px solid var(--border)' : 'none',
@@ -658,6 +665,26 @@ function ArrivingGuestsInner() {
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = noRoom ? 'rgba(245,158,11,0.12)' : 'var(--bg-hover)'}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = noRoom ? 'rgba(245,158,11,0.07)' : 'var(--bg-surface)'}
                 >
+                  {/* HotelTime link */}
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <a
+                      href={guest.deepLink}
+                      target="_blank" rel="noreferrer"
+                      onClick={e => e.stopPropagation()}
+                      title="Open in HotelTime PMS"
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: 22, height: 22, borderRadius: 5,
+                        background: '#F0FDF4', border: '1px solid #A7F3D0',
+                        color: '#059669', textDecoration: 'none', flexShrink: 0,
+                      }}
+                    >
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
+                      </svg>
+                    </a>
+                  </div>
+
                   {/* Booking ID */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <span style={{
@@ -751,67 +778,124 @@ function ArrivingGuestsInner() {
                   <div>
                     <TagList items={guest.inventoryItems} color="#34D399" />
                   </div>
+
+                  {/* Actions: PMS lookup + Pre-Check-In */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                    {/* PMS detail */}
+                    <button
+                      onClick={e => { e.stopPropagation(); setPmsId(prev => prev === guest.bookingId ? null : guest.bookingId); }}
+                      title="PMS online detail"
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: 28, height: 28, borderRadius: 6,
+                        border: `1px solid ${pmsId === guest.bookingId ? '#4A7FCB' : 'var(--border-strong)'}`,
+                        background: pmsId === guest.bookingId ? '#4A7FCB' : '#fff',
+                        color: pmsId === guest.bookingId ? '#fff' : 'var(--fg-muted)',
+                        cursor: 'pointer', transition: 'all 0.15s', flexShrink: 0,
+                      }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+                      </svg>
+                    </button>
+                    {/* Pre-Check-In */}
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        setCheckInGuest({
+                          bookingId: guest.bookingId,
+                          name: `${guest.firstname} ${guest.surname}`,
+                        });
+                      }}
+                      title="Pre-Check-In / Check-In"
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: 28, height: 28, borderRadius: 6,
+                        border: '1px solid var(--status-green-border)',
+                        background: 'var(--status-green-bg)',
+                        color: 'var(--status-green)',
+                        cursor: 'pointer', transition: 'all 0.15s', flexShrink: 0,
+                      }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               );
             })}
           </div>
 
           {/* ── Pagination ── */}
-          {data.totalPages > 1 && (
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              marginTop: 20,
-            }}>
-              <button
-                disabled={page <= 1}
-                onClick={() => setPage(p => p - 1)}
-                style={{
-                  padding: '6px 14px', borderRadius: 7,
-                  border: '1px solid var(--border-strong)',
-                  background: 'var(--bg-surface)',
-                  cursor: page <= 1 ? 'default' : 'pointer',
-                  color: page <= 1 ? 'var(--fg-subtle)' : 'var(--fg)',
-                  fontSize: 13,
-                }}
-              >
-                ← Prev
-              </button>
-              {Array.from({ length: data.totalPages }, (_, i) => i + 1)
-                .filter(p => Math.abs(p - page) <= 2)
-                .map(p => (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    style={{
-                      width: 34, height: 34, borderRadius: 7,
-                      border: '1px solid',
-                      borderColor: p === page ? 'var(--accent)' : 'var(--border-strong)',
-                      background: p === page ? 'var(--accent)' : 'var(--bg-surface)',
-                      color: p === page ? '#fff' : 'var(--fg)',
-                      cursor: 'pointer', fontSize: 13, fontWeight: p === page ? 600 : 400,
-                    }}
-                  >
-                    {p}
-                  </button>
-                ))}
-              <button
-                disabled={page >= data.totalPages}
-                onClick={() => setPage(p => p + 1)}
-                style={{
-                  padding: '6px 14px', borderRadius: 7,
-                  border: '1px solid var(--border-strong)',
-                  background: 'var(--bg-surface)',
-                  cursor: page >= data.totalPages ? 'default' : 'pointer',
-                  color: page >= data.totalPages ? 'var(--fg-subtle)' : 'var(--fg)',
-                  fontSize: 13,
-                }}
-              >
-                Next →
-              </button>
-            </div>
-          )}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            marginTop: 20,
+          }}>
+            <button
+              disabled={page <= 1}
+              onClick={() => setPage(p => p - 1)}
+              style={{
+                padding: '6px 14px', borderRadius: 7,
+                border: '1px solid var(--border-strong)',
+                background: 'var(--bg-surface)',
+                cursor: page <= 1 ? 'default' : 'pointer',
+                color: page <= 1 ? 'var(--fg-subtle)' : 'var(--fg)',
+                fontSize: 13,
+              }}
+            >
+              ← Prev
+            </button>
+            {Array.from({ length: data.totalPages }, (_, i) => i + 1)
+              .filter(p => Math.abs(p - page) <= 2)
+              .map(p => (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  style={{
+                    width: 34, height: 34, borderRadius: 7,
+                    border: '1px solid',
+                    borderColor: p === page ? 'var(--accent)' : 'var(--border-strong)',
+                    background: p === page ? 'var(--accent)' : 'var(--bg-surface)',
+                    color: p === page ? '#fff' : 'var(--fg)',
+                    cursor: 'pointer', fontSize: 13, fontWeight: p === page ? 600 : 400,
+                  }}
+                >
+                  {p}
+                </button>
+              ))}
+            <button
+              disabled={page >= data.totalPages}
+              onClick={() => setPage(p => p + 1)}
+              style={{
+                padding: '6px 14px', borderRadius: 7,
+                border: '1px solid var(--border-strong)',
+                background: 'var(--bg-surface)',
+                cursor: page >= data.totalPages ? 'default' : 'pointer',
+                color: page >= data.totalPages ? 'var(--fg-subtle)' : 'var(--fg)',
+                fontSize: 13,
+              }}
+            >
+              Next →
+            </button>
+          </div>
         </>
       )}
+    </div>
+    {pmsId != null && (
+      <PmsPanel
+        key={pmsId}
+        reservationId={pmsId}
+        onClose={() => setPmsId(null)}
+      />
+    )}
+    {checkInGuest && (
+      <PreCheckInModal
+        bookingId={checkInGuest.bookingId}
+        guestName={checkInGuest.name}
+        onClose={() => setCheckInGuest(null)}
+      />
+    )}
     </div>
     </div>
   );

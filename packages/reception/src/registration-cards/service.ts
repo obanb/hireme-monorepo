@@ -68,7 +68,13 @@ export const registrationCardsService = {
       });
     }
 
-    const filtered   = applyFilters(raw, filter);
+    const filtered = applyFilters(raw, filter);
+
+    const isRed = (c: RegistrationCard) =>
+      !c.isGDPRRead || !c.isDataConfirmed || !c.isHouseRulesAccepted;
+
+    filtered.sort((a, b) => Number(isRed(b)) - Number(isRed(a)));
+
     const total      = filtered.length;
     const totalPages = Math.max(1, Math.ceil(total / limit));
     const skip       = (page - 1) * limit;

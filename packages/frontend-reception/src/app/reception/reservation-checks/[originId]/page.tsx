@@ -124,16 +124,29 @@ function SegmentErrorBadge({ errors }: { errors: string[] }) {
   );
 }
 
-function ReprocessBadge({ available, reprocessed }: { available: boolean | null; reprocessed: boolean | null }) {
+function ReprocessBadge({ available, reprocessed, segmentId }: { available: boolean | null; reprocessed: boolean | null; segmentId: string }) {
   if (reprocessed) return (
     <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: 'var(--status-pending-bg)', color: 'var(--status-pending)', fontWeight: 600, border: '1px solid var(--status-pending-border)' }}>
       Reprocessed
     </span>
   );
   if (available) return (
-    <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: 'var(--status-green-bg)', color: 'var(--status-green)', fontWeight: 600, border: '1px solid var(--status-green-border)' }}>
-      Can reprocess
-    </span>
+    <button
+      onClick={e => { e.stopPropagation(); console.log('Reprocess segment', segmentId); }}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 5,
+        fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 5,
+        background: '#EA580C', color: '#fff',
+        border: '1px solid #C2410C',
+        cursor: 'pointer', letterSpacing: '0.03em',
+        boxShadow: '0 1px 4px rgba(234,88,12,0.35)',
+      }}
+    >
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/>
+      </svg>
+      Reprocess
+    </button>
   );
   return null;
 }
@@ -188,7 +201,7 @@ function PaymentCard({ seg }: { seg: BEPaymentSegment }) {
             {seg.data.paidAmount.toLocaleString()} <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--fg-muted)' }}>{seg.data.currency}</span>
           </span>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} />
+            <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} segmentId={seg.id} />
             {seg.error ? <SegmentErrorBadge errors={seg.errors} /> : (
               <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: 'var(--status-green-bg)', color: 'var(--status-green)', fontWeight: 600, border: '1px solid var(--status-green-border)' }}>OK</span>
             )}
@@ -229,7 +242,7 @@ function VoucherCard({ seg }: { seg: BEVoucherSegment }) {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center' }}>
-          <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} />
+          <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} segmentId={seg.id} />
           {seg.error ? <SegmentErrorBadge errors={seg.errors} /> : null}
         </div>
       </div>
@@ -264,7 +277,7 @@ function NoteCard({ seg, color }: { seg: BENoteSegment | BEHSKNoteSegment; color
           "{seg.data}"
         </div>
         <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-          <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} />
+          <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} segmentId={seg.id} />
           {seg.error ? <SegmentErrorBadge errors={seg.errors} /> : (
             <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: 'var(--status-green-bg)', color: 'var(--status-green)', fontWeight: 600, border: '1px solid var(--status-green-border)' }}>OK</span>
           )}
@@ -292,7 +305,7 @@ function RoomFeatureCard({ seg }: { seg: BERoomFeatureSegment }) {
           <span style={{ marginLeft: 8, color: 'var(--fg-subtle)' }}>mask: {seg.data.featureMask}</span>
         </div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} />
+          <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} segmentId={seg.id} />
           {seg.error ? <SegmentErrorBadge errors={seg.errors} /> : (
             <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: 'var(--status-green-bg)', color: 'var(--status-green)', fontWeight: 600, border: '1px solid var(--status-green-border)' }}>OK</span>
           )}
@@ -328,7 +341,7 @@ function InventoryCard({ seg }: { seg: BEInventorySegment }) {
           {seg.data.roomType}
         </span>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} />
+          <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} segmentId={seg.id} />
           {seg.error ? <SegmentErrorBadge errors={seg.errors} /> : (
             <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: 'var(--status-green-bg)', color: 'var(--status-green)', fontWeight: 600, border: '1px solid var(--status-green-border)' }}>OK</span>
           )}
@@ -365,7 +378,7 @@ function PromoCodeCard({ seg }: { seg: BEPromoCodeSegment }) {
         {seg.data}
       </span>
       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-        <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} />
+        <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} segmentId={seg.id} />
         {seg.error ? <SegmentErrorBadge errors={seg.errors} /> : (
           <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: 'var(--status-green-bg)', color: 'var(--status-green)', fontWeight: 600, border: '1px solid var(--status-green-border)' }}>OK</span>
         )}
@@ -392,7 +405,7 @@ function CompanyCard({ seg }: { seg: BECompanySegment }) {
           {d.dic && <div style={{ fontSize: 11, color: 'var(--fg-subtle)', marginTop: 2 }}>DIČ: {d.dic}</div>}
         </div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} />
+          <ReprocessBadge available={seg.reprocessAvailable} reprocessed={seg.reprocessed} segmentId={seg.id} />
           {seg.error ? <SegmentErrorBadge errors={seg.errors} /> : (
             <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, background: 'var(--status-green-bg)', color: 'var(--status-green)', fontWeight: 600, border: '1px solid var(--status-green-border)' }}>OK</span>
           )}

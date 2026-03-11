@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import StatusBadge from '@/components/StatusBadge';
+import { PmsPanel } from '@/components/PmsPanel';
 import type {
   CheckReservationBooking, CheckReservationStatus, ReservationCheckDetail,
   BEPaymentSegment, BEVoucherSegment, BENoteSegment, BEHSKNoteSegment,
@@ -115,96 +116,104 @@ function ProviderTag({ provider }: { provider: string }) {
   );
 }
 
-const DOT_CHECKS = [
-  { key: 'notesStatus',        abbr: 'N', label: 'Notes'      },
-  { key: 'featuresStatus',     abbr: 'F', label: 'Features'   },
-  { key: 'vouchersStatus',     abbr: 'V', label: 'Vouchers'   },
-  { key: 'paymentsStatus',     abbr: 'P', label: 'Payments'   },
-  { key: 'customerNoteStatus', abbr: 'G', label: 'Guest Note' },
-  { key: 'inventoriesStatus',  abbr: 'I', label: 'Inventory'  },
-  { key: 'hskStatus',          abbr: 'H', label: 'HSK'        },
+const SEGMENT_COLS = [
+  {
+    key: 'paymentsStatus', label: 'Payments',
+    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>,
+  },
+  {
+    key: 'vouchersStatus', label: 'Vouchers',
+    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>,
+  },
+  {
+    key: 'notesStatus', label: 'Notes',
+    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
+  },
+  {
+    key: 'featuresStatus', label: 'Features',
+    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+  },
+  {
+    key: 'inventoriesStatus', label: 'Inventory',
+    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>,
+  },
+  {
+    key: 'customerNoteStatus', label: 'Guest Note',
+    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  },
+  {
+    key: 'hskStatus', label: 'HSK',
+    icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+  },
 ] as const;
 
 const dotColor: Record<CheckReservationStatus, string> = {
   GREEN: 'var(--status-green)', YELLOW: 'var(--status-yellow)', RED: 'var(--status-red)', PENDING: 'var(--status-pending)', NONE: 'var(--fg-subtle)',
 };
 
-function CheckDots({ r }: { r: CheckReservationBooking }) {
-  const [hovered, setHovered] = useState<number | null>(null);
+function SegmentDot({ statusKey, r }: { statusKey: string; r: CheckReservationBooking }) {
+  const [hovered, setHovered] = useState(false);
+  const status = r[statusKey as keyof CheckReservationBooking] as CheckReservationStatus;
+  const color  = dotColor[status];
+  const isNone = status === 'NONE';
   return (
-    <div style={{ display: 'flex', gap: 5, alignItems: 'flex-end' }}>
-      {DOT_CHECKS.map(({ key, abbr, label }, idx) => {
-        const status = r[key] as CheckReservationStatus;
-        const color  = dotColor[status];
-        const isHov  = hovered === idx;
-        return (
-          <div key={key}
-            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, position: 'relative', cursor: 'default' }}
-            onMouseEnter={() => setHovered(idx)}
-            onMouseLeave={() => setHovered(null)}
-          >
-            {isHov && (
-              <div style={{
-                position: 'absolute', bottom: 'calc(100% + 7px)',
-                left: '50%', transform: 'translateX(-50%)',
-                background: '#1E293B', color: '#F8FAFC',
-                fontSize: 11, fontWeight: 500, whiteSpace: 'nowrap',
-                padding: '4px 8px', borderRadius: 5,
-                pointerEvents: 'none', zIndex: 200,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-              }}>
-                {label}
-                <span style={{ opacity: 0.6, margin: '0 4px' }}>·</span>
-                <span style={{ color }}>{status}</span>
-                <span style={{
-                  position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
-                  width: 0, height: 0,
-                  borderLeft: '4px solid transparent', borderRight: '4px solid transparent',
-                  borderTop: '4px solid #1E293B',
-                }} />
-              </div>
-            )}
-            <div style={{
-              width: 9, height: 9, borderRadius: '50%', background: color,
-              boxShadow: isHov ? `0 0 0 2px ${color}40` : 'none',
-              transition: 'box-shadow 0.12s', flexShrink: 0,
-            }} />
-            <span style={{
-              fontSize: 9, fontFamily: 'var(--font-mono)',
-              color: isHov ? color : 'var(--fg-subtle)',
-              fontWeight: isHov ? 600 : 400, lineHeight: 1, transition: 'color 0.12s',
-            }}>
-              {abbr}
-            </span>
-          </div>
-        );
-      })}
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {hovered && (
+        <div style={{
+          position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)',
+          background: '#1E293B', color: '#F8FAFC', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap',
+          padding: '3px 7px', borderRadius: 4, pointerEvents: 'none', zIndex: 200,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+        }}>
+          <span style={{ color }}>{status}</span>
+          <span style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderTop: '4px solid #1E293B' }} />
+        </div>
+      )}
+      <div style={{
+        width: 13, height: 13, borderRadius: '50%', flexShrink: 0,
+        background: isNone ? 'transparent' : color,
+        border: isNone ? '1.5px solid var(--border-strong)' : 'none',
+        boxShadow: hovered && !isNone ? `0 0 0 3px ${color}30` : 'none',
+        transition: 'box-shadow 0.12s',
+      }} />
     </div>
   );
 }
 
-const PREVIEW_MAX = 42;
-function NotePreview({ note }: { note: string | null }) {
+
+const NOTE_MAX = 55;
+function NotePreview({ note, status }: { note: string | null; status?: CheckReservationStatus }) {
   const [visible, setVisible] = useState(false);
   if (!note) return null;
-  const truncated = note.length > PREVIEW_MAX ? note.slice(0, PREVIEW_MAX).trimEnd() + '…' : note;
+  const isRed = status === 'RED';
+  const truncated = note.length > NOTE_MAX ? note.slice(0, NOTE_MAX).trimEnd() + '…' : note;
+  const overflows = note.length > NOTE_MAX;
+
+  const iconColor  = isRed ? 'var(--status-red)'    : 'var(--accent)';
+  const textColor  = isRed ? 'var(--status-red)'    : 'var(--fg-muted)';
+  const bgColor    = isRed ? 'var(--status-red-bg)' : 'transparent';
+  const border     = isRed ? '1px solid var(--status-red-border)' : 'none';
+
   return (
-    <div style={{ position: 'relative', display: 'inline-block', marginTop: 4, maxWidth: 220 }}
-      onMouseEnter={() => note.length > PREVIEW_MAX && setVisible(true)}
+    <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'flex-start', gap: 5, maxWidth: 240,
+      ...(isRed ? { background: bgColor, border, borderRadius: 5, padding: '3px 7px' } : {}),
+    }}
+      onMouseEnter={() => overflows && setVisible(true)}
       onMouseLeave={() => setVisible(false)}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 5 }}>
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="var(--fg-subtle)" style={{ flexShrink: 0, marginTop: 2 }}>
-          <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1zm12 0c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/>
-        </svg>
-        <span style={{ fontSize: 11, color: 'var(--fg-muted)', fontStyle: 'italic', lineHeight: 1.4 }}>{truncated}</span>
-      </div>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+      </svg>
+      <span style={{ fontSize: 11, color: textColor, fontStyle: 'italic', lineHeight: 1.4, fontWeight: isRed ? 600 : 400 }}>{truncated}</span>
       {visible && (
         <div style={{
-          position: 'absolute', bottom: 'calc(100% + 8px)', left: 0, zIndex: 100,
-          background: '#1E293B', color: '#F8FAFC', fontSize: 12, lineHeight: 1.55,
+          position: 'absolute', bottom: 'calc(100% + 8px)', left: 0,
+          zIndex: 100, background: '#1E293B', color: '#F8FAFC', fontSize: 12, lineHeight: 1.55,
           fontStyle: 'italic', padding: '10px 13px', borderRadius: 8, width: 280,
-          boxShadow: '0 4px 20px rgba(0,0,0,0.18)', pointerEvents: 'none',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.18)', pointerEvents: 'none', whiteSpace: 'pre-wrap',
         }}>
           "{note}"
           <span style={{
@@ -221,44 +230,52 @@ function NotePreview({ note }: { note: string | null }) {
 
 // ── Preview Panel ─────────────────────────────────────────────────────────────
 
-function ErrorDot({ errors }: { errors: string[] }) {
-  const [open, setOpen] = useState(false);
-  if (!errors.length) return null;
-  return (
-    <div style={{ position: 'relative', display: 'inline-block' }}>
-      <button onClick={e => { e.stopPropagation(); setOpen(o => !o); }} style={{
-        width: 16, height: 16, borderRadius: '50%', background: 'var(--status-red-bg)',
-        border: '1px solid var(--status-red-border)', cursor: 'pointer', display: 'flex',
-        alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-      }}>
-        <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--status-red)' }} />
-      </button>
-      {open && (
-        <div style={{
-          position: 'absolute', bottom: 'calc(100% + 6px)', right: 0, zIndex: 20,
-          background: '#1E293B', color: '#FCA5A5', fontSize: 10, lineHeight: 1.6,
-          padding: '8px 10px', borderRadius: 6, width: 260,
-          boxShadow: '0 6px 20px rgba(0,0,0,0.25)',
-        }}>
-          {errors.map((e, i) => <div key={i}>{e}</div>)}
-          <div style={{ position: 'absolute', top: -4, right: 8, width: 8, height: 8, background: '#1E293B', transform: 'rotate(45deg)' }} />
-        </div>
-      )}
-    </div>
-  );
-}
 
-function PanelSegmentRow({ color, ok, errors, children }: { color: string; ok: boolean; errors: string[]; children: React.ReactNode }) {
+function PanelSegmentRow({ color, ok, errors, reprocessAvailable, children }: {
+  color: string; ok: boolean; errors: string[];
+  reprocessAvailable?: boolean | null; children: React.ReactNode;
+}) {
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
       padding: '7px 10px', borderRadius: 6,
       background: ok ? 'var(--bg-elevated)' : 'var(--status-red-bg)',
       border: `1px solid ${ok ? 'var(--border)' : 'var(--status-red-border)'}`,
       borderLeft: `3px solid ${ok ? color : 'var(--status-red)'}`,
     }}>
-      <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-      {!ok && <ErrorDot errors={errors} />}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
+        {reprocessAvailable && (
+          <button
+            onClick={e => { e.stopPropagation(); console.log('Reprocess segment'); }}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 5,
+              background: '#EA580C', color: '#fff',
+              border: '1px solid #C2410C',
+              cursor: 'pointer', letterSpacing: '0.03em', whiteSpace: 'nowrap', flexShrink: 0,
+              boxShadow: '0 1px 4px rgba(234,88,12,0.35)',
+            }}
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/>
+            </svg>
+            Reprocess
+          </button>
+        )}
+      </div>
+      {!ok && errors.length > 0 && (
+        <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {errors.map((e, i) => (
+            <div key={i} style={{
+              fontSize: 10, color: 'var(--status-red)', lineHeight: 1.5,
+              display: 'flex', gap: 5, alignItems: 'flex-start',
+            }}>
+              <span style={{ flexShrink: 0, opacity: 0.7 }}>✕</span>
+              <span>{e}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -302,7 +319,7 @@ function PanelSegments({ d }: { d: ReservationCheckDetail }) {
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#2563EB', marginBottom: 6 }}>Payments</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {d.payments.map((s: BEPaymentSegment) => (
-                <PanelSegmentRow key={s.id} color="#2563EB" ok={!s.error} errors={s.errors}>
+                <PanelSegmentRow key={s.id} color="#2563EB" ok={!s.error} errors={s.errors} reprocessAvailable={s.reprocessAvailable}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-display)' }}>
                       {s.data.paidAmount.toLocaleString()} <span style={{ fontSize: 10, fontWeight: 400, color: 'var(--fg-muted)' }}>{s.data.currency}</span>
@@ -321,7 +338,7 @@ function PanelSegments({ d }: { d: ReservationCheckDetail }) {
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#7C3AED', marginBottom: 6 }}>Vouchers</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {d.vouchers.map((s: BEVoucherSegment) => (
-                <PanelSegmentRow key={s.id} color="#7C3AED" ok={!s.error} errors={s.errors}>
+                <PanelSegmentRow key={s.id} color="#7C3AED" ok={!s.error} errors={s.errors} reprocessAvailable={s.reprocessAvailable}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, color: '#7C3AED', letterSpacing: '0.06em' }}>
                       {s.data.voucherNumber}
@@ -351,7 +368,7 @@ function PanelSegments({ d }: { d: ReservationCheckDetail }) {
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#D97706', marginBottom: 6 }}>Notes</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {d.notes.map((s: BENoteSegment) => (
-                <PanelSegmentRow key={s.id} color="#D97706" ok={!s.error} errors={s.errors}>
+                <PanelSegmentRow key={s.id} color="#D97706" ok={!s.error} errors={s.errors} reprocessAvailable={s.reprocessAvailable}>
                   <span style={{ fontSize: 12, fontStyle: 'italic', color: 'var(--fg)', lineHeight: 1.4 }}>
                     "{s.data.length > 60 ? s.data.slice(0, 60) + '…' : s.data}"
                   </span>
@@ -367,7 +384,7 @@ function PanelSegments({ d }: { d: ReservationCheckDetail }) {
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#EA580C', marginBottom: 6 }}>HSK Notes</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {d.hskNotes.map((s: BEHSKNoteSegment) => (
-                <PanelSegmentRow key={s.id} color="#EA580C" ok={!s.error} errors={s.errors}>
+                <PanelSegmentRow key={s.id} color="#EA580C" ok={!s.error} errors={s.errors} reprocessAvailable={s.reprocessAvailable}>
                   <span style={{ fontSize: 12, fontStyle: 'italic', color: 'var(--fg)', lineHeight: 1.4 }}>
                     "{s.data.length > 60 ? s.data.slice(0, 60) + '…' : s.data}"
                   </span>
@@ -383,7 +400,7 @@ function PanelSegments({ d }: { d: ReservationCheckDetail }) {
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#059669', marginBottom: 6 }}>Room Features</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {d.roomFeatures.map((s: BERoomFeatureSegment) => (
-                <PanelSegmentRow key={s.id} color="#059669" ok={!s.error} errors={s.errors}>
+                <PanelSegmentRow key={s.id} color="#059669" ok={!s.error} errors={s.errors} reprocessAvailable={s.reprocessAvailable}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-muted)', background: 'var(--bg-surface)', padding: '1px 5px', borderRadius: 3, border: '1px solid var(--border)' }}>
                       {s.data.roomType}
@@ -406,7 +423,7 @@ function PanelSegments({ d }: { d: ReservationCheckDetail }) {
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#0891B2', marginBottom: 6 }}>Inventories</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {d.inventories.map((s: BEInventorySegment) => (
-                <PanelSegmentRow key={s.id} color="#0891B2" ok={!s.error} errors={s.errors}>
+                <PanelSegmentRow key={s.id} color="#0891B2" ok={!s.error} errors={s.errors} reprocessAvailable={s.reprocessAvailable}>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                     {s.data.inventories.map(item => (
                       <span key={item.id} style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: '#ECFEFF', color: '#0891B2', border: '1px solid #A5F3FC', fontWeight: 600 }}>
@@ -426,7 +443,7 @@ function PanelSegments({ d }: { d: ReservationCheckDetail }) {
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#BE185D', marginBottom: 6 }}>Promo Codes</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {d.promoCodes.map((s: BEPromoCodeSegment) => (
-                <PanelSegmentRow key={s.id} color="#BE185D" ok={!s.error} errors={s.errors}>
+                <PanelSegmentRow key={s.id} color="#BE185D" ok={!s.error} errors={s.errors} reprocessAvailable={s.reprocessAvailable}>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 800, color: '#BE185D', letterSpacing: '0.1em' }}>
                     {s.data}
                   </span>
@@ -442,7 +459,7 @@ function PanelSegments({ d }: { d: ReservationCheckDetail }) {
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#4F46E5', marginBottom: 6 }}>Companies</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {d.companies.map((s: BECompanySegment) => (
-                <PanelSegmentRow key={s.id} color="#4F46E5" ok={!s.error} errors={s.errors}>
+                <PanelSegmentRow key={s.id} color="#4F46E5" ok={!s.error} errors={s.errors} reprocessAvailable={s.reprocessAvailable}>
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 600 }}>{s.data.name}</div>
                     <div style={{ fontSize: 10, color: 'var(--fg-muted)' }}>{s.data.contact.email}</div>
@@ -670,6 +687,7 @@ export default function ReservationChecksPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [previewId, setPreviewId] = useState<string | null>(null);
+  const [pmsId,     setPmsId]     = useState<number | null>(null);
   const [flagged, setFlagged] = useState<Set<string>>(() => {
     if (typeof window === 'undefined') return new Set();
     try { return new Set(JSON.parse(localStorage.getItem(FLAGGED_KEY) ?? '[]')); }
@@ -692,6 +710,11 @@ export default function ReservationChecksPage() {
     setPreviewId(prev => prev === originId ? null : originId);
   }, []);
 
+  const openPms = useCallback((htId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPmsId(prev => prev === htId ? null : htId);
+  }, []);
+
   // ── Keyboard navigation (↑/↓ rows, Escape closes panel) ──
   const filteredForKb = useMemo(() =>
     [...items]
@@ -706,7 +729,7 @@ export default function ReservationChecksPage() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { setPreviewId(null); return; }
+      if (e.key === 'Escape') { setPreviewId(null); setPmsId(null); return; }
       if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
       e.preventDefault();
       setPreviewId(current => {
@@ -898,14 +921,21 @@ export default function ReservationChecksPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-strong)' }}>
+                <th style={{ ...TH, width: 32, padding: '10px 4px 10px 12px' }} />
                 <th style={{ ...TH, paddingLeft: 18 }}>Reservation</th>
                 <th style={TH}>Guest</th>
+                {!previewId && <th style={TH}>Comment / Request</th>}
                 {!previewId && <th style={TH}>Provider</th>}
                 <th style={TH}>Stay</th>
                 {!previewId && <th style={TH}>Guests</th>}
-                <th style={TH}>Checks</th>
+                {SEGMENT_COLS.map(col => (
+                  <th key={col.key} title={col.label} style={{ ...TH, width: 36, textAlign: 'center', padding: '10px 6px' }}>
+                    {col.icon}
+                  </th>
+                ))}
                 <th style={TH}>Status</th>
                 <th style={{ ...TH, width: 36 }} />
+                <th style={{ ...TH, width: 32 }} />
                 <th style={{ ...TH, width: 32 }} />
                 <th style={{ ...TH, width: 32 }} />
               </tr>
@@ -913,7 +943,7 @@ export default function ReservationChecksPage() {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={10} style={{ padding: '48px 24px', textAlign: 'center', color: 'var(--fg-muted)', fontSize: 14 }}>
+                  <td colSpan={18} style={{ padding: '48px 24px', textAlign: 'center', color: 'var(--fg-muted)', fontSize: 14 }}>
                     {meta.total === 0 ? 'No reservations found.' : 'No reservations match your filter.'}
                   </td>
                 </tr>
@@ -934,6 +964,25 @@ export default function ReservationChecksPage() {
                     onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'var(--bg-surface)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isSelected ? `${rowAccent[r.status]}08` : 'transparent'; }}
                   >
+                    <td style={{ padding: '12px 4px 12px 12px' }} onClick={e => e.stopPropagation()}>
+                      {r.hotelTimeId && (
+                        <a
+                          href={`https://app.hoteltime.com/reservation/${r.hotelTimeId}`}
+                          target="_blank" rel="noreferrer"
+                          title="Open in HotelTime PMS"
+                          style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            width: 22, height: 22, borderRadius: 5,
+                            background: '#F0FDF4', border: '1px solid #A7F3D0',
+                            color: '#059669', textDecoration: 'none',
+                          }}
+                        >
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
+                          </svg>
+                        </a>
+                      )}
+                    </td>
                     <td style={{ padding: '12px 14px 12px 18px' }}>
                       <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: isSelected ? rowAccent[r.status] : 'var(--accent)', fontWeight: 500 }}>
                         {r.originId}
@@ -944,8 +993,12 @@ export default function ReservationChecksPage() {
                     </td>
                     <td style={{ padding: '12px 14px' }}>
                       <div style={{ fontSize: 13, fontWeight: 500 }}>{r.owner}</div>
-                      {!previewId && <NotePreview note={r.customerNote} />}
                     </td>
+                    {!previewId && (
+                      <td style={{ padding: '12px 14px' }}>
+                        <NotePreview note={r.customerNote} status={r.customerNoteStatus} />
+                      </td>
+                    )}
                     {!previewId && (
                       <td style={{ padding: '12px 14px' }}><ProviderTag provider={r.provider} /></td>
                     )}
@@ -961,7 +1014,11 @@ export default function ReservationChecksPage() {
                         </div>
                       </td>
                     )}
-                    <td style={{ padding: '10px 14px' }}><CheckDots r={r} /></td>
+                    {SEGMENT_COLS.map(col => (
+                      <td key={col.key} style={{ padding: '10px 6px' }}>
+                        <SegmentDot statusKey={col.key} r={r} />
+                      </td>
+                    ))}
                     <td style={{ padding: '12px 14px' }}><StatusBadge status={r.status} size="sm" /></td>
 
                     {/* Quick overview button */}
@@ -1011,6 +1068,29 @@ export default function ReservationChecksPage() {
                       </button>
                     </td>
 
+                    {/* PMS lookup button */}
+                    <td style={{ padding: '8px 4px' }}>
+                      {r.hotelTimeId != null && (
+                        <button
+                          onClick={e => openPms(r.hotelTimeId!, e)}
+                          title="PMS online detail"
+                          style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            width: 28, height: 28, borderRadius: 6,
+                            border: `1px solid ${pmsId === r.hotelTimeId ? '#4A7FCB' : 'var(--border-strong)'}`,
+                            background: pmsId === r.hotelTimeId ? '#4A7FCB' : '#fff',
+                            color: pmsId === r.hotelTimeId ? '#fff' : 'var(--fg-muted)',
+                            cursor: 'pointer', transition: 'all 0.15s',
+                            boxShadow: pmsId === r.hotelTimeId ? '0 1px 4px #4A7FCB40' : 'none',
+                          }}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+                          </svg>
+                        </button>
+                      )}
+                    </td>
+
                     {/* Full detail arrow */}
                     <td style={{ padding: '12px 10px 12px 4px' }}>
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fg-subtle)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -1026,12 +1106,7 @@ export default function ReservationChecksPage() {
 
         {/* Pagination */}
         {meta.totalPages > 1 && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
-            <span style={{ fontSize: 13, color: 'var(--fg-muted)' }}>
-              Showing <strong style={{ color: 'var(--fg)', fontWeight: 600 }}>{from}–{to}</strong> of{' '}
-              <strong style={{ color: 'var(--fg)', fontWeight: 600 }}>{meta.total}</strong> reservations
-            </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 16 }}>
               <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 11px', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: page === 1 ? 'not-allowed' : 'pointer', border: '1px solid var(--border-strong)', background: 'var(--bg-surface)', color: page === 1 ? 'var(--fg-subtle)' : 'var(--fg)', opacity: page === 1 ? 0.45 : 1 }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
                 Prev
@@ -1053,7 +1128,9 @@ export default function ReservationChecksPage() {
                 Next
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
               </button>
-            </div>
+              <span style={{ fontSize: 11, color: 'var(--fg-subtle)', marginLeft: 6 }}>
+                {from}–{to} of {meta.total}
+              </span>
           </div>
         )}
       </div>
@@ -1064,6 +1141,15 @@ export default function ReservationChecksPage() {
           key={previewId}
           originId={previewId}
           onClose={() => setPreviewId(null)}
+        />
+      )}
+
+      {/* ── PMS panel ── */}
+      {pmsId != null && (
+        <PmsPanel
+          key={pmsId}
+          reservationId={pmsId}
+          onClose={() => setPmsId(null)}
         />
       )}
       </div>

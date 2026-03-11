@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { PmsPanel } from '@/components/PmsPanel';
+import { RegCardPanel } from '@/components/RegCardPanel';
 
 // ── Bulk PDF progress modal ────────────────────────────────────────────────────
 
@@ -199,6 +201,8 @@ function RegistrationCardsInner() {
   const [data,         setData]         = useState<RegCardsPage | null>(null);
   const [loading,      setLoading]      = useState(true);
   const [bulkProgress, setBulkProgress] = useState<BulkProgress | null>(null);
+  const [quickViewId,  setQuickViewId]  = useState<number | null>(null);
+  const [pmsId,        setPmsId]        = useState<number | null>(null);
   const esRef = useRef<EventSource | null>(null);
 
   const page        = Number(searchParams.get('page')    ?? 1);
@@ -313,6 +317,15 @@ function RegistrationCardsInner() {
 
   const hasFilters = search || hotelName || arrival || departure || dateOfBirth;
 
+  // Escape key: close panels
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setQuickViewId(null); setPmsId(null); }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   return (
     <>
     {bulkProgress && (
@@ -321,7 +334,7 @@ function RegistrationCardsInner() {
         onClose={() => { esRef.current?.close(); setBulkProgress(null); }}
       />
     )}
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
 
       {/* ── Page header ── */}
       <div style={{
@@ -362,7 +375,8 @@ function RegistrationCardsInner() {
         )}
       </div>
 
-    <div style={{ padding: '20px 24px 60px' }}>
+    <div style={{ display: 'flex', flex: 1, alignItems: 'flex-start' }}>
+    <div style={{ flex: 1, minWidth: 0, padding: '20px 24px 60px' }}>
 
       {/* ── Filters ── */}
       <div style={{
@@ -481,12 +495,13 @@ function RegistrationCardsInner() {
         {/* Header row */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '110px 160px 100px 90px 100px 1fr 70px 160px 110px 80px',
+          gridTemplateColumns: '28px 110px 160px 100px 90px 100px 1fr 70px 160px 110px 80px 40px 36px',
           gap: '0 12px', padding: '9px 16px',
           background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)',
           fontSize: 10, fontWeight: 700, color: 'var(--fg-subtle)',
           letterSpacing: '0.07em', textTransform: 'uppercase',
         }}>
+          <div />
           <div>Res. ID</div>
           <div>Name</div>
           <div>Birth Date</div>
@@ -497,6 +512,8 @@ function RegistrationCardsInner() {
           <div>Check-in → Out</div>
           <div>Hotel</div>
           <div>Room</div>
+          <div />
+          <div />
         </div>
 
         {/* Rows */}
@@ -513,24 +530,54 @@ function RegistrationCardsInner() {
         ) : (
           data.items.map((card, idx) => {
             const allOk = card.isDataConfirmed && card.isGDPRRead && card.isHouseRulesAccepted;
+            const isSelected = quickViewId === card.id;
             return (
-              <Link
+              <div
                 key={card.id}
-                href={`/reception/registration-cards/${card.id}`}
+                onClick={() => setQuickViewId(prev => prev === card.id ? null : card.id)}
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '110px 160px 100px 90px 100px 1fr 70px 160px 110px 80px',
+                  gridTemplateColumns: '28px 110px 160px 100px 90px 100px 1fr 70px 160px 110px 80px 40px 36px',
                   gap: '0 12px', padding: '11px 16px',
-                  textDecoration: 'none', color: 'var(--fg)',
                   borderBottom: idx < data.items.length - 1 ? '1px solid var(--border)' : 'none',
-                  alignItems: 'center',
-                  background: allOk ? 'var(--bg-surface)' : 'var(--status-red-bg)',
+                  alignItems: 'center', cursor: 'pointer',
+                  background: isSelected
+                    ? 'rgba(232,160,69,0.07)'
+                    : allOk ? 'var(--bg-surface)' : 'var(--status-red-bg)',
                   transition: 'background 0.1s',
-                  borderLeft: allOk ? '3px solid transparent' : '3px solid var(--status-red-border)',
+                  boxShadow: isSelected
+                    ? 'inset 3px 0 0 0 var(--accent)'
+                    : allOk ? 'none' : 'inset 3px 0 0 0 var(--status-red-border)',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = allOk ? 'var(--bg-hover)' : '#FEE2E2')}
-                onMouseLeave={e => (e.currentTarget.style.background = allOk ? 'var(--bg-surface)' : 'var(--status-red-bg)')}
+                onMouseEnter={e => {
+                  if (!isSelected) (e.currentTarget as HTMLElement).style.background = allOk ? 'var(--bg-hover)' : '#FEE2E2';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLElement).style.background = isSelected
+                    ? 'rgba(232,160,69,0.07)'
+                    : allOk ? 'var(--bg-surface)' : 'var(--status-red-bg)';
+                }}
               >
+                {/* HotelTime link */}
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <a
+                    href={`https://app.hoteltime.com/reservation/${card.reservationId}`}
+                    target="_blank" rel="noreferrer"
+                    onClick={e => e.stopPropagation()}
+                    title="Open in HotelTime PMS"
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      width: 22, height: 22, borderRadius: 5,
+                      background: '#F0FDF4', border: '1px solid #A7F3D0',
+                      color: '#059669', textDecoration: 'none', flexShrink: 0,
+                    }}
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
+                    </svg>
+                  </a>
+                </div>
+
                 {/* Res. ID */}
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent)', fontWeight: 600 }}>
                   #{card.reservationId}
@@ -597,7 +644,38 @@ function RegistrationCardsInner() {
                     <span style={{ color: 'var(--fg-subtle)' }}>—</span>
                   )}
                 </div>
-              </Link>
+
+                {/* Row indicator */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                    stroke={isSelected ? 'var(--accent)' : 'var(--fg-subtle)'}
+                    strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 18l6-6-6-6"/>
+                  </svg>
+                </div>
+
+                {/* PMS live button */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  onClick={e => {
+                    e.stopPropagation();
+                    const rid = card.reservationId;
+                    setPmsId(prev => prev === rid ? null : rid);
+                  }}
+                >
+                  <div title="PMS Live" style={{
+                    width: 26, height: 26, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: pmsId === card.reservationId ? 'var(--accent)' : 'transparent',
+                    border: `1px solid ${pmsId === card.reservationId ? 'var(--accent)' : 'var(--border)'}`,
+                    cursor: 'pointer', transition: 'all 0.15s',
+                  }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                      stroke={pmsId === card.reservationId ? '#fff' : 'var(--fg-subtle)'}
+                      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
             );
           })
         )}
@@ -667,6 +745,23 @@ function RegistrationCardsInner() {
         </div>
       )}
 
+    </div>
+    {quickViewId != null && (
+      <RegCardPanel
+        key={quickViewId}
+        cardId={quickViewId}
+        onClose={() => { setQuickViewId(null); setPmsId(null); }}
+        pmsOpen={pmsId != null}
+        onTogglePms={(reservationId) => setPmsId(prev => prev === reservationId ? null : reservationId)}
+      />
+    )}
+    {pmsId != null && (
+      <PmsPanel
+        key={pmsId}
+        reservationId={pmsId}
+        onClose={() => setPmsId(null)}
+      />
+    )}
     </div>
     </div>
     </>
