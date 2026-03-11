@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PmsPanel } from '@/components/PmsPanel';
 import { PreCheckInModal } from '@/components/PreCheckInModal';
+import { EmailModal } from '@/components/EmailModal';
 
 const ENDPOINT = process.env.NEXT_PUBLIC_RECEPTION_API ?? 'http://localhost:4002/graphql';
 
@@ -129,6 +130,22 @@ function fmtDate(iso: string): string {
   if (!iso) return '—';
   const [, m, d] = iso.split('-');
   return `${d}.${m}`;
+}
+
+// Mock: derive an owner email for guests — pinned IDs always have one, others ~60%
+const PINNED_EMAILS: Record<number, string> = {
+  654451274: 'jara.maly@email.cz',
+  654451276: 'h.muller@gmail.com',
+  654451278: 'john.smith@outlook.com',
+};
+
+function mockOwnerEmail(guest: ArrivingGuest): string | null {
+  if (PINNED_EMAILS[guest.bookingId]) return PINNED_EMAILS[guest.bookingId];
+  // ~60% of random guests have email (seeded by bookingId)
+  if (guest.bookingId % 5 < 3) {
+    return `${guest.firstname.toLowerCase()}.${guest.surname.toLowerCase().replace(/[^a-z]/g, '')}@example.com`;
+  }
+  return null;
 }
 
 function nightCount(arrival: string, departure: string): number {
@@ -298,6 +315,7 @@ function ArrivingGuestsInner() {
   const [error, setError] = useState<string | null>(null);
   const [pmsId,        setPmsId]        = useState<number | null>(null);
   const [checkInGuest, setCheckInGuest] = useState<{ bookingId: number; name: string } | null>(null);
+  const [emailGuest,   setEmailGuest]   = useState<ArrivingGuest | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -606,7 +624,7 @@ function ArrivingGuestsInner() {
             {/* Table header */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: '28px 90px 90px 1fr 1fr 90px 110px 80px 100px 1fr 1fr 70px',
+              gridTemplateColumns: '28px 90px 90px 1fr 1fr 90px 110px 80px 100px 1fr 1fr 96px',
               gap: '0 12px',
               padding: '9px 16px',
               background: 'var(--bg-surface)',
@@ -653,7 +671,7 @@ function ArrivingGuestsInner() {
                   key={guest.id}
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: '28px 90px 90px 1fr 1fr 90px 110px 80px 100px 1fr 1fr 70px',
+                    gridTemplateColumns: '28px 90px 90px 1fr 1fr 90px 110px 80px 100px 1fr 1fr 96px',
                     gap: '0 12px',
                     padding: '12px 16px',
                     borderBottom: idx < visibleItems.length - 1 ? '1px solid var(--border)' : 'none',
@@ -779,7 +797,7 @@ function ArrivingGuestsInner() {
                     <TagList items={guest.inventoryItems} color="#34D399" />
                   </div>
 
-                  {/* Actions: PMS lookup + Pre-Check-In */}
+                  {/* Actions: PMS + Pre-Check-In + Email */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
                     {/* PMS detail */}
                     <button
@@ -821,6 +839,26 @@ function ArrivingGuestsInner() {
                         <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/>
                       </svg>
                     </button>
+                    {/* Email — only shown when owner email is available */}
+                    {mockOwnerEmail(guest) && (
+                      <button
+                        onClick={e => { e.stopPropagation(); setEmailGuest(guest); }}
+                        title={`Send email to ${mockOwnerEmail(guest)}`}
+                        style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          width: 28, height: 28, borderRadius: 6,
+                          border: '1px solid #BFDBFE',
+                          background: emailGuest?.bookingId === guest.bookingId ? '#3B82F6' : '#EFF6FF',
+                          color: emailGuest?.bookingId === guest.bookingId ? '#fff' : '#3B82F6',
+                          cursor: 'pointer', transition: 'all 0.15s', flexShrink: 0,
+                        }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                          <polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -894,6 +932,17 @@ function ArrivingGuestsInner() {
         bookingId={checkInGuest.bookingId}
         guestName={checkInGuest.name}
         onClose={() => setCheckInGuest(null)}
+      />
+    )}
+    {emailGuest && mockOwnerEmail(emailGuest) && (
+      <EmailModal
+        guestName={`${emailGuest.firstname} ${emailGuest.surname}`}
+        ownerEmail={mockOwnerEmail(emailGuest)!}
+        hotelName={emailGuest.hotelName}
+        arrival={emailGuest.arrival}
+        departure={emailGuest.departure}
+        bookingId={emailGuest.bookingId}
+        onClose={() => setEmailGuest(null)}
       />
     )}
     </div>
